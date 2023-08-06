@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
 
@@ -53,7 +53,10 @@ async fn fetch(req: &str) -> Result<Vec<Friend>> {
 
 fn modify_friends(friends: Vec<Friend>) -> Vec<Friend> {
     let askme = false; // とりあえず
-    let mut friends = friends.into_iter().filter(|friend| friend.status != "offline" && (askme || friend.status != "ask me")).collect::<Vec<_>>();
+    let mut friends = friends
+        .into_iter()
+        .filter(|friend| friend.status != "offline" && (askme || friend.status != "ask me"))
+        .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
     friends
 }

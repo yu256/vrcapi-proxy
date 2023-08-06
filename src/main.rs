@@ -10,5 +10,13 @@ fn hello() -> &'static str {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![hello, api::api_auth, api::api_friends])
+    rocket::build().mount(
+        "/",
+        routes![
+            hello,
+            api::api_auth,
+            api::api_twofactor_email,
+            api::api_friends
+        ],
+    )
 }

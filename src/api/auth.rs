@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 use serde::Serialize;
 
@@ -40,14 +40,14 @@ async fn auth(req: &str) -> Result<String> {
         Ok(response
             .headers()
             .get("set-cookie")
-            .ok_or(anyhow!(ON_ERROR))?
+            .context(ON_ERROR)?
             .to_str()?
             .split(';')
             .next()
-            .ok_or(anyhow!(ON_ERROR))?
+            .context(ON_ERROR)?
             .split('=')
             .nth(1)
-            .ok_or(anyhow!(ON_ERROR))?
+            .context(ON_ERROR)?
             .to_owned())
     } else {
         bail!("Error: status code: {}", response.status())
