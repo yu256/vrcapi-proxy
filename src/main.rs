@@ -1,4 +1,7 @@
+#![feature(lazy_cell)]
 mod api;
+mod general;
+mod data;
 
 #[macro_use]
 extern crate rocket;

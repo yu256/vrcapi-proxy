@@ -1,4 +1,5 @@
-use anyhow::{bail, Result};
+use crate::data::Data;
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
@@ -18,7 +19,7 @@ struct Friend {
 }
 
 #[derive(Serialize)]
-enum Token {
+enum Response {
     Success { friends: Vec<Friend> },
     Error { error: String },
 }
@@ -26,8 +27,8 @@ enum Token {
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(friends) => Token::Success { friends },
-        Err(error) => Token::Error {
+        Ok(friends) => Response::Success { friends },
+        Err(error) => Response::Error {
             error: error.to_string(),
         },
     };
@@ -36,26 +37,32 @@ pub(crate) async fn api_friends(req: &str) -> String {
 }
 
 async fn fetch(req: &str) -> Result<Vec<Friend>> {
+    let data = Data::get()?;
+
+    let matched: &Data = data
+        .iter()
+        .find(|d| d.is_match(req))
+        .context("Failed to auth.")?;
+
     let res = reqwest::Client::new()
         .get(URL)
         .header("User-Agent", "vrc-rs")
-        .header("Cookie", req)
+        .header("Cookie", &matched.token)
         .send()
         .await?;
 
     if res.status().is_success() {
         let deserialized: Vec<Friend> = res.json().await?;
-        Ok(modify_friends(deserialized))
+        Ok(modify_friends(deserialized, &matched.askme))
     } else {
         bail!("Error: status code: {}", res.status())
     }
 }
 
-fn modify_friends(friends: Vec<Friend>) -> Vec<Friend> {
-    let askme = false; // とりあえず
+fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<Friend> {
     let mut friends = friends
         .into_iter()
-        .filter(|friend| friend.status != "offline" && (askme || friend.status != "ask me"))
+        .filter(|friend| friend.status != "offline" && (*askme || friend.status != "ask me"))
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
     friends

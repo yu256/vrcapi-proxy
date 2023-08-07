@@ -1,35 +1,55 @@
-use anyhow::{bail, Context, Result};
-use serde::{Deserialize, Serialize};
+use crate::data::{Data, DataVecExt as _};
+use anyhow::{bail, Context, Error, Result};
+use serde::Serialize;
 use serde_json::json;
+use uuid::Uuid;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/twofactorauth/emailotp/verify";
 
 #[derive(Serialize)]
 enum Response {
-    Success { verified: bool },
+    Success { auth: String },
     Error { error: String },
 }
 
-#[derive(Deserialize)]
-struct Res {
-    verified: bool,
+impl From<Error> for Response {
+    fn from(error: Error) -> Self {
+        Response::Error {
+            error: error.to_string(),
+        }
+    }
 }
 
 #[post("/twofactor_email", data = "<req>")]
 pub(crate) async fn api_twofactor_email(req: &str) -> String {
-    let result = match fetch(req).await {
-        Ok(res) => Response::Success {
-            verified: res.verified,
+    let result: Response = match req.split_once(';') {
+        Some((req, auth)) => match fetch(req).await {
+            Ok(token) => {
+                if let Err(err) = update(token, auth) {
+                    return serde_json::to_string(&Response::from(err)).unwrap();
+                }
+                Response::Success {
+                    auth: auth.to_string(),
+                }
+            }
+            Err(error) => Response::from(error),
         },
-        Err(error) => Response::Error {
-            error: error.to_string(),
+        None => match fetch(req).await {
+            Ok(token) => {
+                let auth = Uuid::new_v4().to_string();
+                if let Err(err) = add(token, &auth) {
+                    return serde_json::to_string(&Response::from(err)).unwrap();
+                }
+                Response::Success { auth }
+            }
+            Err(error) => Response::from(error),
         },
     };
 
     serde_json::to_string(&result).unwrap()
 }
 
-async fn fetch(req: &str) -> Result<Res> {
+async fn fetch(req: &str) -> Result<&str> {
     let (token, f) = req.split_once(':').context("Unexpected input.")?;
     let res = reqwest::Client::new()
         .get(URL)
@@ -40,8 +60,38 @@ async fn fetch(req: &str) -> Result<Res> {
         .await?;
 
     if res.status().is_success() {
-        Ok(res.json().await?)
+        Ok(token)
     } else {
         bail!("Error: status code: {}", res.status())
     }
+}
+
+fn update(token: &str, auth: &str) -> Result<()> {
+    let mut data: Vec<Data> = Data::get()?;
+
+    if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
+        data.token = token.to_string();
+    } else {
+        bail!("No matching auth found.");
+    }
+
+    data.write()?;
+
+    Ok(())
+}
+
+fn add(token: &str, auth: &str) -> Result<()> {
+    let new_data = Data {
+        auth: auth.to_string(),
+        token: token.to_string(),
+        askme: false,
+    };
+
+    let mut data: Vec<Data> = Data::get()?;
+
+    data.push(new_data);
+
+    data.write()?;
+
+    Ok(())
 }
