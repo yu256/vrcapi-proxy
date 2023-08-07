@@ -41,6 +41,7 @@ impl Data {
         }
     }
 }
+
 pub(crate) trait DataVecExt {
     fn write(&self) -> Result<()>;
 }

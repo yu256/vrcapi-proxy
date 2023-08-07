@@ -52,7 +52,7 @@ pub(crate) async fn api_twofactor_email(req: &str) -> String {
 async fn fetch(req: &str) -> Result<&str> {
     let (token, f) = req.split_once(':').context("Unexpected input.")?;
     let res = reqwest::Client::new()
-        .get(URL)
+        .post(URL)
         .header("User-Agent", "vrc-rs")
         .header("Cookie", token)
         .json(&json!({ "code": f }))

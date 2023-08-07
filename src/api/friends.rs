@@ -62,7 +62,7 @@ async fn fetch(req: &str) -> Result<Vec<Friend>> {
 fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<Friend> {
     let mut friends = friends
         .into_iter()
-        .filter(|friend| friend.status != "offline" && (*askme || friend.status != "ask me"))
+        .filter(|friend| friend.location != "offline" && (*askme || friend.status != "ask me"))
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
     friends
