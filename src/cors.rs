@@ -1,6 +1,7 @@
 use anyhow::Result;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{Header, Method, Status};
+use rocket::log::private::info;
 use rocket::{Request, Response};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -32,7 +33,7 @@ impl CorsConfig {
 
                 write_json(&conf, "config")?;
 
-                println!(
+                info!(
                     "{} を生成しました。",
                     &DATA_PATH.join("config.json").to_string_lossy()
                 );

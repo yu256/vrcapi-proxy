@@ -17,7 +17,8 @@ fn rocket() -> _ {
                 api::api_twofactor_email,
                 api::api_friends,
                 api::api_user,
-                api::api_instance
+                api::api_instance,
+                api::api_toggle
             ],
         )
         .attach(cors::CORS)
