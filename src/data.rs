@@ -21,13 +21,24 @@ impl Data {
     }
 
     pub(crate) fn get() -> Result<Vec<Self>> {
-        let mut file = open_file(&DATA_PATH.join("data.json"))?;
+        match open_file(&DATA_PATH.join("data.json")) {
+            Ok(mut file) => {
+                let mut content = String::new();
 
-        let mut content = String::new();
+                file.read_to_string(&mut content)?;
 
-        file.read_to_string(&mut content)?;
-
-        Ok(serde_json::from_str(&content)?)
+                Ok(serde_json::from_str(&content)?)
+            }
+            Err(_) => {
+                let data = Data {
+                    auth: String::new(),
+                    token: String::new(),
+                    askme: false,
+                };
+                write_json(&data, "data")?;
+                Ok(vec![data])
+            }
+        }
     }
 }
 pub(crate) trait DataVecExt {
