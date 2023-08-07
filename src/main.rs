@@ -1,7 +1,7 @@
 #![feature(lazy_cell)]
 mod api;
-mod general;
 mod data;
+mod general;
 
 #[macro_use]
 extern crate rocket;
@@ -19,7 +19,9 @@ fn rocket() -> _ {
             hello,
             api::api_auth,
             api::api_twofactor_email,
-            api::api_friends
+            api::api_friends,
+            api::api_user,
+            api::api_instance
         ],
     )
 }

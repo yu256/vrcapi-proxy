@@ -1,5 +1,5 @@
 use crate::data::{Data, DataVecExt as _};
-use anyhow::{bail, Context, Error, Result};
+use anyhow::{bail, Context as _, Error, Result};
 use serde::Serialize;
 use serde_json::json;
 use uuid::Uuid;
