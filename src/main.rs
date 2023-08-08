@@ -23,6 +23,7 @@ fn rocket() -> _ {
                 api::api_friend_request,
                 api::api_del_friend_request,
                 api::api_friend_status,
+                api::api_notifications
             ],
         )
         .attach(cors::CORS)
