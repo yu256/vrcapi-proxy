@@ -29,13 +29,15 @@ where
     Ok(())
 }
 
+const NO_AUTH: &str = "Failed to auth.";
+
 pub fn find_matched_data(auth: &str) -> Result<Data> {
     let data = Data::get()?;
 
     let matched: Data = data
         .into_iter()
-        .find(|d| d.is_match(auth))
-        .context("Failed to auth.")?;
+        .find(|data| data.auth == auth)
+        .context(NO_AUTH)?;
 
     Ok(matched)
 }
@@ -46,7 +48,7 @@ pub fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) -> T) -> 
     if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
         updater(data);
     } else {
-        bail!("No matching auth found.");
+        bail!(NO_AUTH);
     }
 
     data.write()?;

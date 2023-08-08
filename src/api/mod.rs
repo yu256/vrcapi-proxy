@@ -1,4 +1,5 @@
 mod auth;
+mod friend_request;
 mod friends;
 mod instance;
 mod search_user;
@@ -7,6 +8,7 @@ mod two_factor_email;
 mod user;
 
 pub(crate) use auth::api_auth;
+pub(crate) use friend_request::{api_del_friend_request, api_friend_request};
 pub(crate) use friends::api_friends;
 pub(crate) use instance::api_instance;
 pub(crate) use search_user::api_search_user;

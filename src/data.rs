@@ -16,10 +16,6 @@ pub struct Data {
 }
 
 impl Data {
-    pub(crate) fn is_match(&self, req: &str) -> bool {
-        self.auth == req
-    }
-
     pub(crate) fn get() -> Result<Vec<Self>> {
         match open_file(&DATA_PATH.join("data.json")) {
             Ok(mut file) => {
