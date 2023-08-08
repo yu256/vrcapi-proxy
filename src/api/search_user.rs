@@ -1,33 +1,20 @@
+use super::user::User;
 use crate::data::Data;
 use anyhow::{bail, Context as _, Result};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-const URL: &str = "https://api.vrchat.cloud/api/1/users/";
-
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
-pub(crate) struct User {
-    pub(crate) bio: String,
-    pub(crate) bioLinks: Vec<String>,
-    pub(crate) currentAvatarThumbnailImageUrl: String,
-    pub(crate) displayName: String,
-    pub(crate) isFriend: bool,
-    pub(crate) last_activity: String,
-    pub(crate) location: String,
-    pub(crate) status: String,
-    pub(crate) statusDescription: String,
-}
+const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
 
 #[derive(Serialize)]
 enum Response {
-    Success { user: User },
+    Success { users: Vec<User> },
     Error { error: String },
 }
 
-#[post("/user", data = "<req>")]
-pub(crate) async fn api_user(req: &str) -> String {
+#[post("/search_user", data = "<req>")]
+pub(crate) async fn api_search_user(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(user) => Response::Success { user },
+        Ok(users) => Response::Success { users },
         Err(error) => Response::Error {
             error: error.to_string(),
         },
@@ -36,7 +23,7 @@ pub(crate) async fn api_user(req: &str) -> String {
     serde_json::to_string(&result).unwrap()
 }
 
-async fn fetch(req: &str) -> Result<User> {
+async fn fetch(req: &str) -> Result<Vec<User>> {
     let (auth, user) = req.split_once(':').context("Unexpected input.")?;
     let data = Data::get()?;
 
@@ -53,7 +40,7 @@ async fn fetch(req: &str) -> Result<User> {
         .await?;
 
     if res.status().is_success() {
-        let user: User = res.json().await?;
+        let user: Vec<User> = res.json().await?;
         Ok(user)
     } else {
         bail!("Error: status code: {}", res.status())

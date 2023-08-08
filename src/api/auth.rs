@@ -7,7 +7,7 @@ const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 const ON_ERROR: &str = "An error occurred while parsing the cookie.";
 
 #[derive(Serialize)]
-enum Token {
+enum Response {
     Success { token: String },
     Error { error: String },
 }
@@ -15,8 +15,8 @@ enum Token {
 #[post("/auth", data = "<req>")]
 pub(crate) async fn api_auth(req: &str) -> String {
     let result = match auth(req).await {
-        Ok(t) => Token::Success { token: t },
-        Err(error) => Token::Error {
+        Ok(t) => Response::Success { token: t },
+        Err(error) => Response::Error {
             error: error.to_string(),
         },
     };

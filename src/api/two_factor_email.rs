@@ -1,7 +1,7 @@
 use crate::data::{Data, DataVecExt as _};
 use anyhow::{bail, Context as _, Error, Result};
 use serde::Serialize;
-use serde_json::json;
+use serde_json::{json, to_string as to_json};
 use uuid::Uuid;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/twofactorauth/emailotp/verify";
@@ -26,8 +26,9 @@ pub(crate) async fn api_twofactor_email(req: &str) -> String {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
                 if let Err(err) = update(token, auth) {
-                    return serde_json::to_string(&Response::from(err)).unwrap();
+                    return to_json(&Response::from(err)).unwrap();
                 }
+
                 Response::Success {
                     auth: auth.to_string(),
                 }
@@ -37,16 +38,18 @@ pub(crate) async fn api_twofactor_email(req: &str) -> String {
         None => match fetch(req).await {
             Ok(token) => {
                 let auth = Uuid::new_v4().to_string();
+
                 if let Err(err) = add(token, &auth) {
-                    return serde_json::to_string(&Response::from(err)).unwrap();
+                    return to_json(&Response::from(err)).unwrap();
                 }
+
                 Response::Success { auth }
             }
             Err(error) => Response::from(error),
         },
     };
 
-    serde_json::to_string(&result).unwrap()
+    to_json(&result).unwrap()
 }
 
 async fn fetch(req: &str) -> Result<&str> {
