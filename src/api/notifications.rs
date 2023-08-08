@@ -23,7 +23,7 @@ enum Response {
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 
-#[post("/friend_request", data = "<req>")]
+#[post("/notifications", data = "<req>")]
 pub(crate) async fn api_notifications(req: &str) -> String {
     let result = match fetch(req).await {
         Ok(notifications) => Response::Success { notifications },
