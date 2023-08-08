@@ -9,10 +9,10 @@ use std::sync::LazyLock;
 use crate::general::{open_file, write_json};
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct Data {
-    pub(crate) auth: String,
-    pub(crate) token: String,
-    pub(crate) askme: bool,
+pub struct Data {
+    pub auth: String,
+    pub token: String,
+    pub askme: bool,
 }
 
 impl Data {

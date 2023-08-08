@@ -1,4 +1,7 @@
-use crate::data::{Data, DataVecExt as _};
+use crate::{
+    data::{Data, DataVecExt as _},
+    general::update_data_property,
+};
 use anyhow::{bail, Context as _, Error, Result};
 use serde::Serialize;
 use serde_json::{json, to_string as to_json};
@@ -70,15 +73,9 @@ async fn fetch(req: &str) -> Result<&str> {
 }
 
 fn update(token: &str, auth: &str) -> Result<()> {
-    let mut data: Vec<Data> = Data::get()?;
-
-    if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
+    update_data_property(auth, |data| {
         data.token = token.to_string();
-    } else {
-        bail!("No matching auth found.");
-    }
-
-    data.write()?;
+    })?;
 
     Ok(())
 }

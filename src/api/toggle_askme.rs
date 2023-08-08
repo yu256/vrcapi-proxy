@@ -1,5 +1,5 @@
-use crate::data::{Data, DataVecExt as _};
-use anyhow::{bail, Context, Result};
+use crate::general::update_data_property;
+use anyhow::{Context as _, Result};
 
 #[post("/askme", data = "<req>")]
 pub(crate) async fn api_toggle(req: &str) -> String {
@@ -12,17 +12,11 @@ pub(crate) async fn api_toggle(req: &str) -> String {
 fn toggle(req: &str) -> Result<bool> {
     let (auth, req) = req.split_once(':').context("Unexpected token.")?;
 
-    let mut data = Data::get()?;
-
     let bool = if req == "t" { true } else { false };
 
-    if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
+    update_data_property(auth, |data| {
         data.askme = bool;
-    } else {
-        bail!("No matching auth found.");
-    }
-
-    data.write()?;
+    })?;
 
     Ok(bool)
 }

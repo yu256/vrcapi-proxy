@@ -1,5 +1,5 @@
-use crate::data::DATA_PATH;
-use anyhow::Result;
+use crate::data::{Data, DataVecExt as _, DATA_PATH};
+use anyhow::{bail, Context as _, Result};
 use serde::Serialize;
 use std::{
     fs::{self, File},
@@ -25,6 +25,31 @@ where
 
     let mut file = BufWriter::new(file);
     file.write_all(json.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn find_matched_data(auth: &str) -> Result<Data> {
+    let data = Data::get()?;
+
+    let matched: Data = data
+        .into_iter()
+        .find(|d| d.is_match(auth))
+        .context("Failed to auth.")?;
+
+    Ok(matched)
+}
+
+pub fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) -> T) -> Result<()> {
+    let mut data: Vec<Data> = Data::get()?;
+
+    if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
+        updater(data);
+    } else {
+        bail!("No matching auth found.");
+    }
+
+    data.write()?;
 
     Ok(())
 }

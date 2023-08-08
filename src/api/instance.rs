@@ -1,7 +1,7 @@
 use anyhow::{bail, Context as _, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::data::Data;
+use crate::general::find_matched_data;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/instances/";
 
@@ -66,12 +66,7 @@ pub(crate) async fn api_instance(req: &str) -> String {
 async fn fetch(req: &str) -> Result<InstanceData> {
     let (auth, instance) = req.split_once(':').context("Unexpected input.")?;
 
-    let data = Data::get()?;
-
-    let matched: &Data = data
-        .iter()
-        .find(|d| d.is_match(auth))
-        .context("Failed to auth.")?;
+    let matched = find_matched_data(auth)?;
 
     let res = reqwest::Client::new()
         .get(&format!("{}{}", URL, instance))

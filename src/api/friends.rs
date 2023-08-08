@@ -1,5 +1,5 @@
-use crate::data::Data;
-use anyhow::{bail, Context as _, Result};
+use crate::general::find_matched_data;
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
@@ -32,12 +32,7 @@ pub(crate) async fn api_friends(req: &str) -> String {
 }
 
 async fn fetch(req: &str) -> Result<Vec<Friend>> {
-    let data = Data::get()?;
-
-    let matched: &Data = data
-        .iter()
-        .find(|d| d.is_match(req))
-        .context("Failed to auth.")?;
+    let matched = find_matched_data(req)?;
 
     let res = reqwest::Client::new()
         .get(URL)
