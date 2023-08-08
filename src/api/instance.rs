@@ -16,7 +16,7 @@ struct World {
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 struct InstanceData {
-    ownerId: String,
+    ownerId: Option<String>,
     userCount: i32,
     world: World,
 }
@@ -24,7 +24,7 @@ struct InstanceData {
 #[allow(non_snake_case)]
 #[derive(Serialize)]
 struct ResponseInstance {
-    ownerId: String,
+    ownerId: Option<String>,
     userCount: i32,
     name: String,
     description: String,

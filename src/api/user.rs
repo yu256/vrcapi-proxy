@@ -12,7 +12,7 @@ pub(crate) struct User {
     pub(crate) currentAvatarThumbnailImageUrl: String,
     pub(crate) displayName: String,
     pub(crate) isFriend: bool,
-    pub(crate) last_activity: String,
+    pub(crate) last_activity: Option<String>,
     pub(crate) location: String,
     pub(crate) status: String,
     pub(crate) statusDescription: String,
