@@ -1,9 +1,22 @@
-use super::user::User;
 use crate::general::find_matched_data;
 use anyhow::{bail, Context as _, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize)]
+struct User {
+    // bio: Option<String>,
+    // bioLinks: Option<Vec<String>>,
+    currentAvatarThumbnailImageUrl: String,
+    displayName: String,
+	id: String,
+	isFriend: bool,
+    // last_activity: Option<String>,
+    // location: Option<String>,
+    statusDescription: String,
+}
 
 #[derive(Serialize)]
 enum Response {

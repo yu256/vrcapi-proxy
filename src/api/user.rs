@@ -6,16 +6,15 @@ const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
-pub(crate) struct User {
-    pub(crate) bio: String,
-    pub(crate) bioLinks: Vec<String>,
-    pub(crate) currentAvatarThumbnailImageUrl: String,
-    pub(crate) displayName: String,
-    pub(crate) isFriend: bool,
-    pub(crate) last_activity: Option<String>,
-    pub(crate) location: String,
-    pub(crate) status: String,
-    pub(crate) statusDescription: String,
+struct User {
+    bio: String,
+    bioLinks: Vec<String>,
+    currentAvatarThumbnailImageUrl: String,
+    displayName: String,
+    last_activity: Option<String>,
+    location: String,
+    status: String,
+    statusDescription: String,
 }
 
 #[derive(Serialize)]
