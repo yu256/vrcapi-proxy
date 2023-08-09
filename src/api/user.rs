@@ -15,6 +15,8 @@ struct User {
     location: String,
     status: String,
     statusDescription: String,
+    tags: Vec<String>,
+    rank: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -48,9 +50,40 @@ async fn fetch(req: &str) -> Result<User> {
         .await?;
 
     if res.status().is_success() {
-        let user: User = res.json().await?;
+        let mut user: User = res.json().await?;
+        add_rank(&mut user);
         Ok(user)
     } else {
         bail!("Error: status code: {}", res.status())
     }
+}
+
+fn add_rank(user: &mut User) {
+    for tag in user.tags.iter().rev() {
+        match tag.as_str() {
+            "system_trust_veteran" => {
+                user.rank = Some("Trusted".to_string());
+                break;
+            }
+            "system_trust_trusted" => {
+                user.rank = Some("Known".to_string());
+                break;
+            }
+            "system_trust_known" => {
+                user.rank = Some("User".to_string());
+                break;
+            }
+            "system_trust_basic" => {
+                user.rank = Some("New User".to_string());
+                break;
+            }
+            "system_troll" => {
+                user.rank = Some("Troll".to_string());
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    user.tags.clear()
 }
