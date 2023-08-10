@@ -4,17 +4,15 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 enum Response {
-    Success {},
-    Error { error: String },
+    Success,
+    Error(String),
 }
 
 #[post("/friend_request", data = "<req>")]
 pub(crate) async fn api_friend_request(req: &str) -> String {
     let result = match fetch(req, true).await {
-        Ok(_) => Response::Success {},
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(_) => Response::Success,
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()
@@ -23,10 +21,8 @@ pub(crate) async fn api_friend_request(req: &str) -> String {
 #[delete("/friend_request", data = "<req>")]
 pub(crate) async fn api_del_friend_request(req: &str) -> String {
     let result = match fetch(req, false).await {
-        Ok(_) => Response::Success {},
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(_) => Response::Success,
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

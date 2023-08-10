@@ -17,8 +17,8 @@ struct Notification {
 
 #[derive(Serialize)]
 enum Response {
-    Success { notifications: Vec<Notification> },
-    Error { error: String },
+    Success(Vec<Notification>),
+    Error(String),
 }
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
@@ -26,10 +26,8 @@ const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 #[post("/notifications", data = "<req>")]
 pub(crate) async fn api_notifications(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(notifications) => Response::Success { notifications },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(notifications) => Response::Success(notifications),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

@@ -15,17 +15,15 @@ struct Friend {
 
 #[derive(Serialize)]
 enum Response {
-    Success { friends: Vec<Friend> },
-    Error { error: String },
+    Success(Vec<Friend>),
+    Error(String),
 }
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(friends) => Response::Success { friends },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(friends) => Response::Success(friends),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

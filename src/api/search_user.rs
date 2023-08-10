@@ -45,17 +45,15 @@ impl From<User> for ResUser {
 
 #[derive(Serialize)]
 enum Response {
-    Success { users: Vec<ResUser> },
-    Error { error: String },
+    Success(Vec<ResUser>),
+    Error(String),
 }
 
 #[post("/search_user", data = "<req>")]
 pub(crate) async fn api_search_user(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(users) => Response::Success { users },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(users) => Response::Success(users),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

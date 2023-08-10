@@ -35,17 +35,15 @@ struct ResUser {
 
 #[derive(Serialize)]
 enum Response {
-    Success { user: ResUser },
-    Error { error: String },
+    Success(ResUser),
+    Error(String),
 }
 
 #[post("/user", data = "<req>")]
 pub(crate) async fn api_user(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(user) => Response::Success { user },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(user) => Response::Success(user),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

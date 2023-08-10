@@ -5,24 +5,22 @@ use serde::{Deserialize, Serialize};
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 struct Status {
-    // isFriend: bool, 
+    // isFriend: bool,
     outgoingRequest: bool,
     incomingRequest: bool,
 }
 
 #[derive(Serialize)]
 enum Response {
-    Success { status: Status },
-    Error { error: String },
+    Success(Status),
+    Error(String),
 }
 
 #[post("/friend_status", data = "<req>")]
 pub(crate) async fn api_friend_status(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(status) => Response::Success { status },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(status) => Response::Success(status),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()
@@ -34,7 +32,9 @@ async fn fetch(req: &str) -> Result<Status> {
     let matched = find_matched_data(auth)?;
 
     let res = reqwest::Client::new()
-        .get(&format!("https://api.vrchat.cloud/api/1/user/{user}/friendStatus"))
+        .get(&format!(
+            "https://api.vrchat.cloud/api/1/user/{user}/friendStatus"
+        ))
         .header("User-Agent", "vrc-rs")
         .header("Cookie", &matched.token)
         .send()

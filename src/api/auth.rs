@@ -8,17 +8,15 @@ const ON_ERROR: &str = "An error occurred while parsing the cookie.";
 
 #[derive(Serialize)]
 enum Response {
-    Success { token: String },
-    Error { error: String },
+    Success(String),
+    Error(String),
 }
 
 #[post("/auth", data = "<req>")]
 pub(crate) async fn api_auth(req: &str) -> String {
     let result = match auth(req).await {
-        Ok(t) => Response::Success { token: t },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(token) => Response::Success(token),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

@@ -45,19 +45,15 @@ impl InstanceData {
 
 #[derive(Serialize)]
 enum Response {
-    Success { instance: ResponseInstance },
-    Error { error: String },
+    Success(ResponseInstance),
+    Error(String),
 }
 
 #[post("/instance", data = "<req>")]
 pub(crate) async fn api_instance(req: &str) -> String {
     let result = match fetch(req).await {
-        Ok(data) => Response::Success {
-            instance: data.to_res(),
-        },
-        Err(error) => Response::Error {
-            error: error.to_string(),
-        },
+        Ok(data) => Response::Success(data.to_res()),
+        Err(error) => Response::Error(error.to_string()),
     };
 
     serde_json::to_string(&result).unwrap()

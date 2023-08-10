@@ -10,45 +10,41 @@ use uuid::Uuid;
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/twofactorauth/emailotp/verify";
 
 #[derive(Serialize)]
-enum Response {
-    Success { auth: String },
-    Error { error: String },
+enum Res {
+    Success(String),
+    Error(String),
 }
 
-impl From<Error> for Response {
+impl From<Error> for Res {
     fn from(error: Error) -> Self {
-        Response::Error {
-            error: error.to_string(),
-        }
+        Res::Error(error.to_string())
     }
 }
 
 #[post("/twofactor_email", data = "<req>")]
 pub(crate) async fn api_twofactor_email(req: &str) -> String {
-    let result: Response = match req.split_once(';') {
+    let result: Res = match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
                 if let Err(err) = update(token, auth) {
-                    return to_json(&Response::from(err)).unwrap();
+                    return to_json(&Res::from(err)).unwrap();
                 }
 
-                Response::Success {
-                    auth: auth.to_string(),
-                }
+                Res::Success(auth.to_string())
             }
-            Err(error) => Response::from(error),
+            Err(error) => Res::from(error),
         },
         None => match fetch(req).await {
             Ok(token) => {
                 let auth = Uuid::new_v4().to_string();
 
                 if let Err(err) = add(token, &auth) {
-                    return to_json(&Response::from(err)).unwrap();
+                    return to_json(&Res::from(err)).unwrap();
                 }
 
-                Response::Success { auth }
+                Res::Success(auth)
             }
-            Err(error) => Response::from(error),
+            Err(error) => Res::from(error),
         },
     };
 
