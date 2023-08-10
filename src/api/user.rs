@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct User {
     bio: String,
     bioLinks: Vec<String>,
@@ -16,12 +16,25 @@ struct User {
     status: String,
     statusDescription: String,
     tags: Vec<String>,
-    rank: Option<String>,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize)]
+struct ResUser {
+    bio: String,
+    bioLinks: Vec<String>,
+    currentAvatarThumbnailImageUrl: String,
+    displayName: String,
+    last_activity: Option<String>,
+    location: String,
+    status: String,
+    statusDescription: String,
+    rank: String,
 }
 
 #[derive(Serialize)]
 enum Response {
-    Success { user: User },
+    Success { user: ResUser },
     Error { error: String },
 }
 
@@ -37,7 +50,7 @@ pub(crate) async fn api_user(req: &str) -> String {
     serde_json::to_string(&result).unwrap()
 }
 
-async fn fetch(req: &str) -> Result<User> {
+async fn fetch(req: &str) -> Result<ResUser> {
     let (auth, user) = req.split_once(':').context("Unexpected input.")?;
 
     let matched = find_matched_data(auth)?;
@@ -50,40 +63,50 @@ async fn fetch(req: &str) -> Result<User> {
         .await?;
 
     if res.status().is_success() {
-        let mut user: User = res.json().await?;
-        add_rank(&mut user);
-        Ok(user)
+        let user: User = res.json().await?;
+        Ok(add_rank(user))
     } else {
         bail!("Error: status code: {}", res.status())
     }
 }
 
-fn add_rank(user: &mut User) {
+fn add_rank(user: User) -> ResUser {
+    let mut rank = None;
     for tag in user.tags.iter().rev() {
         match tag.as_str() {
             "system_trust_veteran" => {
-                user.rank = Some("Trusted".to_string());
+                rank = Some("Trusted".to_string());
                 break;
             }
             "system_trust_trusted" => {
-                user.rank = Some("Known".to_string());
+                rank = Some("Known".to_string());
                 break;
             }
             "system_trust_known" => {
-                user.rank = Some("User".to_string());
+                rank = Some("User".to_string());
                 break;
             }
             "system_trust_basic" => {
-                user.rank = Some("New User".to_string());
+                rank = Some("New User".to_string());
                 break;
             }
             "system_troll" => {
-                user.rank = Some("Troll".to_string());
+                rank = Some("Troll".to_string());
                 break;
             }
             _ => {}
         }
     }
 
-    user.tags.clear()
+    ResUser {
+        bio: user.bio,
+        bioLinks: user.bioLinks,
+        currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
+        displayName: user.displayName,
+        last_activity: user.last_activity,
+        location: user.location,
+        status: user.status,
+        statusDescription: user.statusDescription,
+        rank: rank.unwrap_or_else(|| "Visitor".to_string()),
+    }
 }
