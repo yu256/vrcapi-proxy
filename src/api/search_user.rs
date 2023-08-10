@@ -5,22 +5,42 @@ use serde::{Deserialize, Serialize};
 const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct User {
-    // bio: Option<String>,
-    // bioLinks: Option<Vec<String>>,
     currentAvatarThumbnailImageUrl: String,
     displayName: String,
-	id: String,
-	isFriend: bool,
-    // last_activity: Option<String>,
-    // location: Option<String>,
+    id: String,
+    isFriend: bool,
     statusDescription: String,
+    tags: Vec<String>,
+    userIcon: String,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize)]
+struct ResUser {
+    currentAvatarThumbnailImageUrl: String,
+    displayName: String,
+    id: String,
+    isFriend: bool,
+    statusDescription: String,
+}
+
+impl From<User> for ResUser {
+    fn from(user: User) -> Self {
+        ResUser {
+            currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
+            displayName: user.displayName,
+            id: user.id,
+            isFriend: user.isFriend,
+            statusDescription: user.statusDescription,
+        }
+    }
 }
 
 #[derive(Serialize)]
 enum Response {
-    Success { users: Vec<User> },
+    Success { users: Vec<ResUser> },
     Error { error: String },
 }
 
@@ -36,7 +56,7 @@ pub(crate) async fn api_search_user(req: &str) -> String {
     serde_json::to_string(&result).unwrap()
 }
 
-async fn fetch(req: &str) -> Result<Vec<User>> {
+async fn fetch(req: &str) -> Result<Vec<ResUser>> {
     let (auth, user) = req.split_once(':').context("Unexpected input.")?;
 
     let matched = find_matched_data(auth)?;
@@ -49,9 +69,16 @@ async fn fetch(req: &str) -> Result<Vec<User>> {
         .await?;
 
     if res.status().is_success() {
-        let user: Vec<User> = res.json().await?;
-        Ok(user)
+        let mut users: Vec<User> = res.json().await?;
+        users.iter_mut().for_each(modify);
+        Ok(users.into_iter().map(ResUser::from).collect())
     } else {
         bail!("Error: status code: {}", res.status())
+    }
+}
+
+fn modify(user: &mut User) {
+    if user.tags.iter().any(|tag| tag == "system_supporter") {
+        std::mem::swap(&mut user.currentAvatarThumbnailImageUrl, &mut user.userIcon);
     }
 }

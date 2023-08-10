@@ -16,6 +16,7 @@ struct User {
     status: String,
     statusDescription: String,
     tags: Vec<String>,
+    userIcon: String,
 }
 
 #[allow(non_snake_case)]
@@ -70,10 +71,13 @@ async fn fetch(req: &str) -> Result<ResUser> {
     }
 }
 
-fn add_rank(user: User) -> ResUser {
+fn add_rank(mut user: User) -> ResUser {
     let mut rank = None;
     for tag in user.tags.iter().rev() {
         match tag.as_str() {
+            "system_supporter" => {
+                std::mem::swap(&mut user.currentAvatarThumbnailImageUrl, &mut user.userIcon);
+            }
             "system_trust_veteran" => {
                 rank = Some("Trusted".to_string());
                 break;
