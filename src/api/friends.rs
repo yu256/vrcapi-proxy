@@ -5,17 +5,47 @@ use serde::{Deserialize, Serialize};
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct Friend {
+    currentAvatarThumbnailImageUrl: String,
+    id: String,
+    status: String,
+    location: String,
+    tags: Vec<String>,
+    userIcon: String,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize)]
+struct ResFriend {
     currentAvatarThumbnailImageUrl: String,
     id: String,
     status: String,
     location: String,
 }
 
+impl From<Friend> for ResFriend {
+    fn from(friend: Friend) -> Self {
+        ResFriend {
+            currentAvatarThumbnailImageUrl: if friend
+                .tags
+                .iter()
+                .any(|tag| tag == "system_supporter")
+            {
+                friend.userIcon
+            } else {
+                friend.currentAvatarThumbnailImageUrl
+            },
+            id: friend.id,
+            status: friend.status,
+            location: friend.location,
+        }
+    }
+}
+
 #[derive(Serialize)]
 enum Response {
-    Success(Vec<Friend>),
+    Success(Vec<ResFriend>),
     Error(String),
 }
 
@@ -29,7 +59,7 @@ pub(crate) async fn api_friends(req: &str) -> String {
     serde_json::to_string(&result).unwrap()
 }
 
-async fn fetch(req: &str) -> Result<Vec<Friend>> {
+async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
     let matched = find_matched_data(req)?;
 
     let res = reqwest::Client::new()
@@ -47,11 +77,11 @@ async fn fetch(req: &str) -> Result<Vec<Friend>> {
     }
 }
 
-fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<Friend> {
+fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<ResFriend> {
     let mut friends = friends
         .into_iter()
         .filter(|friend| friend.location != "offline" && (*askme || friend.status != "ask me"))
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
-    friends
+    friends.into_iter().map(ResFriend::from).collect()
 }
