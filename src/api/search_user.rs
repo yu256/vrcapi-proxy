@@ -29,7 +29,12 @@ struct ResUser {
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
         ResUser {
-            currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
+            currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == "system_supporter")
+            {
+                user.userIcon
+            } else {
+                user.currentAvatarThumbnailImageUrl
+            },
             displayName: user.displayName,
             id: user.id,
             isFriend: user.isFriend,
@@ -69,16 +74,9 @@ async fn fetch(req: &str) -> Result<Vec<ResUser>> {
         .await?;
 
     if res.status().is_success() {
-        let mut users: Vec<User> = res.json().await?;
-        users.iter_mut().for_each(modify);
+        let users: Vec<User> = res.json().await?;
         Ok(users.into_iter().map(ResUser::from).collect())
     } else {
         bail!("Error: status code: {}", res.status())
-    }
-}
-
-fn modify(user: &mut User) {
-    if user.tags.iter().any(|tag| tag == "system_supporter") {
-        std::mem::swap(&mut user.currentAvatarThumbnailImageUrl, &mut user.userIcon);
     }
 }

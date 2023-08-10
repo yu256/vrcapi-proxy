@@ -71,31 +71,28 @@ async fn fetch(req: &str) -> Result<ResUser> {
     }
 }
 
-fn add_rank(mut user: User) -> ResUser {
+fn add_rank(user: User) -> ResUser {
     let mut rank = None;
     for tag in user.tags.iter().rev() {
         match tag.as_str() {
-            "system_supporter" => {
-                std::mem::swap(&mut user.currentAvatarThumbnailImageUrl, &mut user.userIcon);
-            }
             "system_trust_veteran" => {
-                rank = Some("Trusted".to_string());
+                rank = Some("Trusted");
                 break;
             }
             "system_trust_trusted" => {
-                rank = Some("Known".to_string());
+                rank = Some("Known");
                 break;
             }
             "system_trust_known" => {
-                rank = Some("User".to_string());
+                rank = Some("User");
                 break;
             }
             "system_trust_basic" => {
-                rank = Some("New User".to_string());
+                rank = Some("New User");
                 break;
             }
             "system_troll" => {
-                rank = Some("Troll".to_string());
+                rank = Some("Troll");
                 break;
             }
             _ => {}
@@ -105,12 +102,16 @@ fn add_rank(mut user: User) -> ResUser {
     ResUser {
         bio: user.bio,
         bioLinks: user.bioLinks,
-        currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
+        currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == "system_supporter") {
+            user.userIcon
+        } else {
+            user.currentAvatarThumbnailImageUrl
+        },
         displayName: user.displayName,
         last_activity: user.last_activity,
         location: user.location,
         status: user.status,
         statusDescription: user.statusDescription,
-        rank: rank.unwrap_or_else(|| "Visitor".to_string()),
+        rank: rank.unwrap_or_else(|| "Visitor").to_owned(),
     }
 }
