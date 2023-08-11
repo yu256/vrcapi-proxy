@@ -1,6 +1,6 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -25,13 +25,15 @@ pub(crate) enum Response {
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 
 #[post("/notifications", data = "<req>")]
-pub(crate) async fn api_notifications(req: &str) -> Json<Response> {
-    let result = match fetch(req).await {
-        Ok(notifications) => Response::Success(notifications),
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_notifications(req: &str) -> (Status, Json<Response>) {
+    match fetch(req).await {
+        Ok(notifications) => (Status::Ok, Json(Response::Success(notifications))),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn fetch(req: &str) -> Result<Vec<Notification>> {

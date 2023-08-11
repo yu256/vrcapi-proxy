@@ -1,6 +1,6 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
@@ -51,13 +51,15 @@ pub(crate) enum Response {
 }
 
 #[post("/friends", data = "<req>")]
-pub(crate) async fn api_friends(req: &str) -> Json<Response> {
-    let result = match fetch(req).await {
-        Ok(friends) => Response::Success(friends),
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
+    match fetch(req).await {
+        Ok(friends) => (Status::Ok, Json(Response::Success(friends))),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn fetch(req: &str) -> Result<Vec<ResFriend>> {

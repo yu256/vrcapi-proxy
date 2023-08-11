@@ -1,5 +1,5 @@
 use anyhow::{bail, Context as _, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 use crate::general::find_matched_data;
@@ -51,13 +51,15 @@ pub(crate) enum Response {
 }
 
 #[post("/instance", data = "<req>")]
-pub(crate) async fn api_instance(req: &str) -> Json<Response> {
-    let result = match fetch(req).await {
-        Ok(data) => Response::Success(data.to_res()),
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_instance(req: &str) -> (Status, Json<Response>) {
+    match fetch(req).await {
+        Ok(data) => (Status::Ok, Json(Response::Success(data.to_res()))),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn fetch(req: &str) -> Result<InstanceData> {

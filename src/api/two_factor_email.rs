@@ -3,7 +3,7 @@ use crate::{
     general::update_data_property,
 };
 use anyhow::{bail, Context as _, Error, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 use serde_json::json;
 use uuid::Uuid;
@@ -23,33 +23,34 @@ impl From<Error> for Res {
 }
 
 #[post("/twofactor_email", data = "<req>")]
-pub(crate) async fn api_twofactor_email(req: &str) -> Json<Res> {
-    let result = match req.split_once(';') {
+pub(crate) async fn api_twofactor_email(req: &str) -> (Status, Json<Res>) {
+    match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
                 if let Err(err) = update(token, auth) {
-                    return Json(Res::from(err));
+                    return (Status::InternalServerError, Json(Res::from(err)));
                 }
 
-                Res::Success(auth.to_string())
+                (Status::Ok, Json(Res::Success(auth.to_string())))
             }
-            Err(err) => Res::from(err),
+
+            Err(err) => (Status::InternalServerError, Json(Res::from(err))),
         },
+
         None => match fetch(req).await {
             Ok(token) => {
                 let auth = Uuid::new_v4().to_string();
 
                 if let Err(err) = add(token, &auth) {
-                    return Json(Res::from(err));
+                    return (Status::InternalServerError, Json(Res::from(err)));
                 }
 
-                Res::Success(auth)
+                (Status::Ok, Json(Res::Success(auth)))
             }
-            Err(err) => Res::from(err),
-        },
-    };
 
-    Json(result)
+            Err(err) => (Status::InternalServerError, Json(Res::from(err))),
+        },
+    }
 }
 
 async fn fetch(req: &str) -> Result<&str> {

@@ -1,6 +1,6 @@
 use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
@@ -14,13 +14,15 @@ pub(crate) enum Response {
 }
 
 #[post("/auth", data = "<req>")]
-pub(crate) async fn api_auth(req: &str) -> Json<Response> {
-    let result = match auth(req).await {
-        Ok(token) => Response::Success(token),
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_auth(req: &str) -> (Status, Json<Response>) {
+    match auth(req).await {
+        Ok(token) => (Status::Ok, Json(Response::Success(token))),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn auth(req: &str) -> Result<String> {

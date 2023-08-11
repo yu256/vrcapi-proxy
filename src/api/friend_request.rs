@@ -1,6 +1,6 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Context as _, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -10,23 +10,27 @@ pub(crate) enum Response {
 }
 
 #[post("/friend_request", data = "<req>")]
-pub(crate) async fn api_friend_request(req: &str) -> Json<Response> {
-    let result = match fetch(req, true).await {
-        Ok(_) => Response::Success,
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_friend_request(req: &str) -> (Status, Json<Response>) {
+    match fetch(req, true).await {
+        Ok(_) => (Status::Ok, Json(Response::Success)),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 #[delete("/friend_request", data = "<req>")]
-pub(crate) async fn api_del_friend_request(req: &str) -> Json<Response> {
-    let result = match fetch(req, false).await {
-        Ok(_) => Response::Success,
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_del_friend_request(req: &str) -> (Status, Json<Response>) {
+    match fetch(req, false).await {
+        Ok(_) => (Status::Ok, Json(Response::Success)),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn fetch(req: &str, is_post: bool) -> Result<()> {

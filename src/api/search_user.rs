@@ -1,6 +1,6 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Context as _, Result};
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
@@ -51,13 +51,15 @@ pub(crate) enum Response {
 }
 
 #[post("/search_user", data = "<req>")]
-pub(crate) async fn api_search_user(req: &str) -> Json<Response> {
-    let result = match fetch(req).await {
-        Ok(users) => Response::Success(users),
-        Err(error) => Response::Error(error.to_string()),
-    };
+pub(crate) async fn api_search_user(req: &str) -> (Status, Json<Response>) {
+    match fetch(req).await {
+        Ok(users) => (Status::Ok, Json(Response::Success(users))),
 
-    Json(result)
+        Err(error) => (
+            Status::InternalServerError,
+            Json(Response::Error(error.to_string())),
+        ),
+    }
 }
 
 async fn fetch(req: &str) -> Result<Vec<ResUser>> {
