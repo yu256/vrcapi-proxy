@@ -20,13 +20,13 @@ pub(crate) async fn api_friend_request(req: &str) -> Json<Response> {
 }
 
 #[delete("/friend_request", data = "<req>")]
-pub(crate) async fn api_del_friend_request(req: &str) -> String {
+pub(crate) async fn api_del_friend_request(req: &str) -> Json<Response> {
     let result = match fetch(req, false).await {
         Ok(_) => Response::Success,
         Err(error) => Response::Error(error.to_string()),
     };
 
-    serde_json::to_string(&result).unwrap()
+    Json(result)
 }
 
 async fn fetch(req: &str, is_post: bool) -> Result<()> {
