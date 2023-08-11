@@ -73,7 +73,7 @@ async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
         let deserialized: Vec<Friend> = res.json().await?;
         Ok(modify_friends(deserialized, &matched.askme))
     } else {
-        bail!("Error: status code: {}", res.status())
+        bail!("Error: {}", res.status())
     }
 }
 
@@ -81,7 +81,8 @@ fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<ResFriend> {
     let mut friends = friends
         .into_iter()
         .filter(|friend| friend.location != "offline" && (*askme || friend.status != "ask me"))
+        .map(ResFriend::from)
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
-    friends.into_iter().map(ResFriend::from).collect()
+    friends
 }

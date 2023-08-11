@@ -6,7 +6,7 @@ use crate::general::find_matched_data;
 const URL: &str = "https://api.vrchat.cloud/api/1/instances/";
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct World {
     name: String,
     description: String,
@@ -14,7 +14,7 @@ struct World {
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 struct InstanceData {
     ownerId: Option<String>,
     userCount: i32,
@@ -75,6 +75,6 @@ async fn fetch(req: &str) -> Result<InstanceData> {
         let instance_data: InstanceData = res.json().await?;
         Ok(instance_data)
     } else {
-        bail!("Error: status code: {}", res.status())
+        bail!("Error: {}", res.status())
     }
 }

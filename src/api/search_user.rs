@@ -75,6 +75,6 @@ async fn fetch(req: &str) -> Result<Vec<ResUser>> {
         let users: Vec<User> = res.json().await?;
         Ok(users.into_iter().map(ResUser::from).collect())
     } else {
-        bail!("Error: status code: {}", res.status())
+        bail!("Error: {}", res.status())
     }
 }

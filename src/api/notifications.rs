@@ -47,6 +47,6 @@ async fn fetch(req: &str) -> Result<Vec<Notification>> {
         let deserialized: Vec<Notification> = res.json().await?;
         Ok(deserialized)
     } else {
-        bail!("Error: status code: {}", res.status())
+        bail!("Error: {}", res.status())
     }
 }

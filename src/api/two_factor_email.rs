@@ -64,7 +64,7 @@ async fn fetch(req: &str) -> Result<&str> {
     if res.status().is_success() {
         Ok(token)
     } else {
-        bail!("Error: status code: {}", res.status())
+        bail!("Error: {}", res.status())
     }
 }
 
