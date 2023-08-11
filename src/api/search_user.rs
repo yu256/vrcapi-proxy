@@ -1,5 +1,6 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Context as _, Result};
+use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
@@ -18,7 +19,7 @@ struct User {
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
-struct ResUser {
+pub(crate) struct ResUser {
     currentAvatarThumbnailImageUrl: String,
     displayName: String,
     id: String,
@@ -44,19 +45,19 @@ impl From<User> for ResUser {
 }
 
 #[derive(Serialize)]
-enum Response {
+pub(crate) enum Response {
     Success(Vec<ResUser>),
     Error(String),
 }
 
 #[post("/search_user", data = "<req>")]
-pub(crate) async fn api_search_user(req: &str) -> String {
+pub(crate) async fn api_search_user(req: &str) -> Json<Response> {
     let result = match fetch(req).await {
         Ok(users) => Response::Success(users),
         Err(error) => Response::Error(error.to_string()),
     };
 
-    serde_json::to_string(&result).unwrap()
+    Json(result)
 }
 
 async fn fetch(req: &str) -> Result<Vec<ResUser>> {

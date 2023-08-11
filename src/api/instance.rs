@@ -1,4 +1,5 @@
 use anyhow::{bail, Context as _, Result};
+use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 
 use crate::general::find_matched_data;
@@ -23,7 +24,7 @@ struct InstanceData {
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
-struct ResponseInstance {
+pub(crate) struct ResponseInstance {
     ownerId: Option<String>,
     userCount: i32,
     name: String,
@@ -44,19 +45,19 @@ impl InstanceData {
 }
 
 #[derive(Serialize)]
-enum Response {
+pub(crate) enum Response {
     Success(ResponseInstance),
     Error(String),
 }
 
 #[post("/instance", data = "<req>")]
-pub(crate) async fn api_instance(req: &str) -> String {
+pub(crate) async fn api_instance(req: &str) -> Json<Response> {
     let result = match fetch(req).await {
         Ok(data) => Response::Success(data.to_res()),
         Err(error) => Response::Error(error.to_string()),
     };
 
-    serde_json::to_string(&result).unwrap()
+    Json(result)
 }
 
 async fn fetch(req: &str) -> Result<InstanceData> {

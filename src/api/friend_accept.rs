@@ -1,21 +1,22 @@
 use crate::general::find_matched_data;
 use anyhow::{bail, Context as _, Result};
+use rocket::serde::json::Json;
 use serde::Serialize;
 
 #[derive(Serialize)]
-enum Response {
+pub(crate) enum Response {
     Success,
     Error(String),
 }
 
 #[post("/friend_accept", data = "<req>")]
-pub(crate) async fn api_friend_accept(req: &str) -> String {
+pub(crate) async fn api_friend_accept(req: &str) -> Json<Response> {
     let result = match fetch(req).await {
         Ok(_) => Response::Success,
         Err(error) => Response::Error(error.to_string()),
     };
 
-    serde_json::to_string(&result).unwrap()
+    Json(result)
 }
 
 async fn fetch(req: &str) -> Result<()> {

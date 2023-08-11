@@ -1,5 +1,6 @@
 use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
+use rocket::serde::json::Json;
 use serde::Serialize;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
@@ -7,19 +8,19 @@ const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 const ON_ERROR: &str = "An error occurred while parsing the cookie.";
 
 #[derive(Serialize)]
-enum Response {
+pub(crate) enum Response {
     Success(String),
     Error(String),
 }
 
 #[post("/auth", data = "<req>")]
-pub(crate) async fn api_auth(req: &str) -> String {
+pub(crate) async fn api_auth(req: &str) -> Json<Response> {
     let result = match auth(req).await {
         Ok(token) => Response::Success(token),
         Err(error) => Response::Error(error.to_string()),
     };
 
-    serde_json::to_string(&result).unwrap()
+    Json(result)
 }
 
 async fn auth(req: &str) -> Result<String> {

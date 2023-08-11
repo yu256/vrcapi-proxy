@@ -3,14 +3,15 @@ use crate::{
     general::update_data_property,
 };
 use anyhow::{bail, Context as _, Error, Result};
+use rocket::serde::json::Json;
 use serde::Serialize;
-use serde_json::{json, to_string as to_json};
+use serde_json::json;
 use uuid::Uuid;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/twofactorauth/emailotp/verify";
 
 #[derive(Serialize)]
-enum Res {
+pub(crate) enum Res {
     Success(String),
     Error(String),
 }
@@ -22,33 +23,33 @@ impl From<Error> for Res {
 }
 
 #[post("/twofactor_email", data = "<req>")]
-pub(crate) async fn api_twofactor_email(req: &str) -> String {
-    let result: Res = match req.split_once(';') {
+pub(crate) async fn api_twofactor_email(req: &str) -> Json<Res> {
+    let result = match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
                 if let Err(err) = update(token, auth) {
-                    return to_json(&Res::from(err)).unwrap();
+                    return Json(Res::from(err));
                 }
 
                 Res::Success(auth.to_string())
             }
-            Err(error) => Res::from(error),
+            Err(err) => Res::from(err),
         },
         None => match fetch(req).await {
             Ok(token) => {
                 let auth = Uuid::new_v4().to_string();
 
                 if let Err(err) = add(token, &auth) {
-                    return to_json(&Res::from(err)).unwrap();
+                    return Json(Res::from(err));
                 }
 
                 Res::Success(auth)
             }
-            Err(error) => Res::from(error),
+            Err(err) => Res::from(err),
         },
     };
 
-    to_json(&result).unwrap()
+    Json(result)
 }
 
 async fn fetch(req: &str) -> Result<&str> {
