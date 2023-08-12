@@ -17,24 +17,13 @@ pub struct Data {
 
 impl Data {
     pub(crate) fn get() -> Result<Vec<Self>> {
-        match open_file(&DATA_PATH.join("data.json")) {
-            Ok(mut file) => {
-                let mut content = String::new();
+        let mut file = open_file(&DATA_PATH.join("data.json"))?;
 
-                file.read_to_string(&mut content)?;
+        let mut content = String::new();
 
-                Ok(serde_json::from_str(&content)?)
-            }
-            Err(_) => {
-                let data = Data {
-                    auth: String::new(),
-                    token: String::new(),
-                    askme: false,
-                };
-                write_json(&data, "data")?;
-                Ok(vec![data])
-            }
-        }
+        file.read_to_string(&mut content)?;
+
+        Ok(serde_json::from_str(&content)?)
     }
 }
 
@@ -49,8 +38,5 @@ impl DataVecExt for Vec<Data> {
     }
 }
 
-pub(crate) static DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    home_dir()
-        .expect("Failed to retrieve home directory.")
-        .join("vrcapi_proxy")
-});
+pub(crate) static DATA_PATH: LazyLock<PathBuf> =
+    LazyLock::new(|| home_dir().unwrap().join("vrcapi_proxy"));
