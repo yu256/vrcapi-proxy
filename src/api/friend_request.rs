@@ -44,21 +44,19 @@ async fn fetch(req: &str, is_post: bool) -> Result<()> {
 
     let url = format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user);
 
-    let res = if is_post {
-        CLIENT
-            .post(&url)
-            .header(UA, UA_VALUE)
-            .header(COOKIE, &matched.token)
-            .send()
-            .await?
-    } else {
-        CLIENT
-            .delete(&url)
-            .header(UA, UA_VALUE)
-            .header(COOKIE, &matched.token)
-            .send()
-            .await?
-    };
+    let res = CLIENT
+        .request(
+            if is_post {
+                reqwest::Method::POST
+            } else {
+                reqwest::Method::DELETE
+            },
+            &url,
+        )
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
+        .send()
+        .await?;
 
     if res.status().is_success() {
         Ok(())
