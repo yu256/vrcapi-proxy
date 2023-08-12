@@ -1,6 +1,6 @@
 use crate::{
     consts::{COOKIE, UA, UA_VALUE, VRC_P},
-    general::find_matched_data,
+    general::find_matched_data, CLIENT,
 };
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -64,7 +64,7 @@ pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
 async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
     let matched = find_matched_data(req)?;
 
-    let res = reqwest::Client::new()
+    let res = CLIENT
         .get(URL)
         .header(UA, UA_VALUE)
         .header(COOKIE, &matched.token)

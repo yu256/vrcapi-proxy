@@ -1,6 +1,7 @@
 use crate::{
     consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
     general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -44,14 +45,14 @@ async fn fetch(req: &str, is_post: bool) -> Result<()> {
     let url = format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user);
 
     let res = if is_post {
-        reqwest::Client::new()
+        CLIENT
             .post(&url)
             .header(UA, UA_VALUE)
             .header(COOKIE, &matched.token)
             .send()
             .await?
     } else {
-        reqwest::Client::new()
+        CLIENT
             .delete(&url)
             .header(UA, UA_VALUE)
             .header(COOKIE, &matched.token)

@@ -1,6 +1,7 @@
 use crate::{
     consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE, VRC_P},
     general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -69,7 +70,7 @@ async fn fetch(req: &str) -> Result<Vec<ResUser>> {
 
     let matched = find_matched_data(auth)?;
 
-    let res = reqwest::Client::new()
+    let res = CLIENT
         .get(&format!("{}{}", URL, user))
         .header(UA, UA_VALUE)
         .header(COOKIE, &matched.token)

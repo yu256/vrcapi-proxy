@@ -1,4 +1,7 @@
-use crate::consts::{UA, UA_VALUE};
+use crate::{
+    consts::{UA, UA_VALUE},
+    CLIENT,
+};
 use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 use rocket::{http::Status, serde::json::Json};
@@ -27,9 +30,7 @@ pub(crate) async fn api_auth(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn auth(req: &str) -> Result<String> {
-    let client = reqwest::Client::new();
-
-    let response = client
+    let res = CLIENT
         .get(URL)
         .header(
             "Authorization",
@@ -39,8 +40,8 @@ async fn auth(req: &str) -> Result<String> {
         .send()
         .await?;
 
-    if response.status().is_success() {
-        Ok(response
+    if res.status().is_success() {
+        Ok(res
             .headers()
             .get("set-cookie")
             .context(ON_ERROR)?
@@ -53,6 +54,6 @@ async fn auth(req: &str) -> Result<String> {
             .context(ON_ERROR)?
             .to_owned())
     } else {
-        bail!("Error: {}", response.status())
+        bail!("Error: {}", res.status())
     }
 }

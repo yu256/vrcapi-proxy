@@ -1,6 +1,7 @@
 use crate::{
-    consts::{COOKIE, UA, UA_VALUE, VRC_P},
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE, VRC_P},
     general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -56,11 +57,11 @@ pub(crate) async fn api_user(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<ResUser> {
-    let (auth, user) = req.split_once(':').context(crate::consts::INVALID_INPUT)?;
+    let (auth, user) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
-    let res = reqwest::Client::new()
+    let res = CLIENT
         .get(&format!("{}{}", URL, user))
         .header(UA, UA_VALUE)
         .header(COOKIE, &matched.token)

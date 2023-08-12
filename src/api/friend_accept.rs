@@ -1,6 +1,7 @@
 use crate::{
     consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
     general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -29,7 +30,7 @@ async fn fetch(req: &str) -> Result<()> {
 
     let matched = find_matched_data(auth)?;
 
-    let res = reqwest::Client::new()
+    let res = CLIENT
         .put(&format!(
             "https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"
         ))

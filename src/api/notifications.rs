@@ -1,6 +1,7 @@
 use crate::{
     consts::{COOKIE, UA, UA_VALUE},
     general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -42,7 +43,7 @@ pub(crate) async fn api_notifications(req: &str) -> (Status, Json<Response>) {
 async fn fetch(req: &str) -> Result<Vec<Notification>> {
     let matched = find_matched_data(req)?;
 
-    let res = reqwest::Client::new()
+    let res = CLIENT
         .get(URL)
         .header(UA, UA_VALUE)
         .header(COOKIE, &matched.token)
