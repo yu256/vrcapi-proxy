@@ -1,4 +1,7 @@
-use crate::general::find_matched_data;
+use crate::{
+    consts::{COOKIE, UA, UA_VALUE},
+    general::find_matched_data,
+};
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -41,8 +44,8 @@ async fn fetch(req: &str) -> Result<Vec<Notification>> {
 
     let res = reqwest::Client::new()
         .get(URL)
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", &matched.token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
         .send()
         .await?;
 

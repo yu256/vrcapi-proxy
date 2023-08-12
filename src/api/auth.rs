@@ -1,3 +1,4 @@
+use crate::consts::{UA, UA_VALUE};
 use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 use rocket::{http::Status, serde::json::Json};
@@ -28,12 +29,13 @@ pub(crate) async fn api_auth(req: &str) -> (Status, Json<Response>) {
 async fn auth(req: &str) -> Result<String> {
     let client = reqwest::Client::new();
 
-    let auth_header = format!("Basic {}", general_purpose::STANDARD_NO_PAD.encode(req));
-
     let response = client
         .get(URL)
-        .header("Authorization", auth_header)
-        .header("User-Agent", "vrc-rs")
+        .header(
+            "Authorization",
+            format!("Basic {}", general_purpose::STANDARD_NO_PAD.encode(req)),
+        )
+        .header(UA, UA_VALUE)
         .send()
         .await?;
 

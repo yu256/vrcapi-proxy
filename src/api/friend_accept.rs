@@ -1,4 +1,7 @@
-use crate::general::find_matched_data;
+use crate::{
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
+    general::find_matched_data,
+};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
@@ -22,7 +25,7 @@ pub(crate) async fn api_friend_accept(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<()> {
-    let (auth, id) = req.split_once(':').context("Unexpected input.")?;
+    let (auth, id) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
@@ -30,8 +33,8 @@ async fn fetch(req: &str) -> Result<()> {
         .put(&format!(
             "https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"
         ))
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", &matched.token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
         .send()
         .await?;
 

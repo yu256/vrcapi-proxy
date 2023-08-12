@@ -1,4 +1,5 @@
 use crate::{
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
     general::update_data_property,
 };
@@ -54,11 +55,11 @@ pub(crate) async fn api_twofactor_email(req: &str) -> (Status, Json<Res>) {
 }
 
 async fn fetch(req: &str) -> Result<&str> {
-    let (token, f) = req.split_once(':').context("Unexpected input.")?;
+    let (token, f) = req.split_once(':').context(INVALID_INPUT)?;
     let res = reqwest::Client::new()
         .post(URL)
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, token)
         .json(&json!({ "code": f }))
         .send()
         .await?;

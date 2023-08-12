@@ -1,4 +1,7 @@
-use crate::general::find_matched_data;
+use crate::{
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE, VRC_P},
+    general::find_matched_data,
+};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -30,8 +33,7 @@ pub(crate) struct ResUser {
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
         ResUser {
-            currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == "system_supporter")
-            {
+            currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == VRC_P) {
                 user.userIcon
             } else {
                 user.currentAvatarThumbnailImageUrl
@@ -63,14 +65,14 @@ pub(crate) async fn api_search_user(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<Vec<ResUser>> {
-    let (auth, user) = req.split_once(':').context("Unexpected input.")?;
+    let (auth, user) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
     let res = reqwest::Client::new()
         .get(&format!("{}{}", URL, user))
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", &matched.token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
         .send()
         .await?;
 

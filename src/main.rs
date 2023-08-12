@@ -6,6 +6,7 @@ use data::DATA_PATH;
 use general::write_json;
 
 mod api;
+mod consts;
 mod cors;
 mod data;
 mod general;

@@ -1,4 +1,7 @@
-use crate::general::find_matched_data;
+use crate::{
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
+    general::find_matched_data,
+};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
@@ -34,7 +37,7 @@ pub(crate) async fn api_del_friend_request(req: &str) -> (Status, Json<Response>
 }
 
 async fn fetch(req: &str, is_post: bool) -> Result<()> {
-    let (auth, user) = req.split_once(':').context("Unexpected input.")?;
+    let (auth, user) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
@@ -43,15 +46,15 @@ async fn fetch(req: &str, is_post: bool) -> Result<()> {
     let res = if is_post {
         reqwest::Client::new()
             .post(&url)
-            .header("User-Agent", "vrc-rs")
-            .header("Cookie", &matched.token)
+            .header(UA, UA_VALUE)
+            .header(COOKIE, &matched.token)
             .send()
             .await?
     } else {
         reqwest::Client::new()
             .delete(&url)
-            .header("User-Agent", "vrc-rs")
-            .header("Cookie", &matched.token)
+            .header(UA, UA_VALUE)
+            .header(COOKIE, &matched.token)
             .send()
             .await?
     };

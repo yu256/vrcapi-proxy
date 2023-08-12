@@ -1,8 +1,10 @@
+use crate::{
+    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
+    general::find_matched_data,
+};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
-
-use crate::general::find_matched_data;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/instances/";
 
@@ -63,14 +65,14 @@ pub(crate) async fn api_instance(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<InstanceData> {
-    let (auth, instance) = req.split_once(':').context("Unexpected input.")?;
+    let (auth, instance) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
     let res = reqwest::Client::new()
         .get(&format!("{}{}", URL, instance))
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", &matched.token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
         .send()
         .await?;
 

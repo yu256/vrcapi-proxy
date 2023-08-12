@@ -1,4 +1,7 @@
-use crate::general::find_matched_data;
+use crate::{
+    consts::{COOKIE, UA, UA_VALUE, VRC_P},
+    general::find_matched_data,
+};
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -28,11 +31,7 @@ pub(crate) struct ResFriend {
 impl From<Friend> for ResFriend {
     fn from(friend: Friend) -> Self {
         ResFriend {
-            currentAvatarThumbnailImageUrl: if friend
-                .tags
-                .iter()
-                .any(|tag| tag == "system_supporter")
-            {
+            currentAvatarThumbnailImageUrl: if friend.tags.iter().any(|tag| tag == VRC_P) {
                 friend.userIcon
             } else {
                 friend.currentAvatarThumbnailImageUrl
@@ -67,8 +66,8 @@ async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
 
     let res = reqwest::Client::new()
         .get(URL)
-        .header("User-Agent", "vrc-rs")
-        .header("Cookie", &matched.token)
+        .header(UA, UA_VALUE)
+        .header(COOKIE, &matched.token)
         .send()
         .await?;
 
