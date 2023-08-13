@@ -22,6 +22,7 @@ struct User {
     statusDescription: String,
     tags: Vec<String>,
     userIcon: String,
+    profilePicOverride: String,
 }
 
 #[allow(non_snake_case)]
@@ -107,12 +108,12 @@ fn add_rank(user: User) -> ResUser {
     ResUser {
         bio: user.bio,
         bioLinks: user.bioLinks,
-        currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == VRC_P)
-            && !user.userIcon.is_empty()
-        {
-            user.userIcon
-        } else {
+        currentAvatarThumbnailImageUrl: if !user.tags.iter().any(|tag| tag == VRC_P) {
             user.currentAvatarThumbnailImageUrl
+        } else if user.userIcon.is_empty() {
+            user.profilePicOverride
+        } else {
+            user.userIcon
         },
         displayName: user.displayName,
         last_activity: user.last_activity,
