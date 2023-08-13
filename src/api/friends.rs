@@ -1,6 +1,7 @@
 use crate::{
     consts::{COOKIE, UA, UA_VALUE, VRC_P},
-    general::find_matched_data, CLIENT,
+    general::find_matched_data,
+    CLIENT,
 };
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -31,7 +32,9 @@ pub(crate) struct ResFriend {
 impl From<Friend> for ResFriend {
     fn from(friend: Friend) -> Self {
         ResFriend {
-            currentAvatarThumbnailImageUrl: if friend.tags.iter().any(|tag| tag == VRC_P) {
+            currentAvatarThumbnailImageUrl: if friend.tags.iter().any(|tag| tag == VRC_P)
+                && !friend.userIcon.is_empty()
+            {
                 friend.userIcon
             } else {
                 friend.currentAvatarThumbnailImageUrl

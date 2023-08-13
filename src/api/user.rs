@@ -107,7 +107,9 @@ fn add_rank(user: User) -> ResUser {
     ResUser {
         bio: user.bio,
         bioLinks: user.bioLinks,
-        currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == VRC_P) {
+        currentAvatarThumbnailImageUrl: if user.tags.iter().any(|tag| tag == VRC_P)
+            && !user.userIcon.is_empty()
+        {
             user.userIcon
         } else {
             user.currentAvatarThumbnailImageUrl
