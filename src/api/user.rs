@@ -105,10 +105,17 @@ fn add_rank(user: User) -> ResUser {
         }
     }
 
+    let is_vrc_p = user.tags.iter().any(|tag| tag == VRC_P);
+    let mut rank = rank.unwrap_or_else(|| "Visitor").to_owned();
+
+    if *&is_vrc_p {
+        rank += " (VRC+)"
+    }
+
     ResUser {
         bio: user.bio,
         bioLinks: user.bioLinks,
-        currentAvatarThumbnailImageUrl: if !user.tags.iter().any(|tag| tag == VRC_P) {
+        currentAvatarThumbnailImageUrl: if !&is_vrc_p {
             user.currentAvatarThumbnailImageUrl
         } else if user.userIcon.is_empty() {
             user.profilePicOverride
@@ -120,6 +127,6 @@ fn add_rank(user: User) -> ResUser {
         location: user.location,
         status: user.status,
         statusDescription: user.statusDescription,
-        rank: rank.unwrap_or_else(|| "Visitor").to_owned(),
+        rank,
     }
 }
