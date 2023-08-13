@@ -109,7 +109,7 @@ fn add_rank(user: User) -> ResUser {
     let mut rank = rank.unwrap_or_else(|| "Visitor").to_owned();
 
     if *&is_vrc_p {
-        rank += " (VRC+)"
+        rank += " VRC+"
     }
 
     ResUser {
