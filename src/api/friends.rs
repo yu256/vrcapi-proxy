@@ -79,7 +79,7 @@ async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
         let deserialized: Vec<Friend> = res.json().await?;
         Ok(modify_friends(deserialized, &matched.askme))
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }
 

@@ -9,6 +9,7 @@ mod search_user;
 mod toggle_askme;
 mod two_factor_email;
 mod user;
+mod world;
 
 pub(crate) use auth::api_auth;
 pub(crate) use friend_accept::api_friend_accept;
@@ -22,3 +23,4 @@ pub(crate) use toggle_askme::api_check_askme;
 pub(crate) use toggle_askme::api_toggle;
 pub(crate) use two_factor_email::api_twofactor_email;
 pub(crate) use user::api_user;
+pub(crate) use world::api_world;

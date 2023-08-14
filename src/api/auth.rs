@@ -54,6 +54,6 @@ async fn auth(req: &str) -> Result<String> {
             .context(ON_ERROR)?
             .to_owned())
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }

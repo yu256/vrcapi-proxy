@@ -36,7 +36,8 @@ fn rocket() -> _ {
                 api::api_del_friend_request,
                 api::api_friend_status,
                 api::api_notifications,
-                api::api_friend_accept
+                api::api_friend_accept,
+                api::api_world
             ],
         )
         .attach(cors::CORS)

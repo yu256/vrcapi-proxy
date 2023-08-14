@@ -81,6 +81,6 @@ async fn fetch(req: &str) -> Result<InstanceData> {
         let instance_data: InstanceData = res.json().await?;
         Ok(instance_data)
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }

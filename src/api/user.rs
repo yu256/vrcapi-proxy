@@ -73,7 +73,7 @@ async fn fetch(req: &str) -> Result<ResUser> {
         let user: User = res.json().await?;
         Ok(add_rank(user))
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }
 

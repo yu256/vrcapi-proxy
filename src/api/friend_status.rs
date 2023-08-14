@@ -50,6 +50,6 @@ async fn fetch(req: &str) -> Result<ResStatus> {
         let status: ResStatus = res.json().await?;
         Ok(status)
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }

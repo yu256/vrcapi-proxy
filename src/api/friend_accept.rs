@@ -42,6 +42,6 @@ async fn fetch(req: &str) -> Result<()> {
     if res.status().is_success() {
         Ok(())
     } else {
-        bail!("Error: {}", res.status())
+        bail!("{}", res.status())
     }
 }
