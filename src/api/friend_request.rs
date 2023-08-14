@@ -1,9 +1,7 @@
-use crate::{
-    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
-    general::find_matched_data,
-    CLIENT,
-};
+use super::utils::request;
+use crate::{consts::INVALID_INPUT, general::find_matched_data};
 use anyhow::{bail, Context as _, Result};
+use reqwest::Method;
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 
@@ -15,7 +13,7 @@ pub(crate) enum Response {
 
 #[post("/friend_request", data = "<req>")]
 pub(crate) async fn api_friend_request(req: &str) -> (Status, Json<Response>) {
-    match fetch(req, true).await {
+    match fetch(req, Method::POST).await {
         Ok(_) => (Status::Ok, Json(Response::Success)),
 
         Err(error) => (
@@ -27,7 +25,7 @@ pub(crate) async fn api_friend_request(req: &str) -> (Status, Json<Response>) {
 
 #[delete("/friend_request", data = "<req>")]
 pub(crate) async fn api_del_friend_request(req: &str) -> (Status, Json<Response>) {
-    match fetch(req, false).await {
+    match fetch(req, Method::DELETE).await {
         Ok(_) => (Status::Ok, Json(Response::Success)),
 
         Err(error) => (
@@ -37,26 +35,17 @@ pub(crate) async fn api_del_friend_request(req: &str) -> (Status, Json<Response>
     }
 }
 
-async fn fetch(req: &str, is_post: bool) -> Result<()> {
+async fn fetch(req: &str, method: Method) -> Result<()> {
     let (auth, user) = req.split_once(':').context(INVALID_INPUT)?;
 
     let matched = find_matched_data(auth)?;
 
-    let url = format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user);
-
-    let res = CLIENT
-        .request(
-            if is_post {
-                reqwest::Method::POST
-            } else {
-                reqwest::Method::DELETE
-            },
-            &url,
-        )
-        .header(UA, UA_VALUE)
-        .header(COOKIE, &matched.token)
-        .send()
-        .await?;
+    let res = request(
+        method,
+        &format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user),
+        &matched.token,
+    )
+    .await?;
 
     if res.status().is_success() {
         Ok(())

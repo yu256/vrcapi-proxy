@@ -1,7 +1,5 @@
-use crate::{
-    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
-    general::find_matched_data, CLIENT,
-};
+use super::utils::request;
+use crate::{consts::INVALID_INPUT, general::find_matched_data};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -37,14 +35,12 @@ async fn fetch(req: &str) -> Result<ResStatus> {
 
     let matched = find_matched_data(auth)?;
 
-    let res = CLIENT
-        .get(&format!(
-            "https://api.vrchat.cloud/api/1/user/{user}/friendStatus"
-        ))
-        .header(UA, UA_VALUE)
-        .header(COOKIE, &matched.token)
-        .send()
-        .await?;
+    let res = request(
+        reqwest::Method::GET,
+        &format!("https://api.vrchat.cloud/api/1/user/{user}/friendStatus"),
+        &matched.token,
+    )
+    .await?;
 
     if res.status().is_success() {
         let status: ResStatus = res.json().await?;

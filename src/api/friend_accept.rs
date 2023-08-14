@@ -1,8 +1,5 @@
-use crate::{
-    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
-    general::find_matched_data,
-    CLIENT,
-};
+use super::utils::request;
+use crate::{consts::INVALID_INPUT, general::find_matched_data};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
@@ -30,15 +27,12 @@ async fn fetch(req: &str) -> Result<()> {
 
     let matched = find_matched_data(auth)?;
 
-    let res = CLIENT
-        .put(&format!(
-            "https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"
-        ))
-        .header(UA, UA_VALUE)
-        .header(COOKIE, &matched.token)
-        .send()
-        .await?;
-
+    let res = request(
+        reqwest::Method::PUT,
+        &format!("https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"),
+        &matched.token,
+    )
+    .await?;
     if res.status().is_success() {
         Ok(())
     } else {

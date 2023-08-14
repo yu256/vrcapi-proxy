@@ -4,15 +4,12 @@ use anyhow::Result;
 use cors::CorsConfig;
 use data::DATA_PATH;
 use general::write_json;
-use std::sync::LazyLock;
 
 mod api;
 mod consts;
 mod cors;
 mod data;
 mod general;
-
-pub(crate) static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 #[macro_use]
 extern crate rocket;

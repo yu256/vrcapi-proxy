@@ -10,6 +10,7 @@ mod toggle_askme;
 mod two_factor_email;
 mod user;
 mod world;
+mod utils;
 
 pub(crate) use auth::api_auth;
 pub(crate) use friend_accept::api_friend_accept;

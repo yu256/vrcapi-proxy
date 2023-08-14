@@ -1,11 +1,10 @@
-use crate::{
-    consts::{UA, UA_VALUE},
-    CLIENT,
-};
+use crate::consts::{UA, UA_VALUE};
 use anyhow::{bail, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
+
+use super::utils::CLIENT;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 

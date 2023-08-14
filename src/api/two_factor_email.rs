@@ -1,8 +1,8 @@
+use super::utils::CLIENT;
 use crate::{
     consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
     general::update_data_property,
-    CLIENT,
 };
 use anyhow::{bail, Context as _, Error, Result};
 use rocket::{http::Status, serde::json::Json};
