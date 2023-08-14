@@ -1,12 +1,8 @@
-use crate::{
-    consts::{INVALID_INPUT, VRC_P},
-    general::find_matched_data,
-};
-use anyhow::{bail, Context as _, Result};
+use super::utils::{request, StrExt as _};
+use crate::{consts::VRC_P, general::find_matched_data};
+use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
-
-use super::utils::request;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 
@@ -59,7 +55,7 @@ pub(crate) async fn api_user(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<ResUser> {
-    let (auth, user) = req.split_once(':').context(INVALID_INPUT)?;
+    let (auth, user) = req.split_colon()?;
 
     let matched = find_matched_data(auth)?;
 

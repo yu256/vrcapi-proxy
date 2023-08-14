@@ -1,6 +1,6 @@
-use super::utils::request;
-use crate::{consts::INVALID_INPUT, general::find_matched_data};
-use anyhow::{bail, Context as _, Result};
+use super::utils::{request, StrExt as _};
+use crate::general::find_matched_data;
+use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
@@ -58,7 +58,7 @@ pub(crate) async fn api_world(req: &str) -> (Status, Json<Response>) {
 }
 
 async fn fetch(req: &str) -> Result<World> {
-    let (auth, world) = req.split_once(':').context(INVALID_INPUT)?;
+    let (auth, world) = req.split_colon()?;
 
     let matched = find_matched_data(auth)?;
 

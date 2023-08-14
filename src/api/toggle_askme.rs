@@ -1,8 +1,6 @@
-use crate::{
-    consts::INVALID_INPUT,
-    general::{find_matched_data, update_data_property},
-};
-use anyhow::{Context as _, Result};
+use super::utils::StrExt as _;
+use crate::general::{find_matched_data, update_data_property};
+use anyhow::Result;
 use rocket::http::Status;
 
 #[post("/askme", data = "<req>")]
@@ -15,7 +13,7 @@ pub(crate) async fn api_toggle(req: &str) -> (Status, String) {
 }
 
 fn toggle(req: &str) -> Result<bool> {
-    let (auth, req) = req.split_once(':').context(INVALID_INPUT)?;
+    let (auth, req) = req.split_colon()?;
 
     let bool = req == "true";
 

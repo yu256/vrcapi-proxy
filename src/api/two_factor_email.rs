@@ -1,10 +1,10 @@
-use super::utils::CLIENT;
+use super::utils::{StrExt as _, CLIENT};
 use crate::{
-    consts::{COOKIE, INVALID_INPUT, UA, UA_VALUE},
+    consts::{COOKIE, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
     general::update_data_property,
 };
-use anyhow::{bail, Context as _, Error, Result};
+use anyhow::{bail, Error, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 use serde_json::json;
@@ -56,7 +56,7 @@ pub(crate) async fn api_twofactor_email(req: &str) -> (Status, Json<Res>) {
 }
 
 async fn fetch(req: &str) -> Result<&str> {
-    let (token, f) = req.split_once(':').context(INVALID_INPUT)?;
+    let (token, f) = req.split_colon()?;
     let res = CLIENT
         .post(URL)
         .header(UA, UA_VALUE)
