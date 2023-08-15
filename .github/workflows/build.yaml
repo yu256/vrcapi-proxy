@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
+        platform: [macos-latest, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -37,10 +37,23 @@ jobs:
         with:
           tag_name: v1.0.0-${{ matrix.platform }}
           release_name: Release v1.0.0
-          draft: false
+          draft: true
           prerelease: false
 
+      - name: Upload Release Asset (Windows only)
+        if: matrix.platform == 'windows-latest'
+        id: upload-release-asset-windows
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./target/release/vrcapi_proxy.exe
+          asset_name: vrcapi_proxy.exe
+          asset_content_type: application/octet-stream
+
       - name: Upload Release Asset
+        if: matrix.platform != 'windows-latest'
         id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
