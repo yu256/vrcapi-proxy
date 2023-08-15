@@ -32,7 +32,7 @@ pub(crate) struct ResUser {
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
         ResUser {
-            currentAvatarThumbnailImageUrl: if !user.tags.iter().any(|tag| tag == VRC_P) {
+            currentAvatarThumbnailImageUrl: if user.tags.iter().all(|tag| tag != VRC_P) {
                 user.currentAvatarThumbnailImageUrl
             } else if user.userIcon.is_empty() {
                 user.profilePicOverride

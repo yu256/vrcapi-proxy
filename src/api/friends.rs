@@ -30,7 +30,7 @@ pub(crate) struct ResFriend {
 impl From<Friend> for ResFriend {
     fn from(friend: Friend) -> Self {
         ResFriend {
-            currentAvatarThumbnailImageUrl: if !friend.tags.iter().any(|tag| tag == VRC_P) {
+            currentAvatarThumbnailImageUrl: if friend.tags.iter().all(|tag| tag != VRC_P) {
                 friend.currentAvatarThumbnailImageUrl
             } else if friend.userIcon.is_empty() {
                 friend.profilePicOverride

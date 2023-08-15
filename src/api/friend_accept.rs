@@ -33,6 +33,7 @@ async fn fetch(req: &str) -> Result<()> {
         &matched.token,
     )
     .await?;
+
     if res.status().is_success() {
         Ok(())
     } else {
