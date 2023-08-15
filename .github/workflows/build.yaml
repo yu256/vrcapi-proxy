@@ -2,7 +2,7 @@ name: 'publish'
 on:
   push:
     branches:
-      - main
+      - release
 
 jobs:
   publish:
@@ -26,14 +26,7 @@ jobs:
         with:
           shared-key: "vrc"
 
-      - name: build (Mac Only)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          cargo install cross
-          cross build --release --target aarch64-apple-darwin
-
-      - name: build (except Mac)
-        if: matrix.platform != 'macos-latest'
+      - name: build
         run: cargo build --release
 
       - name: Create Release
