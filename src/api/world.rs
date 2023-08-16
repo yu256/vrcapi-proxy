@@ -15,13 +15,13 @@ pub(crate) struct World {
     favorites: u32,
     featured: bool,
     heat: u32,
-    id: String,
+    // id: String,
     imageUrl: String,
     // instances: Option<Vec<Instance>>,
     labsPublicationDate: String,
     name: String,
     namespace: String,
-    occupants: u32,
+    // occupants: u32,
     organization: String,
     popularity: u32,
     // previewYoutubeId: Option<String>,
@@ -33,8 +33,19 @@ pub(crate) struct World {
     thumbnailImageUrl: String,
     // unityPackages: Vec<UnityPackage>,
     updated_at: String,
-    version: u32,
+    // version: u32,
     visits: u32,
+}
+
+impl World {
+    fn to_res(mut self) -> Self {
+        self.tags.retain(|tag| tag.starts_with("author_tag"));
+        self.tags.iter_mut().for_each(|tag| {
+            tag.replace_range(..11, "");
+        });
+
+        self
+    }
 }
 
 #[derive(Serialize)]
@@ -71,7 +82,7 @@ async fn fetch(req: &str) -> Result<World> {
 
     if res.status().is_success() {
         let status: World = res.json().await?;
-        Ok(status)
+        Ok(status.to_res())
     } else {
         bail!("{}", res.status())
     }
