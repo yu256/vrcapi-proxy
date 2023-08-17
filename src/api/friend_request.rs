@@ -7,14 +7,14 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub(crate) enum Response {
-    Success,
+    Success(bool),
     Error(String),
 }
 
 #[post("/friend_request", data = "<req>")]
 pub(crate) async fn api_friend_request(req: &str) -> (Status, Json<Response>) {
     match fetch(req, Method::POST).await {
-        Ok(_) => (Status::Ok, Json(Response::Success)),
+        Ok(_) => (Status::Ok, Json(Response::Success(true))),
 
         Err(error) => (
             Status::InternalServerError,
@@ -26,7 +26,7 @@ pub(crate) async fn api_friend_request(req: &str) -> (Status, Json<Response>) {
 #[delete("/friend_request", data = "<req>")]
 pub(crate) async fn api_del_friend_request(req: &str) -> (Status, Json<Response>) {
     match fetch(req, Method::DELETE).await {
-        Ok(_) => (Status::Ok, Json(Response::Success)),
+        Ok(_) => (Status::Ok, Json(Response::Success(true))),
 
         Err(error) => (
             Status::InternalServerError,

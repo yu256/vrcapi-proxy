@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub(crate) struct World {
     authorId: String,
-    authorName: String,
+    // authorName: String,
     capacity: u32,
     created_at: String,
     description: String,
@@ -28,7 +28,7 @@ pub(crate) struct World {
     privateOccupants: u32,
     publicOccupants: u32,
     publicationDate: String,
-    releaseStatus: String,
+    // releaseStatus: String,
     tags: Vec<String>,
     thumbnailImageUrl: String,
     // unityPackages: Vec<UnityPackage>,
