@@ -49,6 +49,8 @@ async fn fetch(req: &str) -> Result<()> {
 
     if res.status().is_success() {
         Ok(())
+    } else if res.status() == 400 {
+        bail!("既に登録されています。")
     } else {
         bail!("{}", res.status())
     }
