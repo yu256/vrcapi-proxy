@@ -1,4 +1,5 @@
 mod auth;
+mod favorites;
 mod friend_accept;
 mod friend_request;
 mod friend_status;
@@ -14,6 +15,7 @@ mod utils;
 mod world;
 
 pub(crate) use auth::api_auth;
+pub(crate) use favorites::api_add_favorites;
 pub(crate) use friend_accept::api_friend_accept;
 pub(crate) use friend_request::{api_del_friend_request, api_friend_request};
 pub(crate) use friend_status::api_friend_status;
