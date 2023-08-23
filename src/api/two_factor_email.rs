@@ -87,7 +87,7 @@ fn add(token: &str, auth: &str) -> Result<()> {
         askme: false,
     };
 
-    let mut data: Vec<Data> = get_data::<Vec<Data>>("data")?;
+    let mut data: Vec<Data> = get_data::<Vec<Data>>("data.json")?;
 
     data.push(new_data);
 

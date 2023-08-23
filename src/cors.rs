@@ -32,7 +32,7 @@ impl Fairing for CORS {
 
         response.set_header(Header::new(
             "Access-Control-Allow-Origin",
-            get_data::<CorsConfig>("data").unwrap().url,
+            get_data::<CorsConfig>("config.json").unwrap().url,
         ));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }

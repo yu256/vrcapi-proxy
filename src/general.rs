@@ -3,12 +3,13 @@ use dirs_2::home_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{self, File},
-    io::{BufReader, BufWriter, Read, Write}, sync::LazyLock, path::PathBuf,
+    io::{BufReader, BufWriter, Read, Write},
+    path::PathBuf,
+    sync::LazyLock,
 };
 
 pub(crate) static DATA_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| home_dir().unwrap().join("vrcapi_proxy"));
-
 
 pub fn get_data<T>(path: &str) -> Result<T>
 where
