@@ -52,6 +52,7 @@ async fn auth(req: &str) -> Result<String> {
                 .split('=')
                 .nth(1)
                 .context(ON_ERROR)?;
+
         let auth_type = {
             let json: Value = res.json().await?;
             json["requiresTwoFactorAuth"]
@@ -62,6 +63,7 @@ async fn auth(req: &str) -> Result<String> {
                 .context("No 2FA")?
                 .to_lowercase()
         };
+
         Ok(token + ":" + &auth_type)
     } else {
         bail!("{}", res.text().await?)

@@ -1,21 +1,25 @@
-use super::utils::{find_matched_data, request};
+use super::utils::request;
 use crate::consts::VRC_P;
 use anyhow::{bail, Result};
-use rocket::{http::Status, serde::json::Json};
+use rocket::{http::Status, serde::json::Json, tokio::sync::Mutex};
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, sync::LazyLock};
+
+pub(crate) static FRIENDS: LazyLock<Mutex<HashMap<String, Vec<Friend>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
-struct Friend {
-    currentAvatarThumbnailImageUrl: String,
-    id: String,
-    status: String,
-    location: String,
-    tags: Vec<String>,
-    userIcon: String,
-    profilePicOverride: String,
+pub(crate) struct Friend {
+    pub(crate) currentAvatarThumbnailImageUrl: String,
+    pub(crate) id: String,
+    pub(crate) status: String,
+    pub(crate) location: String,
+    pub(crate) tags: Vec<String>,
+    pub(crate) userIcon: String,
+    pub(crate) profilePicOverride: String,
 }
 
 #[allow(non_snake_case)]
@@ -27,19 +31,19 @@ pub(crate) struct ResFriend {
     location: String,
 }
 
-impl From<Friend> for ResFriend {
-    fn from(friend: Friend) -> Self {
+impl From<&Friend> for ResFriend {
+    fn from(friend: &Friend) -> Self {
         let img = match friend.tags.iter().any(|tag| tag == VRC_P) {
-            true if !friend.userIcon.is_empty() => friend.userIcon,
-            true if !friend.profilePicOverride.is_empty() => friend.profilePicOverride,
-            _ => friend.currentAvatarThumbnailImageUrl,
+            true if !friend.userIcon.is_empty() => &friend.userIcon,
+            true if !friend.profilePicOverride.is_empty() => &friend.profilePicOverride,
+            _ => &friend.currentAvatarThumbnailImageUrl,
         };
 
         ResFriend {
-            currentAvatarThumbnailImageUrl: img,
-            id: friend.id,
-            status: friend.status,
-            location: friend.location,
+            currentAvatarThumbnailImageUrl: img.to_owned(),
+            id: friend.id.to_owned(),
+            status: friend.status.to_owned(),
+            location: friend.location.to_owned(),
         }
     }
 }
@@ -52,32 +56,30 @@ pub(crate) enum Response {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
-    match fetch(req).await {
-        Ok(friends) => (Status::Ok, Json(Response::Success(friends))),
+    match FRIENDS.lock().await.get(req) {
+        Some(friends) => (Status::Ok, Json(Response::Success(modify_friends(friends)))),
 
-        Err(error) => (
+        None => (
             Status::InternalServerError,
-            Json(Response::Error(error.to_string())),
+            Json(Response::Error("failed to auth.".to_string())),
         ),
     }
 }
 
-async fn fetch(req: &str) -> Result<Vec<ResFriend>> {
-    let matched = find_matched_data(req)?;
-
-    let res = request(reqwest::Method::GET, URL, &matched.token).await?;
+pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<Friend>> {
+    let res = request(reqwest::Method::GET, URL, token).await?;
 
     if res.status().is_success() {
-        Ok(modify_friends(res.json().await?, &matched.askme))
+        Ok(res.json().await?)
     } else {
         bail!("{}", res.text().await?)
     }
 }
 
-fn modify_friends(friends: Vec<Friend>, askme: &bool) -> Vec<ResFriend> {
+fn modify_friends(friends: &Vec<Friend>) -> Vec<ResFriend> {
     let mut friends = friends
-        .into_iter()
-        .filter(|friend| friend.location != "offline" && (*askme || friend.status != "ask me"))
+        .iter()
+        .filter(|friend| friend.location != "offline")
         .map(ResFriend::from)
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
