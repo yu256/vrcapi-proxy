@@ -2,7 +2,7 @@ use anyhow::Result;
 use dirs_2::home_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
-    fs::{self, File},
+    fs::{create_dir_all, File},
     io::{BufReader, BufWriter, Read, Write},
     path::PathBuf,
     sync::LazyLock,
@@ -29,7 +29,7 @@ where
     T: Serialize,
 {
     let Ok(file) = File::create(&DATA_PATH.join(format!("{}.json", name))) else {
-        fs::create_dir_all(&*DATA_PATH)?;
+        create_dir_all(&*DATA_PATH)?;
         return write_json(data, name);
     };
 

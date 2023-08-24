@@ -3,6 +3,10 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{Header, Method, Status};
 use rocket::{Request, Response};
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
+
+static ALLOWED_ORIGINS: LazyLock<String> =
+    LazyLock::new(|| get_data::<CorsConfig>("config.json").unwrap().url);
 
 pub struct CORS;
 
@@ -32,7 +36,7 @@ impl Fairing for CORS {
 
         response.set_header(Header::new(
             "Access-Control-Allow-Origin",
-            get_data::<CorsConfig>("config.json").unwrap().url,
+            &*ALLOWED_ORIGINS,
         ));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }

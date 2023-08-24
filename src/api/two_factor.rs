@@ -10,8 +10,6 @@ use serde::Serialize;
 use serde_json::json;
 use uuid::Uuid;
 
-const URL: &str = "https://api.vrchat.cloud/api/1/auth/twofactorauth/emailotp/verify";
-
 #[derive(Serialize)]
 pub(crate) enum Res {
     Success(String),
@@ -24,8 +22,8 @@ impl From<Error> for Res {
     }
 }
 
-#[post("/twofactor_email", data = "<req>")]
-pub(crate) async fn api_twofactor_email(req: &str) -> (Status, Json<Res>) {
+#[post("/twofactor", data = "<req>")]
+pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Res>) {
     match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
@@ -56,9 +54,13 @@ pub(crate) async fn api_twofactor_email(req: &str) -> (Status, Json<Res>) {
 }
 
 async fn fetch(req: &str) -> Result<&str> {
-    let (token, f) = req.split_colon()?;
+    let (token, rest) = req.split_colon()?;
+    let (r#type, f) = rest.split_colon()?;
+
     let res = CLIENT
-        .post(URL)
+        .post(format!(
+            "https://api.vrchat.cloud/api/1/auth/twofactorauth/{type}/verify"
+        ))
         .header(UA, UA_VALUE)
         .header(COOKIE, token)
         .json(&json!({ "code": f }))
@@ -87,7 +89,7 @@ fn add(token: &str, auth: &str) -> Result<()> {
         askme: false,
     };
 
-    let mut data: Vec<Data> = get_data::<Vec<Data>>("data.json")?;
+    let mut data: Vec<Data> = get_data("data.json")?;
 
     data.push(new_data);
 
