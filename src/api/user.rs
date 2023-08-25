@@ -1,4 +1,7 @@
-use super::utils::{find_matched_data, request, StrExt as _};
+use super::{
+    utils::{find_matched_data, request, StrExt as _},
+    FRIENDS,
+};
 use crate::consts::VRC_P;
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -7,19 +10,20 @@ use serde::{Deserialize, Serialize};
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 
 #[allow(non_snake_case)]
-#[derive(Deserialize)]
-struct User {
-    bio: String,
-    bioLinks: Vec<String>,
-    currentAvatarThumbnailImageUrl: String,
-    displayName: String,
-    last_activity: Option<String>,
-    location: String,
-    status: String,
-    statusDescription: String,
-    tags: Vec<String>,
-    userIcon: String,
-    profilePicOverride: String,
+#[derive(Deserialize, Clone)]
+pub(crate) struct User {
+    pub(crate) id: String,
+    pub(crate) bio: String,
+    pub(crate) bioLinks: Vec<String>,
+    pub(crate) currentAvatarThumbnailImageUrl: String,
+    pub(crate) displayName: String,
+    pub(crate) last_activity: Option<String>,
+    pub(crate) location: String,
+    pub(crate) status: String,
+    pub(crate) statusDescription: String,
+    pub(crate) tags: Vec<String>,
+    pub(crate) userIcon: String,
+    pub(crate) profilePicOverride: String,
 }
 
 #[allow(non_snake_case)]
@@ -56,6 +60,12 @@ pub(crate) async fn api_user(req: &str) -> (Status, Json<Response>) {
 
 async fn fetch(req: &str) -> Result<ResUser> {
     let (auth, user) = req.split_colon()?;
+
+    if let Some(users) = FRIENDS.read().await.get(auth) {
+        if let Some(user) = users.iter().find(|u| u.id == user) {
+            return Ok(add_rank(user.clone()));
+        }
+    }
 
     let matched = find_matched_data(auth)?;
 

@@ -1,7 +1,7 @@
 use crate::{
     consts::{COOKIE, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
-    general::get_data,
+    general::read_json,
 };
 use anyhow::{bail, Context as _, Result};
 use reqwest::Response;
@@ -27,7 +27,7 @@ pub(crate) async fn request(
 const NO_AUTH: &str = "Failed to auth.";
 
 pub(crate) fn find_matched_data(auth: &str) -> Result<Data> {
-    let data: Vec<Data> = get_data("data.json")?;
+    let data: Vec<Data> = read_json("data.json")?;
 
     let matched: Data = data
         .into_iter()
@@ -38,7 +38,7 @@ pub(crate) fn find_matched_data(auth: &str) -> Result<Data> {
 }
 
 pub(crate) fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) -> T) -> Result<()> {
-    let mut data: Vec<Data> = get_data("data.json")?;
+    let mut data: Vec<Data> = read_json("data.json")?;
 
     if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
         updater(data);

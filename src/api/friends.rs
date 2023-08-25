@@ -1,26 +1,14 @@
-use super::utils::request;
+use super::{utils::request, user::User};
 use crate::consts::VRC_P;
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::{collections::HashMap, sync::LazyLock};
 
-pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<Friend>>>> =
+pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<User>>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
-
-#[allow(non_snake_case)]
-#[derive(Deserialize)]
-pub(crate) struct Friend {
-    pub(crate) currentAvatarThumbnailImageUrl: String,
-    pub(crate) id: String,
-    pub(crate) status: String,
-    pub(crate) location: String,
-    pub(crate) tags: Vec<String>,
-    pub(crate) userIcon: String,
-    pub(crate) profilePicOverride: String,
-}
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
@@ -31,8 +19,8 @@ pub(crate) struct ResFriend {
     location: String,
 }
 
-impl From<&Friend> for ResFriend {
-    fn from(friend: &Friend) -> Self {
+impl From<&User> for ResFriend {
+    fn from(friend: &User) -> Self {
         let img = match friend.tags.iter().any(|tag| tag == VRC_P) {
             true if !friend.userIcon.is_empty() => &friend.userIcon,
             true if !friend.profilePicOverride.is_empty() => &friend.profilePicOverride,
@@ -56,6 +44,7 @@ pub(crate) enum Response {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
+
     match FRIENDS.read().await.get(req) {
         Some(friends) => (Status::Ok, Json(Response::Success(modify_friends(friends)))),
 
@@ -66,7 +55,7 @@ pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
     }
 }
 
-pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<Friend>> {
+pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<User>> {
     let res = request(reqwest::Method::GET, URL, token).await?;
 
     if res.status().is_success() {
@@ -76,7 +65,7 @@ pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<Friend>> {
     }
 }
 
-fn modify_friends(friends: &Vec<Friend>) -> Vec<ResFriend> {
+fn modify_friends(friends: &Vec<User>) -> Vec<ResFriend> {
     let mut friends = friends
         .iter()
         .filter(|friend| friend.location != "offline")

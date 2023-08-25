@@ -11,7 +11,7 @@ use std::{
 pub(crate) static DATA_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| home_dir().unwrap().join("vrcapi_proxy"));
 
-pub fn get_data<T>(path: &str) -> Result<T>
+pub fn read_json<T>(path: &str) -> Result<T>
 where
     T: DeserializeOwned,
 {

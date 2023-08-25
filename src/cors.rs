@@ -1,4 +1,4 @@
-use crate::general::get_data;
+use crate::general::read_json;
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{Header, Method, Status};
 use rocket::{Request, Response};
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
 static ALLOWED_ORIGINS: LazyLock<String> =
-    LazyLock::new(|| get_data::<CorsConfig>("config.json").unwrap().url);
+    LazyLock::new(|| read_json::<CorsConfig>("config.json").unwrap().url);
 
 pub struct CORS;
 

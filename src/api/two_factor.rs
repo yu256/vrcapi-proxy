@@ -2,7 +2,7 @@ use super::utils::{update_data_property, StrExt as _, CLIENT};
 use crate::{
     consts::{COOKIE, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
-    general::get_data,
+    general::read_json,
 };
 use anyhow::{bail, Error, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -89,7 +89,7 @@ fn add(token: &str, auth: &str) -> Result<()> {
         askme: false,
     };
 
-    let mut data: Vec<Data> = get_data("data.json")?;
+    let mut data: Vec<Data> = read_json("data.json")?;
 
     data.push(new_data);
 

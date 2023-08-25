@@ -4,7 +4,7 @@ use anyhow::Result;
 use api::{fetch_friends, route, FRIENDS};
 use cors::CorsConfig;
 use data::Data;
-use general::{get_data, write_json, DATA_PATH};
+use general::{read_json, write_json, DATA_PATH};
 use rocket::tokio::{self, time::sleep};
 // use stream::stream;
 
@@ -21,7 +21,7 @@ extern crate rocket;
 #[launch]
 async fn rocket() -> _ {
     init().unwrap();
-    for data in get_data::<Vec<Data>>("data.json").unwrap() {
+    for data in read_json::<Vec<Data>>("data.json").unwrap() {
         tokio::spawn(async move {
             let friends = fetch_friends(&data.token).await;
             if let Ok(friends) = friends {
@@ -34,10 +34,12 @@ async fn rocket() -> _ {
                     //     }
                     // }
                     sleep(std::time::Duration::from_secs(60)).await;
-                    let mut unlocked = FRIENDS.write().await;
-                    let friends = unlocked.get_mut(&data.auth).unwrap();
-                    if let Ok(f) = fetch_friends(&data.token).await {
-                        *friends = f;
+                    {
+                        let mut unlocked = FRIENDS.write().await;
+                        let friends = unlocked.get_mut(&data.auth).unwrap();
+                        if let Ok(f) = fetch_friends(&data.token).await {
+                            *friends = f;
+                        }
                     }
                 }
             }
