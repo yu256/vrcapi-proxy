@@ -34,17 +34,16 @@ async fn rocket() -> _ {
                     //     }
                     // }
                     sleep(std::time::Duration::from_secs(60)).await;
-                    {
+                    if let Ok(f) = fetch_friends(&data.token).await {
                         let mut unlocked = FRIENDS.write().await;
                         let friends = unlocked.get_mut(&data.auth).unwrap();
-                        if let Ok(f) = fetch_friends(&data.token).await {
-                            *friends = f;
-                        }
+                        *friends = f;
                     }
                 }
             }
         });
     }
+
     rocket::build().mount("/", route()).attach(cors::CORS)
 }
 
