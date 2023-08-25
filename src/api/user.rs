@@ -12,12 +12,12 @@ const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 #[allow(non_snake_case)]
 #[derive(Deserialize, Clone)]
 pub(crate) struct User {
-    pub(crate) id: String,
     pub(crate) bio: String,
     pub(crate) bioLinks: Vec<String>,
     pub(crate) currentAvatarThumbnailImageUrl: String,
     pub(crate) displayName: String,
-    pub(crate) last_activity: Option<String>,
+    pub(crate) id: String,
+    pub(crate) isFriend: bool,
     pub(crate) location: String,
     pub(crate) status: String,
     pub(crate) statusDescription: String,
@@ -33,7 +33,7 @@ pub(crate) struct ResUser {
     bioLinks: Vec<String>,
     currentAvatarThumbnailImageUrl: String,
     displayName: String,
-    last_activity: Option<String>,
+    isFriend: bool,
     location: String,
     status: String,
     statusDescription: String,
@@ -129,7 +129,7 @@ fn add_rank(user: User) -> ResUser {
         bioLinks: user.bioLinks,
         currentAvatarThumbnailImageUrl: img,
         displayName: user.displayName,
-        last_activity: user.last_activity,
+        isFriend: user.isFriend,
         location: user.location,
         status: user.status,
         statusDescription: user.statusDescription,
