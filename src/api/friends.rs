@@ -1,12 +1,12 @@
 use super::utils::request;
 use crate::consts::VRC_P;
 use anyhow::{bail, Result};
-use rocket::{http::Status, serde::json::Json, tokio::sync::Mutex};
+use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::LazyLock};
 
-pub(crate) static FRIENDS: LazyLock<Mutex<HashMap<String, Vec<Friend>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<Friend>>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
 
@@ -56,7 +56,7 @@ pub(crate) enum Response {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
-    match FRIENDS.lock().await.get(req) {
+    match FRIENDS.read().await.get(req) {
         Some(friends) => (Status::Ok, Json(Response::Success(modify_friends(friends)))),
 
         None => (

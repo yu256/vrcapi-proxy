@@ -1,9 +1,11 @@
 use crate::{
     api::{Friend, FRIENDS},
+    consts::{UA, UA_VALUE},
     data::Data,
 };
 use anyhow::{Context as _, Result};
 use futures::StreamExt;
+use httparse::Header;
 use serde::Deserialize;
 use tokio_tungstenite::connect_async;
 
@@ -21,11 +23,9 @@ struct FriendOnlineEventContent {
 }
 
 pub(crate) async fn stream(data: Data) -> Result<()> {
-    let (stream, _) = connect_async(format!(
-        "wss://pipeline.vrchat.cloud/?authToken={}",
-        &data.token[5..data.token.len()]
-    ))
-    .await?;
+    let req = format!("wss://pipeline.vrchat.cloud/?{}", &data.token);
+
+    let (stream, _) = connect_async(req).await?;
 
     let (_, mut read) = stream.split();
 

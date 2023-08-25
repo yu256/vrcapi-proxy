@@ -5,38 +5,44 @@ use api::{fetch_friends, route, FRIENDS};
 use cors::CorsConfig;
 use data::Data;
 use general::{get_data, write_json, DATA_PATH};
-use rocket::tokio::runtime::Runtime;
-use stream::stream;
+use rocket::tokio::{self, time::sleep};
+// use stream::stream;
 
 mod api;
 mod consts;
 mod cors;
 mod data;
 mod general;
-mod stream;
+// mod stream;
 
 #[macro_use]
 extern crate rocket;
 
 #[launch]
-fn rocket() -> _ {
+async fn rocket() -> _ {
     init().unwrap();
-    get_data::<Vec<Data>>("data.json")
-        .unwrap()
-        .into_iter()
-        .for_each(|data| {
-            Runtime::new().unwrap().spawn(async move {
-                let friends = fetch_friends(&data.token).await;
-                if let Ok(friends) = friends {
-                    FRIENDS.lock().await.insert(data.auth.to_owned(), friends);
-                    loop {
-                        if let Err(e) = stream(data.clone()).await {
-                            println!("{e}"); // todo 認証エラーの場合break
-                        }
+    for data in get_data::<Vec<Data>>("data.json").unwrap() {
+        tokio::spawn(async move {
+            let friends = fetch_friends(&data.token).await;
+            if let Ok(friends) = friends {
+                FRIENDS.write().await.insert(data.auth.to_owned(), friends);
+                loop {
+                    // if let Err(e) = stream(data.clone()).await {
+                    //     println!("{e}"); // todo 認証エラーの場合break
+                    //     if !e.to_string().contains("Connection reset without closing handshake") {
+                    //         panic!();
+                    //     }
+                    // }
+                    sleep(std::time::Duration::from_secs(60)).await;
+                    let mut unlocked = FRIENDS.write().await;
+                    let friends = unlocked.get_mut(&data.auth).unwrap();
+                    if let Ok(f) = fetch_friends(&data.token).await {
+                        *friends = f;
                     }
                 }
-            });
+            }
         });
+    }
     rocket::build().mount("/", route()).attach(cors::CORS)
 }
 
