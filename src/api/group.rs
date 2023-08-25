@@ -29,7 +29,7 @@ pub(crate) struct Group {
     createdAt: String,
     onlineMemberCount: i32,
     membershipStatus: String,
-    myMember: Member,
+    myMember: Option<Member>,
 }
 
 #[allow(non_snake_case)]
