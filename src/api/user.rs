@@ -63,7 +63,7 @@ async fn fetch(req: &str) -> Result<ResUser> {
 
     if let Some(users) = FRIENDS.read().await.get(auth) {
         if let Some(user) = users.iter().find(|u| u.id == user) {
-            return Ok(add_rank(user.clone()));
+            return Ok(user.clone().to_user());
         }
     }
 
@@ -77,62 +77,59 @@ async fn fetch(req: &str) -> Result<ResUser> {
     .await?;
 
     if res.status().is_success() {
-        Ok(add_rank(res.json().await?))
+        Ok(res.json::<User>().await?.to_user())
     } else {
         bail!("{}", res.text().await?)
     }
 }
 
-fn add_rank(user: User) -> ResUser {
-    let mut rank = None;
-    for tag in user.tags.iter().rev() {
-        match tag.as_str() {
-            "system_trust_veteran" => {
-                rank = Some("Trusted");
-                break;
+impl User {
+    fn to_user(self) -> ResUser {
+        let mut rank = {
+            let mut rank = None;
+            for tag in self.tags.iter().rev() {
+                match tag.as_str() {
+                    "system_trust_veteran" => {
+                        rank = Some("Trusted");
+                        break;
+                    }
+                    "system_trust_trusted" => {
+                        rank = Some("Known");
+                        break;
+                    }
+                    "system_trust_known" => {
+                        rank = Some("User");
+                        break;
+                    }
+                    "system_trust_basic" => {
+                        rank = Some("New User");
+                        break;
+                    }
+                    "system_troll" => {
+                        rank = Some("Troll");
+                        break;
+                    }
+                    _ => {}
+                }
             }
-            "system_trust_trusted" => {
-                rank = Some("Known");
-                break;
-            }
-            "system_trust_known" => {
-                rank = Some("User");
-                break;
-            }
-            "system_trust_basic" => {
-                rank = Some("New User");
-                break;
-            }
-            "system_troll" => {
-                rank = Some("Troll");
-                break;
-            }
-            _ => {}
+
+            rank.unwrap_or("Visitor").to_owned()
+        };
+
+        if self.tags.iter().any(|tag| tag == VRC_P) {
+            rank += " VRC+"
         }
-    }
 
-    let is_vrc_p = user.tags.iter().any(|tag| tag == VRC_P);
-    let mut rank = rank.unwrap_or("Visitor").to_owned();
-
-    if *&is_vrc_p {
-        rank += " VRC+"
-    }
-
-    let img = match &is_vrc_p {
-        true if !user.userIcon.is_empty() => user.userIcon,
-        true if !user.profilePicOverride.is_empty() => user.profilePicOverride,
-        _ => user.currentAvatarThumbnailImageUrl,
-    };
-
-    ResUser {
-        bio: user.bio,
-        bioLinks: user.bioLinks,
-        currentAvatarThumbnailImageUrl: img,
-        displayName: user.displayName,
-        isFriend: user.isFriend,
-        location: user.location,
-        status: user.status,
-        statusDescription: user.statusDescription,
-        rank,
+        ResUser {
+            currentAvatarThumbnailImageUrl: self.get_img(),
+            bio: self.bio,
+            bioLinks: self.bioLinks,
+            displayName: self.displayName,
+            isFriend: self.isFriend,
+            location: self.location,
+            status: self.status,
+            statusDescription: self.statusDescription,
+            rank,
+        }
     }
 }

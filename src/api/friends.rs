@@ -1,4 +1,4 @@
-use super::{utils::request, user::User};
+use super::{user::User, utils::request};
 use crate::consts::VRC_P;
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
@@ -19,20 +19,23 @@ pub(crate) struct ResFriend {
     location: String,
 }
 
-impl From<&User> for ResFriend {
-    fn from(friend: &User) -> Self {
-        let img = match friend.tags.iter().any(|tag| tag == VRC_P) {
-            true if !friend.userIcon.is_empty() => &friend.userIcon,
-            true if !friend.profilePicOverride.is_empty() => &friend.profilePicOverride,
-            _ => &friend.currentAvatarThumbnailImageUrl,
-        };
-
+impl User {
+    pub(crate) fn to_friend(&self) -> ResFriend {
         ResFriend {
-            currentAvatarThumbnailImageUrl: img.to_owned(),
-            id: friend.id.to_owned(),
-            status: friend.status.to_owned(),
-            location: friend.location.to_owned(),
+            currentAvatarThumbnailImageUrl: self.get_img(),
+            id: self.id.to_owned(),
+            status: self.status.to_owned(),
+            location: self.location.to_owned(),
         }
+    }
+
+    pub(crate) fn get_img(&self) -> String {
+        let img = match self.tags.iter().any(|tag| tag == VRC_P) {
+            true if !self.userIcon.is_empty() => &self.userIcon,
+            true if !self.profilePicOverride.is_empty() => &self.profilePicOverride,
+            _ => &self.currentAvatarThumbnailImageUrl,
+        };
+        img.to_owned()
     }
 }
 
@@ -44,7 +47,6 @@ pub(crate) enum Response {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
-
     match FRIENDS.read().await.get(req) {
         Some(friends) => (Status::Ok, Json(Response::Success(modify_friends(friends)))),
 
@@ -69,7 +71,7 @@ fn modify_friends(friends: &Vec<User>) -> Vec<ResFriend> {
     let mut friends = friends
         .iter()
         .filter(|friend| friend.location != "offline")
-        .map(ResFriend::from)
+        .map(User::to_friend)
         .collect::<Vec<_>>();
     friends.sort_by(|a, b| a.id.cmp(&b.id));
     friends

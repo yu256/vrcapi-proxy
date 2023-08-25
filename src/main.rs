@@ -24,9 +24,7 @@ async fn rocket() -> _ {
     for data in read_json::<Vec<Data>>("data.json").unwrap() {
         tokio::spawn(async move {
             if let Ok(friends) = fetch_friends(&data.token).await {
-                {
-                    FRIENDS.write().await.insert(data.auth.to_owned(), friends);
-                }
+                FRIENDS.write().await.insert(data.auth.to_owned(), friends);
                 loop {
                     // if let Err(e) = stream(data.clone()).await {
                     //     println!("{e}"); // todo 認証エラーの場合break
