@@ -8,8 +8,6 @@ use serde_json::Value;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 
-const ON_ERROR: &str = "An error occurred while parsing the cookie.";
-
 #[derive(Serialize)]
 pub(crate) enum Response {
     Success(String),
@@ -44,22 +42,17 @@ async fn auth(req: &str) -> Result<String> {
             + res
                 .headers()
                 .get("set-cookie")
-                .context(ON_ERROR)?
-                .to_str()?
-                .split(';')
-                .next()
-                .context(ON_ERROR)?
-                .split('=')
-                .nth(1)
-                .context(ON_ERROR)?;
+                .and_then(|c| c.to_str().ok())
+                .and_then(|c| c.split(':').next())
+                .and_then(|c| c.split('=').nth(1))
+                .context("invalid cookie found.")?;
 
         let auth_type = {
             let json: Value = res.json().await?;
             json["requiresTwoFactorAuth"]
                 .as_array()
                 .and_then(|arr| arr.get(0))
-                .context("No 2FA")?
-                .as_str()
+                .and_then(|value| value.as_str())
                 .context("No 2FA")?
                 .to_lowercase()
         };
