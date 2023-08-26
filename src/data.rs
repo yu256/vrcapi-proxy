@@ -8,15 +8,6 @@ pub struct Data {
     pub token: String,
 }
 
-impl Clone for Data {
-    fn clone(&self) -> Self {
-        Data {
-            auth: self.auth.clone(),
-            token: self.token.clone(),
-        }
-    }
-}
-
 pub(crate) trait DataVecExt {
     fn write(&self) -> Result<()>;
 }

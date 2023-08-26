@@ -58,6 +58,6 @@ pub(crate) trait StrExt {
 
 impl StrExt for str {
     fn split_colon(&self) -> Result<(&str, &str)> {
-        Ok(self.split_once(':').context(INVALID_INPUT)?)
+        self.split_once(':').context(INVALID_INPUT)
     }
 }

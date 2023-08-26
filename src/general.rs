@@ -15,7 +15,7 @@ pub fn read_json<T>(path: &str) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    let mut file = BufReader::new(File::open(&DATA_PATH.join(path))?);
+    let mut file = BufReader::new(File::open(DATA_PATH.join(path))?);
 
     let mut content = String::new();
 
@@ -28,7 +28,7 @@ pub fn write_json<T>(data: &T, name: &str) -> Result<()>
 where
     T: Serialize,
 {
-    let Ok(file) = File::create(&DATA_PATH.join(format!("{}.json", name))) else {
+    let Ok(file) = File::create(DATA_PATH.join(format!("{}.json", name))) else {
         create_dir_all(&*DATA_PATH)?;
         return write_json(data, name);
     };

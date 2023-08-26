@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 static ALLOWED_ORIGINS: LazyLock<String> =
     LazyLock::new(|| read_json::<CorsConfig>("config.json").unwrap().url);
 
-pub struct CORS;
+pub(crate) struct Cors;
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct CorsConfig {
@@ -16,7 +16,7 @@ pub(crate) struct CorsConfig {
 }
 
 #[rocket::async_trait]
-impl Fairing for CORS {
+impl Fairing for Cors {
     fn info(&self) -> Info {
         Info {
             name: "Add CORS headers to responses",

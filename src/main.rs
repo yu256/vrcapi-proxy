@@ -43,7 +43,7 @@ async fn rocket() -> _ {
         });
     }
 
-    rocket::build().mount("/", route()).attach(cors::CORS)
+    rocket::build().mount("/", route()).attach(cors::Cors)
 }
 
 fn init() -> Result<()> {
