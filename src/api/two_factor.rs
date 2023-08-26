@@ -86,7 +86,6 @@ fn add(token: &str, auth: &str) -> Result<()> {
     let new_data = Data {
         auth: auth.to_string(),
         token: token.to_string(),
-        askme: false,
     };
 
     let mut data: Vec<Data> = read_json("data.json")?;

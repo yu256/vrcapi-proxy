@@ -37,6 +37,7 @@ pub(crate) fn find_matched_data(auth: &str) -> Result<Data> {
     Ok(matched)
 }
 
+#[inline]
 pub(crate) fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) -> T) -> Result<()> {
     let mut data: Vec<Data> = read_json("data.json")?;
 

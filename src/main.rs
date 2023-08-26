@@ -48,7 +48,7 @@ async fn rocket() -> _ {
 
 fn init() -> Result<()> {
     if DATA_PATH.is_dir() {
-        return Ok(());
+        return migrate();
     }
 
     let conf = CorsConfig {
@@ -60,4 +60,34 @@ fn init() -> Result<()> {
     write_json(&data, "data")?;
 
     std::process::exit(0);
+}
+
+// いずれ消す
+fn migrate() -> Result<()> {
+    #[derive(serde::Deserialize)]
+    struct OldData {
+        auth: String,
+        token: String,
+        #[allow(dead_code)]
+        askme: bool,
+    }
+    match read_json::<Vec<OldData>>("data.json") {
+        Ok(_) => {
+            fn to_new_data(data: OldData) -> Data {
+                Data {
+                    auth: data.auth,
+                    token: data.token,
+                }
+            }
+            match read_json::<Vec<OldData>>("data.json") {
+                Ok(data) => {
+                    let new_data = data.into_iter().map(to_new_data).collect::<Vec<_>>();
+                    write_json(&new_data, "data")?;
+                    Ok(())
+                }
+                Err(_) => panic!("data.json is broken."),
+            }
+        }
+        Err(_) => Ok(()),
+    }
 }

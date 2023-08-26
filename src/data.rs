@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Data {
     pub auth: String,
     pub token: String,
-    pub askme: bool,
 }
 
 impl Clone for Data {
@@ -14,7 +13,6 @@ impl Clone for Data {
         Data {
             auth: self.auth.clone(),
             token: self.token.clone(),
-            askme: self.askme,
         }
     }
 }

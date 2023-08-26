@@ -1,6 +1,9 @@
-use super::{user::User, utils::request};
+use super::{
+    user::User,
+    utils::{request, StrExt as _},
+};
 use crate::consts::VRC_P;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
 use serde::Serialize;
 use std::{collections::HashMap, sync::LazyLock};
@@ -47,12 +50,12 @@ pub(crate) enum Response {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
-    match FRIENDS.read().await.get(req) {
-        Some(friends) => (Status::Ok, Json(Response::Success(modify_friends(friends)))),
+    match get_friends(req).await {
+        Ok(friends) => (Status::Ok, Json(Response::Success(friends))),
 
-        None => (
+        Err(e) => (
             Status::InternalServerError,
-            Json(Response::Error("failed to auth.".to_string())),
+            Json(Response::Error(e.to_string())),
         ),
     }
 }
@@ -67,12 +70,21 @@ pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<User>> {
     }
 }
 
-fn modify_friends(friends: &Vec<User>) -> Vec<ResFriend> {
-    let mut friends = friends
-        .iter()
-        .filter(|friend| friend.location != "offline")
-        .map(User::to_friend)
-        .collect::<Vec<_>>();
+async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
+    let mut friends = {
+        let (auth, askme) = req.split_colon()?;
+        let read = FRIENDS.read().await;
+        let friends = read.get(auth).context("failed to auth.")?;
+        friends
+            .iter()
+            .filter(|friend| {
+                friend.location != "offline" && (askme == "true" || friend.status != "ask me")
+            })
+            .map(User::to_friend)
+            .collect::<Vec<_>>()
+    };
+
     friends.sort_by(|a, b| a.id.cmp(&b.id));
-    friends
+
+    Ok(friends)
 }

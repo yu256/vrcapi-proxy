@@ -8,7 +8,6 @@ mod group;
 mod instance;
 mod notifications;
 mod search_user;
-mod toggle_askme;
 mod two_factor;
 mod user;
 mod utils;
@@ -29,8 +28,6 @@ pub(crate) fn route() -> Vec<rocket::Route> {
         instance::api_instance,
         notifications::api_notifications,
         search_user::api_search_user,
-        toggle_askme::api_check_askme,
-        toggle_askme::api_toggle,
         two_factor::api_twofactor,
         user::api_user,
         world::api_world
