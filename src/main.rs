@@ -72,21 +72,16 @@ fn migrate() -> Result<()> {
         askme: bool,
     }
     match read_json::<Vec<OldData>>("data.json") {
-        Ok(_) => {
+        Ok(data) => {
             fn to_new_data(data: OldData) -> Data {
                 Data {
                     auth: data.auth,
                     token: data.token,
                 }
             }
-            match read_json::<Vec<OldData>>("data.json") {
-                Ok(data) => {
-                    let new_data = data.into_iter().map(to_new_data).collect::<Vec<_>>();
-                    write_json(&new_data, "data")?;
-                    Ok(())
-                }
-                Err(_) => panic!("data.json is broken."),
-            }
+            let new_data = data.into_iter().map(to_new_data).collect::<Vec<_>>();
+            write_json(&new_data, "data")?;
+            Ok(())
         }
         Err(_) => Ok(()),
     }
