@@ -38,7 +38,10 @@ pub(crate) fn find_matched_data(auth: &str) -> Result<Data> {
 }
 
 #[inline]
-pub(crate) fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) -> T) -> Result<()> {
+pub(crate) fn update_data_property<T>(
+    auth: &str,
+    updater: impl Fn(&mut Data) -> T,
+) -> Result<Data> {
     let mut data: Vec<Data> = read_json("data.json")?;
 
     if let Some(data) = data.iter_mut().find(|data| data.auth == auth) {
@@ -49,7 +52,11 @@ pub(crate) fn update_data_property<T>(auth: &str, updater: impl Fn(&mut Data) ->
 
     data.write()?;
 
-    Ok(())
+    Ok(unsafe {
+        data.into_iter()
+            .find(|data| data.auth == auth)
+            .unwrap_unchecked()
+    })
 }
 
 pub(crate) trait StrExt {

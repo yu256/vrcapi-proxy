@@ -3,6 +3,7 @@ use crate::{
     consts::{COOKIE, UA, UA_VALUE},
     data::{Data, DataVecExt as _},
     general::read_json,
+    spawn,
 };
 use anyhow::{bail, Error, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -75,9 +76,11 @@ async fn fetch(req: &str) -> Result<&str> {
 }
 
 fn update(token: &str, auth: &str) -> Result<()> {
-    update_data_property(auth, |data| {
+    let data = update_data_property(auth, |data| {
         data.token = token.to_string();
     })?;
+
+    spawn(data);
 
     Ok(())
 }
@@ -93,6 +96,12 @@ fn add(token: &str, auth: &str) -> Result<()> {
     data.push(new_data);
 
     data.write()?;
+
+    spawn(unsafe {
+        data.into_iter()
+            .find(|data| data.auth == auth)
+            .unwrap_unchecked()
+    });
 
     Ok(())
 }

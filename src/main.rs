@@ -21,34 +21,16 @@ extern crate rocket;
 #[launch]
 async fn rocket() -> _ {
     init().unwrap();
-    for data in read_json::<Vec<Data>>("data.json").unwrap() {
-        tokio::spawn(async move {
-            if let Ok(friends) = fetch_friends(&data.token).await {
-                FRIENDS.write().await.insert(data.auth.to_owned(), friends);
-                loop {
-                    // if let Err(e) = stream(data.clone()).await {
-                    //     println!("{e}"); // todo 認証エラーの場合break
-                    //     if !e.to_string().contains("Connection reset without closing handshake") {
-                    //         panic!();
-                    //     }
-                    // }
-                    sleep(std::time::Duration::from_secs(60)).await;
-                    if let Ok(f) = fetch_friends(&data.token).await {
-                        let mut unlocked = FRIENDS.write().await;
-                        let friends = unlocked.get_mut(&data.auth).unwrap();
-                        *friends = f;
-                    }
-                }
-            }
-        });
-    }
-
+    read_json::<Vec<Data>>("data.json")
+        .unwrap()
+        .into_iter()
+        .for_each(spawn);
     rocket::build().mount("/", route()).attach(cors::Cors)
 }
 
 fn init() -> Result<()> {
     if DATA_PATH.is_dir() {
-        return migrate();
+        return Ok(());
     }
 
     let conf = CorsConfig {
@@ -62,27 +44,24 @@ fn init() -> Result<()> {
     std::process::exit(0);
 }
 
-// いずれ消す
-fn migrate() -> Result<()> {
-    #[derive(serde::Deserialize)]
-    struct OldData {
-        auth: String,
-        token: String,
-        #[allow(dead_code)]
-        askme: bool,
-    }
-    match read_json::<Vec<OldData>>("data.json") {
-        Ok(data) => {
-            fn to_new_data(data: OldData) -> Data {
-                Data {
-                    auth: data.auth,
-                    token: data.token,
+pub(crate) fn spawn(data: Data) {
+    tokio::spawn(async move {
+        if let Ok(friends) = fetch_friends(&data.token).await {
+            FRIENDS.write().await.insert(data.auth.to_owned(), friends);
+            loop {
+                sleep(std::time::Duration::from_secs(60)).await;
+                match fetch_friends(&data.token).await {
+                    Ok(f) => {
+                        let mut unlocked = FRIENDS.write().await;
+                        *unlocked.get_mut(&data.auth).unwrap() = f;
+                    }
+                    Err(e) => {
+                        if e.to_string().contains("Missing Credentials") {
+                            break;
+                        }
+                    }
                 }
             }
-            let new_data = data.into_iter().map(to_new_data).collect::<Vec<_>>();
-            write_json(&new_data, "data")?;
-            Ok(())
         }
-        Err(_) => Ok(()),
-    }
+    });
 }
