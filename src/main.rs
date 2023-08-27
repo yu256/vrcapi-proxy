@@ -3,15 +3,14 @@
 use anyhow::Result;
 use api::{fetch_friends, route, FRIENDS};
 use cors::CorsConfig;
-use data::Data;
 use general::{read_json, write_json, DATA_PATH};
 use rocket::tokio::{self, time::sleep};
+use std::collections::HashMap;
 // use stream::stream;
 
 mod api;
 mod consts;
 mod cors;
-mod data;
 mod general;
 // mod stream;
 
@@ -21,7 +20,7 @@ extern crate rocket;
 #[launch]
 async fn rocket() -> _ {
     init().unwrap();
-    read_json::<Vec<Data>>("data.json")
+    read_json::<HashMap<String, String>>("data.json")
         .unwrap()
         .into_iter()
         .for_each(spawn);
@@ -30,7 +29,7 @@ async fn rocket() -> _ {
 
 fn init() -> Result<()> {
     if DATA_PATH.is_dir() {
-        return Ok(());
+        return migrate();
     }
 
     let conf = CorsConfig {
@@ -44,16 +43,17 @@ fn init() -> Result<()> {
     std::process::exit(0);
 }
 
-pub(crate) fn spawn(data: Data) {
+pub(crate) fn spawn(data: (String, String)) {
     tokio::spawn(async move {
-        if let Ok(friends) = fetch_friends(&data.token).await {
-            FRIENDS.write().await.insert(data.auth.to_owned(), friends);
+        let (auth, token) = data;
+        if let Ok(friends) = fetch_friends(&token).await {
+            FRIENDS.write().await.insert(auth.clone(), friends);
             loop {
                 sleep(std::time::Duration::from_secs(60)).await;
-                match fetch_friends(&data.token).await {
+                match fetch_friends(&token).await {
                     Ok(f) => {
                         let mut unlocked = FRIENDS.write().await;
-                        *unlocked.get_mut(&data.auth).unwrap() = f;
+                        *unlocked.get_mut(&auth).unwrap() = f;
                     }
                     Err(e) => {
                         if e.to_string().contains("Missing Credentials") {
@@ -64,4 +64,29 @@ pub(crate) fn spawn(data: Data) {
             }
         }
     });
+}
+
+// いずれ消す
+fn migrate() -> Result<()> {
+    #[derive(serde::Deserialize)]
+    struct OldData {
+        auth: String,
+        token: String,
+    }
+    match read_json::<Vec<OldData>>("data.json") {
+        Ok(data) => {
+            let mut map = HashMap::new();
+
+            data.into_iter().for_each(|data| {
+                if !data.auth.is_empty() {
+                    map.insert(data.auth, data.token);
+                }
+            });
+
+            write_json(&map, "data")?;
+
+            Ok(())
+        }
+        Err(_) => Ok(()),
+    }
 }

@@ -1,14 +1,14 @@
-use super::utils::{update_data_property, StrExt as _, CLIENT};
+use super::utils::{StrExt as _, CLIENT};
 use crate::{
     consts::{COOKIE, UA, UA_VALUE},
-    data::{Data, DataVecExt as _},
-    general::read_json,
+    general::{read_json, HashMapExt as _},
     spawn,
 };
 use anyhow::{bail, Error, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 use serde_json::json;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Serialize)]
@@ -28,7 +28,7 @@ pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Res>) {
     match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
-                if let Err(err) = update(token, auth) {
+                if let Err(err) = update(auth, token) {
                     return (Status::InternalServerError, Json(Res::from(err)));
                 }
 
@@ -42,7 +42,7 @@ pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Res>) {
             Ok(token) => {
                 let auth = Uuid::new_v4().to_string();
 
-                if let Err(err) = add(token, &auth) {
+                if let Err(err) = update(&auth, token) {
                     return (Status::InternalServerError, Json(Res::from(err)));
                 }
 
@@ -75,33 +75,12 @@ async fn fetch(req: &str) -> Result<&str> {
     }
 }
 
-fn update(token: &str, auth: &str) -> Result<()> {
-    let data = update_data_property(auth, |data| {
-        data.token = token.to_string();
-    })?;
+fn update(auth: &str, token: &str) -> Result<()> {
+    let mut data: HashMap<String, String> = read_json("data.json")?;
 
-    spawn(data);
+    data.add(auth, token)?;
 
-    Ok(())
-}
-
-fn add(token: &str, auth: &str) -> Result<()> {
-    let new_data = Data {
-        auth: auth.to_string(),
-        token: token.to_string(),
-    };
-
-    let mut data: Vec<Data> = read_json("data.json")?;
-
-    data.push(new_data);
-
-    data.write()?;
-
-    spawn(unsafe {
-        data.into_iter()
-            .find(|data| data.auth == auth)
-            .unwrap_unchecked()
-    });
+    spawn(unsafe { data.remove_entry(auth).unwrap_unchecked() });
 
     Ok(())
 }

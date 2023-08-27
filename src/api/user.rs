@@ -67,12 +67,12 @@ async fn fetch(req: &str) -> Result<ResUser> {
         }
     }
 
-    let matched = find_matched_data(auth)?;
+    let (_, token) = find_matched_data(auth)?;
 
     let res = request(
         reqwest::Method::GET,
         &format!("{}{}", URL, user),
-        &matched.token,
+        &token,
     )
     .await?;
 
