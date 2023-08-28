@@ -84,9 +84,13 @@ async fn fetch(req: &str) -> Result<(InstanceData, HashMap<String, String>)> {
             .get(auth)
             .context("failed to auth.")?
             .iter()
-            .filter(|user| user.location.split(':').next() == Some(instance))
-            .cloned()
-            .map(|user| (user.get_img(), user.displayName))
+            .filter_map(|user| {
+                if user.location == instance {
+                    Some((user.get_img(), user.displayName.clone()))
+                } else {
+                    None
+                }
+            })
             .collect::<HashMap<_, _>>();
 
         Ok((res.json().await?, users))
