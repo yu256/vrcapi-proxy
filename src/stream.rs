@@ -5,7 +5,6 @@ use crate::{
 use anyhow::{Context as _, Result};
 use futures::StreamExt;
 use serde::Deserialize;
-use std::sync::Arc;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest};
 
 #[allow(non_snake_case)]
@@ -21,7 +20,7 @@ struct FriendOnlineEventContent {
     user: User,
 }
 
-pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
+pub(crate) async fn stream(data: &(String, String)) -> Result<()> {
     let mut req = format!("wss://pipeline.vrchat.cloud/?{}", &data.1).into_client_request()?;
     let headers = req.headers_mut();
     headers.insert(UA, UA_VALUE.try_into()?);
