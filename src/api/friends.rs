@@ -73,7 +73,6 @@ async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
 
     let mut friends = friends
         .iter()
-        .filter(|friend| friend.location != "offline")
         .map(User::to_friend)
         .collect::<Vec<_>>();
 

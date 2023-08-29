@@ -46,7 +46,8 @@ fn init() -> Result<()> {
 
 pub(crate) fn spawn(data: (String, String)) {
     tokio::spawn(async move {
-        if let Ok(friends) = fetch_friends(&data.1).await {
+        if let Ok(mut friends) = fetch_friends(&data.1).await {
+            friends.retain(|friend| friend.location != "offline" && friend.status != "ask me");
             FRIENDS.write().await.insert(data.0.clone(), friends);
             loop {
                 if let Err(e) = stream(&data).await {
