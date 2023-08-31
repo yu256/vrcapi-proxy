@@ -40,7 +40,7 @@ pub(crate) struct Gallery {
     name: String,
     description: String,
     membersOnly: bool,
-    roleIdsToView: Vec<String>,
+    roleIdsToView: Option<Vec<String>>,
     roleIdsToSubmit: Vec<String>,
     roleIdsToAutoApprove: Vec<String>,
     roleIdsToManage: Vec<String>,
