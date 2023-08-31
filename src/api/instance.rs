@@ -56,7 +56,7 @@ pub(crate) enum Response {
 #[post("/instance", data = "<req>")]
 pub(crate) async fn api_instance(req: &str) -> (Status, Json<Response>) {
     match fetch(req).await {
-        Ok((data, users)) => (Status::Ok, Json(Response::Success(data.to_res(users)))),
+        Ok(data) => (Status::Ok, Json(Response::Success(data))),
 
         Err(error) => (
             Status::InternalServerError,
@@ -65,7 +65,7 @@ pub(crate) async fn api_instance(req: &str) -> (Status, Json<Response>) {
     }
 }
 
-async fn fetch(req: &str) -> Result<(InstanceData, HashMap<String, String>)> {
+async fn fetch(req: &str) -> Result<ResponseInstance> {
     let (auth, instance) = req.split_once(':').context("Failed to split")?;
 
     let (_, token) = find_matched_data(auth)?;
@@ -91,9 +91,9 @@ async fn fetch(req: &str) -> Result<(InstanceData, HashMap<String, String>)> {
                     None
                 }
             })
-            .collect::<HashMap<_, _>>();
+            .collect();
 
-        Ok((res.json().await?, users))
+        Ok(res.json::<InstanceData>().await?.to_res(users))
     } else {
         bail!("{}", res.text().await?)
     }
