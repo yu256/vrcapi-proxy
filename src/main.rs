@@ -29,7 +29,10 @@ async fn rocket() -> _ {
 }
 
 fn init() -> Result<()> {
-    if DATA_PATH.is_dir() {
+    if DATA_PATH.is_dir()
+        && DATA_PATH.join("data.json").is_file()
+        && DATA_PATH.join("config.json").is_file()
+    {
         return Ok(());
     }
 

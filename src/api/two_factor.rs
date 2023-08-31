@@ -1,9 +1,8 @@
 use super::utils::CLIENT;
 use crate::{
     consts::{COOKIE, UA, UA_VALUE},
-    split_colon,
     general::{read_json, HashMapExt as _},
-    spawn,
+    spawn, split_colon,
 };
 use anyhow::{bail, Error, Result};
 use rocket::{http::Status, serde::json::Json};
@@ -13,30 +12,42 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Serialize)]
-pub(crate) enum Res {
+pub(crate) enum Response {
     Success(String),
     Error(String),
 }
 
-impl From<Error> for Res {
+impl From<Error> for Response {
     fn from(error: Error) -> Self {
-        Res::Error(error.to_string())
+        Response::Error(error.to_string())
+    }
+}
+
+impl From<&str> for Response {
+    fn from(success: &str) -> Self {
+        Response::Success(success.to_string())
+    }
+}
+
+impl From<String> for Response {
+    fn from(success: String) -> Self {
+        Response::Success(success)
     }
 }
 
 #[post("/twofactor", data = "<req>")]
-pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Res>) {
+pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Response>) {
     match req.split_once(';') {
         Some((req, auth)) => match fetch(req).await {
             Ok(token) => {
                 if let Err(err) = update(auth, token) {
-                    return (Status::InternalServerError, Json(Res::from(err)));
+                    return (Status::InternalServerError, Json(err.into()));
                 }
 
-                (Status::Ok, Json(Res::Success(auth.to_string())))
+                (Status::Ok, Json(auth.into()))
             }
 
-            Err(err) => (Status::InternalServerError, Json(Res::from(err))),
+            Err(err) => (Status::InternalServerError, Json(err.into())),
         },
 
         None => match fetch(req).await {
@@ -44,13 +55,13 @@ pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<Res>) {
                 let auth = Uuid::new_v4().to_string();
 
                 if let Err(err) = update(&auth, token) {
-                    return (Status::InternalServerError, Json(Res::from(err)));
+                    return (Status::InternalServerError, Json(err.into()));
                 }
 
-                (Status::Ok, Json(Res::Success(auth)))
+                (Status::Ok, Json(auth.into()))
             }
 
-            Err(err) => (Status::InternalServerError, Json(Res::from(err))),
+            Err(err) => (Status::InternalServerError, Json(err.into())),
         },
     }
 }
