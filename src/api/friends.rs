@@ -1,5 +1,5 @@
 use super::{user::User, utils::request};
-use crate::consts::VRC_P;
+use crate::{api::response::ApiResponse, consts::VRC_P, into_err};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
 use serde::Serialize;
@@ -39,21 +39,12 @@ impl User {
     }
 }
 
-#[derive(Serialize)]
-pub(crate) enum Response {
-    Success(Vec<ResFriend>),
-    Error(String),
-}
-
 #[post("/friends", data = "<req>")]
-pub(crate) async fn api_friends(req: &str) -> (Status, Json<Response>) {
+pub(crate) async fn api_friends(req: &str) -> (Status, Json<ApiResponse<Vec<ResFriend>>>) {
     match get_friends(req).await {
-        Ok(friends) => (Status::Ok, Json(Response::Success(friends))),
+        Ok(friends) => (Status::Ok, Json(friends.into())),
 
-        Err(e) => (
-            Status::InternalServerError,
-            Json(Response::Error(e.to_string())),
-        ),
+        Err(e) => (Status::InternalServerError, Json(into_err!(e))),
     }
 }
 

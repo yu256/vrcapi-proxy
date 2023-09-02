@@ -2,6 +2,7 @@ use super::{
     utils::{find_matched_data, request},
     FRIENDS,
 };
+use crate::{api::response::ApiResponse, into_err};
 use anyhow::{bail, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -47,21 +48,12 @@ impl InstanceData {
     }
 }
 
-#[derive(Serialize)]
-pub(crate) enum Response {
-    Success(ResponseInstance),
-    Error(String),
-}
-
 #[post("/instance", data = "<req>")]
-pub(crate) async fn api_instance(req: &str) -> (Status, Json<Response>) {
+pub(crate) async fn api_instance(req: &str) -> (Status, Json<ApiResponse<ResponseInstance>>) {
     match fetch(req).await {
-        Ok(data) => (Status::Ok, Json(Response::Success(data))),
+        Ok(data) => (Status::Ok, Json(data.into())),
 
-        Err(error) => (
-            Status::InternalServerError,
-            Json(Response::Error(error.to_string())),
-        ),
+        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
     }
 }
 
