@@ -12,7 +12,7 @@ const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 #[allow(non_snake_case)]
 #[derive(Deserialize, Clone)]
 pub(crate) struct User {
-    pub(crate) bio: String,
+    pub(crate) bio: Option<String>,
     pub(crate) bioLinks: Vec<String>,
     pub(crate) currentAvatarThumbnailImageUrl: String,
     pub(crate) displayName: String,
@@ -113,7 +113,7 @@ impl User {
 
         ResUser {
             currentAvatarThumbnailImageUrl: self.get_img(),
-            bio: self.bio,
+            bio: self.bio.unwrap_or_else(|| String::new()),
             bioLinks: self.bioLinks,
             displayName: self.displayName,
             isFriend: self.isFriend,
