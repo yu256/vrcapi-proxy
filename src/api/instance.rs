@@ -74,7 +74,7 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
             .read()
             .await
             .get(auth)
-            .context("failed to auth.")?
+            .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
             .iter()
             .filter_map(|user| {
                 if user.location == instance {

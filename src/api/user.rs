@@ -56,7 +56,7 @@ async fn fetch(req: &str) -> Result<ResUser> {
         .read()
         .await
         .get(auth)
-        .context("failed to auth.")?
+        .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
         .iter()
         .find(|u| u.id == user)
     {
