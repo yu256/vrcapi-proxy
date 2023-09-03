@@ -36,7 +36,7 @@ async fn fetch(req: &str) -> Result<(&str, &str)> {
         ))
         .set(UA, UA_VALUE)
         .set(COOKIE, token)
-        .send_json(&json!({ "code": f }))?;
+        .send_json(json!({ "code": f }))?;
 
     if res.status() == 200 {
         Ok((auth, token))

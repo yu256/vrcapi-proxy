@@ -27,7 +27,7 @@ async fn fetch(req: &str) -> Result<()> {
         .post(URL)
         .set(UA, UA_VALUE)
         .set(COOKIE, &token)
-        .send_json(&json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ))?;
+        .send_json(json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ))?;
 
     if res.status() == 200 {
         Ok(())
