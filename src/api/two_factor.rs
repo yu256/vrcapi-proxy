@@ -5,45 +5,30 @@ use crate::{
     general::{read_json, HashMapExt as _},
     into_err, spawn, split_colon,
 };
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde_json::json;
 use std::collections::HashMap;
-use uuid::Uuid;
 
 #[post("/twofactor", data = "<req>")]
 pub(crate) async fn api_twofactor(req: &str) -> (Status, Json<ApiResponse<String>>) {
-    match req.split_once(';') {
-        Some((req, auth)) => match fetch(req).await {
-            Ok(token) => {
-                if let Err(err) = update(auth, token) {
-                    return (Status::InternalServerError, Json(into_err!(err)));
-                }
-
-                (Status::Ok, Json(auth.into()))
+    match fetch(req).await {
+        Ok((auth, token)) => {
+            if let Err(err) = update(auth, token) {
+                return (Status::InternalServerError, Json(into_err!(err)));
             }
 
-            Err(err) => (Status::InternalServerError, Json(into_err!(err))),
-        },
+            (Status::Ok, Json(auth.into()))
+        }
 
-        None => match fetch(req).await {
-            Ok(token) => {
-                let auth = Uuid::new_v4().to_string();
-
-                if let Err(err) = update(&auth, token) {
-                    return (Status::InternalServerError, Json(into_err!(err)));
-                }
-
-                (Status::Ok, Json(auth.into()))
-            }
-
-            Err(err) => (Status::InternalServerError, Json(into_err!(err))),
-        },
+        Err(err) => (Status::InternalServerError, Json(into_err!(err))),
     }
 }
 
-async fn fetch(req: &str) -> Result<&str> {
-    split_colon!(req, [token, r#type, f]);
+async fn fetch(req: &str) -> Result<(&str, &str)> {
+    split_colon!(req, [token, r#type, f, auth]);
+
+    ensure!(auth.len() <= 50, "認証IDが長すぎます。");
 
     let res = CLIENT
         .post(format!(
@@ -56,7 +41,7 @@ async fn fetch(req: &str) -> Result<&str> {
         .await?;
 
     if res.status().is_success() {
-        Ok(token)
+        Ok((auth, token))
     } else {
         bail!("{}", res.text().await?)
     }
