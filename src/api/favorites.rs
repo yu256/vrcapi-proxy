@@ -1,7 +1,6 @@
-use super::utils::{find_matched_data, CLIENT};
+use super::utils::find_matched_data;
 use crate::{
-    api::response::ApiResponse,
-    consts::{COOKIE, UA, UA_VALUE},
+    api::{response::ApiResponse, utils::request_json},
     into_err, split_colon,
 };
 use anyhow::{bail, Result};
@@ -23,11 +22,12 @@ async fn fetch(req: &str) -> Result<()> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    let res = CLIENT
-        .post(URL)
-        .set(UA, UA_VALUE)
-        .set(COOKIE, &token)
-        .send_json(json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ))?;
+    let res = request_json(
+        "POST",
+        URL,
+        &token,
+        json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ),
+    )?;
 
     if res.status() == 200 {
         Ok(())

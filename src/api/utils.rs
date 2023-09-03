@@ -17,6 +17,14 @@ pub(crate) fn request(method: &str, target: &str, cookie: &str) -> Result<Respon
         .call()
 }
 
+pub(crate) fn request_json(method: &str, target: &str, cookie: &str, data: impl serde::Serialize) -> Result<Response, ureq::Error> {
+	CLIENT
+        .request(method, target)
+        .set(UA, UA_VALUE)
+        .set(COOKIE, cookie)
+        .send_json(data)
+}
+
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {
     let mut data: HashMap<String, String> = read_json("data.json")?;
 

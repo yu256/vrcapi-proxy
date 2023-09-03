@@ -1,7 +1,5 @@
-use super::utils::CLIENT;
 use crate::{
-    api::response::ApiResponse,
-    consts::{COOKIE, UA, UA_VALUE},
+    api::{response::ApiResponse, utils::request_json},
     general::{read_json, HashMapExt as _},
     into_err, spawn, split_colon,
 };
@@ -30,13 +28,12 @@ async fn fetch(req: &str) -> Result<(&str, &str)> {
 
     ensure!(auth.len() <= 50, "認証IDが長すぎます。");
 
-    let res = CLIENT
-        .post(&format!(
-            "https://api.vrchat.cloud/api/1/auth/twofactorauth/{type}/verify"
-        ))
-        .set(UA, UA_VALUE)
-        .set(COOKIE, token)
-        .send_json(json!({ "code": f }))?;
+    let res = request_json(
+        "POST",
+        &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{type}/verify"),
+        &token,
+        json!({ "code": f }),
+    )?;
 
     if res.status() == 200 {
         Ok((auth, token))
