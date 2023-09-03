@@ -49,12 +49,12 @@ pub(crate) async fn api_friends(req: &str) -> (Status, Json<ApiResponse<Vec<ResF
 }
 
 pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<User>> {
-    let res = request(reqwest::Method::GET, URL, token).await?;
+    let res = request("GET", URL, token)?;
 
-    if res.status().is_success() {
-        Ok(res.json().await?)
+    if res.status() == 200 {
+        Ok(res.into_json()?)
     } else {
-        bail!("{}", res.text().await?)
+        bail!("{}", res.into_string()?)
     }
 }
 

@@ -65,12 +65,12 @@ async fn fetch(req: &str) -> Result<ResUser> {
 
     let (_, token) = unsafe { find_matched_data(auth).unwrap_unchecked() };
 
-    let res = request(reqwest::Method::GET, &format!("{}{}", URL, user), &token).await?;
+    let res = request("GET", &format!("{}{}", URL, user), &token)?;
 
-    if res.status().is_success() {
-        Ok(res.json::<User>().await?.to_user())
+    if res.status() == 200 {
+        Ok(res.into_json::<User>()?.to_user())
     } else {
-        bail!("{}", res.text().await?)
+        bail!("{}", res.into_string()?)
     }
 }
 

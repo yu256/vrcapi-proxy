@@ -64,16 +64,15 @@ async fn fetch(req: &str) -> Result<Vec<ResUser>> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    let res = request(reqwest::Method::GET, &format!("{}{}", URL, user), &token).await?;
+    let res = request("GET", &format!("{}{}", URL, user), &token)?;
 
-    if res.status().is_success() {
+    if res.status() == 200 {
         Ok(res
-            .json::<Vec<User>>()
-            .await?
+            .into_json::<Vec<User>>()?
             .into_iter()
             .map(ResUser::from)
             .collect())
     } else {
-        bail!("{}", res.text().await?)
+        bail!("{}", res.into_string()?)
     }
 }
