@@ -1,5 +1,5 @@
 use super::utils::{find_matched_data, request};
-use crate::{consts::VRC_P, split_colon, api::response::ApiResponse, into_err};
+use crate::{api::response::ApiResponse, consts::VRC_P, into_err, split_colon};
 use anyhow::{bail, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
@@ -52,10 +52,7 @@ pub(crate) async fn api_search_user(req: &str) -> (Status, Json<ApiResponse<Vec<
     match fetch(req).await {
         Ok(users) => (Status::Ok, Json(users.into())),
 
-        Err(error) => (
-            Status::InternalServerError,
-            Json(into_err!(error)),
-        ),
+        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
     }
 }
 

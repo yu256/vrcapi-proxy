@@ -3,16 +3,13 @@ use crate::{
     general::read_json,
 };
 use anyhow::{Context as _, Result};
-use ureq::Response;
 use std::{collections::HashMap, sync::LazyLock};
+use ureq::Response;
 
-pub(crate) static CLIENT: LazyLock<ureq::Agent> = LazyLock::new(|| ureq::AgentBuilder::new().build());
+pub(crate) static CLIENT: LazyLock<ureq::Agent> =
+    LazyLock::new(|| ureq::AgentBuilder::new().build());
 
-pub(crate) fn request(
-    method: &str,
-    target: &str,
-    cookie: &str,
-) -> Result<Response, ureq::Error> {
+pub(crate) fn request(method: &str, target: &str, cookie: &str) -> Result<Response, ureq::Error> {
     CLIENT
         .request(method, target)
         .set(UA, UA_VALUE)

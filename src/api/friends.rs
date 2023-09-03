@@ -62,10 +62,7 @@ async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
     let read = FRIENDS.read().await;
     let friends = read.get(req).with_context(|| format!("{req}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?;
 
-    let mut friends = friends
-        .iter()
-        .map(User::to_friend)
-        .collect::<Vec<_>>();
+    let mut friends = friends.iter().map(User::to_friend).collect::<Vec<_>>();
 
     friends.sort_by(|a, b| a.id.cmp(&b.id));
 

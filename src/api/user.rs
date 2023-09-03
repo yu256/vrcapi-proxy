@@ -29,7 +29,7 @@ pub(crate) struct User {
 #[allow(non_snake_case)]
 #[derive(Serialize)]
 pub(crate) struct ResUser {
-    bio: String,
+    bio: Option<String>,
     bioLinks: Vec<String>,
     currentAvatarThumbnailImageUrl: String,
     displayName: String,
@@ -113,7 +113,7 @@ impl User {
 
         ResUser {
             currentAvatarThumbnailImageUrl: self.get_img(),
-            bio: self.bio.unwrap_or_else(|| String::new()),
+            bio: self.bio,
             bioLinks: self.bioLinks,
             displayName: self.displayName,
             isFriend: self.isFriend,
