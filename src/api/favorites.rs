@@ -28,8 +28,8 @@ fn fetch(req: &str) -> Result<()> {
         &token,
         json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ),
     )
-    .map_err(|e| match e {
-        ureq::Error::Status(status, _) if status == 400 => {
+    .map_err(|e| match *e {
+        ureq::Error::Status(400, _) => {
             anyhow!("既に登録されています。")
         }
         ureq::Error::Status(_, res) => {

@@ -9,20 +9,29 @@ use ureq::Response;
 pub(crate) static CLIENT: LazyLock<ureq::Agent> =
     LazyLock::new(|| ureq::AgentBuilder::new().build());
 
-pub(crate) fn request(method: &str, target: &str, cookie: &str) -> Result<Response, ureq::Error> {
-    CLIENT
+pub(crate) fn request(
+    method: &str,
+    target: &str,
+    cookie: &str,
+) -> Result<Response, Box<ureq::Error>> {
+    Ok(CLIENT
         .request(method, target)
         .set(UA, UA_VALUE)
         .set(COOKIE, cookie)
-        .call()
+        .call()?)
 }
 
-pub(crate) fn request_json(method: &str, target: &str, cookie: &str, data: impl serde::Serialize) -> Result<Response, ureq::Error> {
-	CLIENT
+pub(crate) fn request_json(
+    method: &str,
+    target: &str,
+    cookie: &str,
+    data: impl serde::Serialize,
+) -> Result<Response, Box<ureq::Error>> {
+    Ok(CLIENT
         .request(method, target)
         .set(UA, UA_VALUE)
         .set(COOKIE, cookie)
-        .send_json(data)
+        .send_json(data)?)
 }
 
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {

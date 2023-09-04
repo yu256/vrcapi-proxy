@@ -31,7 +31,7 @@ fn fetch(req: &str) -> Result<(&str, &str)> {
     request_json(
         "POST",
         &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{type}/verify"),
-        &token,
+        token,
         json!({ "code": f }),
     )?;
 

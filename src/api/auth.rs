@@ -4,7 +4,7 @@ use crate::{
     consts::{UA, UA_VALUE},
     into_err,
 };
-use anyhow::{bail, Context as _, Result};
+use anyhow::{Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 use rocket::{http::Status, serde::json::Json};
 use serde_json::Value;
@@ -30,26 +30,22 @@ async fn auth(req: &str) -> Result<String> {
         .set(UA, UA_VALUE)
         .call()?;
 
-    if res.status() == 200 {
-        let token = String::from("auth=")
-            + res
-                .header("set-cookie")
-                .and_then(|c| c.split(';').next())
-                .and_then(|c| c.split('=').nth(1))
-                .context("invalid cookie found.")?;
+    let token = String::from("auth=")
+        + res
+            .header("set-cookie")
+            .and_then(|c| c.split(';').next())
+            .and_then(|c| c.split('=').nth(1))
+            .context("invalid cookie found.")?;
 
-        let auth_type = {
-            let json: Value = res.into_json()?;
-            json["requiresTwoFactorAuth"]
-                .as_array()
-                .and_then(|arr| arr.get(0))
-                .and_then(|value| value.as_str())
-                .context("No 2FA")?
-                .to_lowercase()
-        };
+    let auth_type = {
+        let json: Value = res.into_json()?;
+        json["requiresTwoFactorAuth"]
+            .as_array()
+            .and_then(|arr| arr.get(0))
+            .and_then(|value| value.as_str())
+            .context("No 2FA")?
+            .to_lowercase()
+    };
 
-        Ok(token + ":" + &auth_type)
-    } else {
-        bail!("{}", res.into_string()?)
-    }
+    Ok(token + ":" + &auth_type)
 }
