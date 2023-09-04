@@ -1,6 +1,6 @@
 use super::{user::User, utils::request};
 use crate::{api::response::ApiResponse, consts::VRC_P, into_err};
-use anyhow::{bail, Context as _, Result};
+use anyhow::{Context as _, Result};
 use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
 use serde::Serialize;
 use std::{collections::HashMap, sync::LazyLock};
@@ -48,14 +48,8 @@ pub(crate) async fn api_friends(req: &str) -> (Status, Json<ApiResponse<Vec<ResF
     }
 }
 
-pub(crate) async fn fetch_friends(token: &str) -> Result<Vec<User>> {
-    let res = request("GET", URL, token)?;
-
-    if res.status() == 200 {
-        Ok(res.into_json()?)
-    } else {
-        bail!("{}", res.into_string()?)
-    }
+pub(crate) fn fetch_friends(token: &str) -> Result<Vec<User>> {
+    Ok(request("GET", URL, token).map(|res| res.into_json::<Vec<User>>())??)
 }
 
 async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {

@@ -3,7 +3,7 @@ use super::{
     utils::{find_matched_data, request},
 };
 use crate::{into_err, split_colon};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
@@ -52,28 +52,23 @@ impl World {
 }
 
 #[post("/world", data = "<req>")]
-pub(crate) async fn api_world(req: &str) -> (Status, Json<ApiResponse<World>>) {
-    match fetch(req).await {
+pub(crate) fn api_world(req: &str) -> (Status, Json<ApiResponse<World>>) {
+    match fetch(req) {
         Ok(status) => (Status::Ok, Json(status.into())),
 
         Err(error) => (Status::InternalServerError, Json(into_err!(error))),
     }
 }
 
-async fn fetch(req: &str) -> Result<World> {
+fn fetch(req: &str) -> Result<World> {
     split_colon!(req, [auth, world]);
 
     let (_, token) = find_matched_data(auth)?;
 
-    let res = request(
+    request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
         &token,
-    )?;
-
-    if res.status() == 200 {
-        Ok(res.into_json::<World>()?.to_res())
-    } else {
-        bail!("{}", res.into_string()?)
-    }
+    )
+    .map(|res| Ok(res.into_json::<World>()?.to_res()))?
 }

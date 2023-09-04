@@ -3,7 +3,7 @@ use super::{
     FRIENDS,
 };
 use crate::{api::response::ApiResponse, consts::VRC_P, into_err, split_colon};
-use anyhow::{bail, Context as _, Result};
+use anyhow::{Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
@@ -64,14 +64,8 @@ async fn fetch(req: &str) -> Result<ResUser> {
     }
 
     let (_, token) = unsafe { find_matched_data(auth).unwrap_unchecked() };
-
-    let res = request("GET", &format!("{}{}", URL, user), &token)?;
-
-    if res.status() == 200 {
-        Ok(res.into_json::<User>()?.to_user())
-    } else {
-        bail!("{}", res.into_string()?)
-    }
+    request("GET", &format!("{}{}", URL, user), &token)
+        .map(|res| Ok(res.into_json::<User>()?.to_user()))?
 }
 
 impl User {

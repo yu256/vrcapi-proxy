@@ -3,7 +3,7 @@ use super::{
     FRIENDS,
 };
 use crate::{api::response::ApiResponse, into_err};
-use anyhow::{bail, Context as _, Result};
+use anyhow::{anyhow, Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,14 +62,13 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    let res = request(
+    match request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
         &token,
-    )?;
-
-    if res.status() == 200 {
-        let users = FRIENDS
+    ) {
+        Ok(res) => {
+            let users = FRIENDS
             .read()
             .await
             .get(auth)
@@ -84,8 +83,8 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
             })
             .collect();
 
-        Ok(res.into_json::<InstanceData>()?.to_res(users))
-    } else {
-        bail!("{}", res.into_string()?)
+            Ok(res.into_json::<InstanceData>()?.to_res(users))
+        }
+        Err(e) => Err(anyhow!("{}", e.to_string())),
     }
 }

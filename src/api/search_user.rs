@@ -1,6 +1,6 @@
 use super::utils::{find_matched_data, request};
 use crate::{api::response::ApiResponse, consts::VRC_P, into_err, split_colon};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
@@ -48,28 +48,24 @@ impl From<User> for ResUser {
 }
 
 #[post("/search_user", data = "<req>")]
-pub(crate) async fn api_search_user(req: &str) -> (Status, Json<ApiResponse<Vec<ResUser>>>) {
-    match fetch(req).await {
+pub(crate) fn api_search_user(req: &str) -> (Status, Json<ApiResponse<Vec<ResUser>>>) {
+    match fetch(req) {
         Ok(users) => (Status::Ok, Json(users.into())),
 
         Err(error) => (Status::InternalServerError, Json(into_err!(error))),
     }
 }
 
-async fn fetch(req: &str) -> Result<Vec<ResUser>> {
+fn fetch(req: &str) -> Result<Vec<ResUser>> {
     split_colon!(req, [auth, user]);
 
     let (_, token) = find_matched_data(auth)?;
 
-    let res = request("GET", &format!("{}{}", URL, user), &token)?;
-
-    if res.status() == 200 {
+    request("GET", &format!("{}{}", URL, user), &token).map(|res| {
         Ok(res
             .into_json::<Vec<User>>()?
             .into_iter()
             .map(ResUser::from)
-            .collect())
-    } else {
-        bail!("{}", res.into_string()?)
-    }
+            .collect::<Vec<_>>())
+    })?
 }

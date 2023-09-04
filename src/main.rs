@@ -47,7 +47,7 @@ fn init() -> Result<()> {
 pub(crate) fn spawn(data: (String, String)) {
     tokio::spawn(async move {
         let data = Arc::new(data);
-        match fetch_friends(&data.1).await {
+        match fetch_friends(&data.1) {
             Ok(mut friends) => {
                 friends.retain(|friend| friend.location != "offline" && friend.status != "ask me");
                 FRIENDS.write().await.insert(data.0.clone(), friends);
