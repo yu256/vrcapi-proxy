@@ -26,10 +26,11 @@ fn fetch(req: &str) -> Result<ResStatus> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    Ok(request(
+    request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/user/{user}/friendStatus"),
         &token,
     )
-    .map(|res| res.into_json::<ResStatus>())??)
+    .map(|res| res.into_json::<ResStatus>())?
+    .map_err(From::from)
 }

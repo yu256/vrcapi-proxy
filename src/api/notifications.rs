@@ -30,5 +30,7 @@ pub(crate) fn api_notifications(req: &str) -> (Status, Json<ApiResponse<Vec<Noti
 
 fn fetch(req: &str) -> Result<Vec<Notification>> {
     let (_, token) = find_matched_data(req)?;
-    Ok(request("GET", URL, &token).map(|res| res.into_json::<Vec<Notification>>())??)
+    request("GET", URL, &token)
+        .map(|res| res.into_json::<Vec<Notification>>())?
+        .map_err(From::from)
 }

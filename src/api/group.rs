@@ -80,10 +80,11 @@ fn fetch(req: &str) -> Result<Group> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    Ok(request(
+    request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
         &token,
     )
-    .map(|res| res.into_json::<Group>())??)
+    .map(|res| res.into_json::<Group>())?
+    .map_err(From::from)
 }

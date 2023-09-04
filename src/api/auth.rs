@@ -12,15 +12,15 @@ use serde_json::Value;
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 
 #[post("/auth", data = "<req>")]
-pub(crate) async fn api_auth(req: &str) -> (Status, Json<ApiResponse<String>>) {
-    match auth(req).await {
+pub(crate) fn api_auth(req: &str) -> (Status, Json<ApiResponse<String>>) {
+    match auth(req) {
         Ok(token) => (Status::Ok, Json(token.into())),
 
         Err(error) => (Status::InternalServerError, Json(into_err!(error))),
     }
 }
 
-async fn auth(req: &str) -> Result<String> {
+fn auth(req: &str) -> Result<String> {
     let res = CLIENT
         .get(URL)
         .set(

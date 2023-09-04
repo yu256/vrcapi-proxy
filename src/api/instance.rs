@@ -3,7 +3,7 @@ use super::{
     FRIENDS,
 };
 use crate::{api::response::ApiResponse, into_err};
-use anyhow::{anyhow, Context as _, Result};
+use anyhow::{Context as _, Result};
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,29 +62,26 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
 
     let (_, token) = find_matched_data(auth)?;
 
-    match request(
+    let res = request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
         &token,
-    ) {
-        Ok(res) => {
-            let users = FRIENDS
-            .read()
-            .await
-            .get(auth)
-            .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
-            .iter()
-            .filter_map(|user| {
-                if user.location == instance {
-                    Some((user.get_img(), user.displayName.clone()))
-                } else {
-                    None
-                }
-            })
-            .collect();
+    )?;
 
-            Ok(res.into_json::<InstanceData>()?.into_res(users))
-        }
-        Err(e) => Err(anyhow!("{}", e.to_string())),
-    }
+    let users = FRIENDS
+        .read()
+        .await
+        .get(auth)
+        .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
+        .iter()
+        .filter_map(|user| {
+            if user.location == instance {
+                Some((user.get_img(), user.displayName.clone()))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    Ok(res.into_json::<InstanceData>()?.into_res(users))
 }

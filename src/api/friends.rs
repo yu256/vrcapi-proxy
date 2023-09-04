@@ -51,7 +51,9 @@ pub(crate) async fn api_friends(req: &str) -> (Status, Json<ApiResponse<Vec<ResF
 }
 
 pub(crate) fn fetch_friends(token: &str) -> Result<Vec<User>> {
-    Ok(request("GET", URL, token).map(|res| res.into_json::<Vec<User>>())??)
+    request("GET", URL, token)
+        .map(|res| res.into_json::<Vec<User>>())?
+        .map_err(From::from)
 }
 
 async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
