@@ -93,7 +93,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
     loop {
         sleep(std::time::Duration::from_secs(60)).await;
         {
-            if !ping_count.load(Ordering::Acquire) {
+            if !ping_count.fetch_not(Ordering::Acquire) {
                 if handle.is_finished() {
                     return handle.await?;
                 } else {
@@ -101,7 +101,6 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     bail!("disconnected.");
                 }
             }
-            ping_count.store(false, Ordering::Release);
         }
     }
 }

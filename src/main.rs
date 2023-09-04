@@ -1,4 +1,5 @@
 #![feature(lazy_cell)]
+#![feature(atomic_bool_fetch_not)]
 
 use anyhow::Result;
 use api::{fetch_friends, route, FRIENDS};
