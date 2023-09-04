@@ -19,16 +19,18 @@ pub(crate) struct ResFriend {
     location: String,
 }
 
-impl User {
-    pub(crate) fn to_friend(&self) -> ResFriend {
-        ResFriend {
-            currentAvatarThumbnailImageUrl: self.get_img(),
-            id: self.id.to_owned(),
-            status: self.status.to_owned(),
-            location: self.location.to_owned(),
+impl From<&User> for ResFriend {
+    fn from(user: &User) -> Self {
+        Self {
+            currentAvatarThumbnailImageUrl: user.get_img(),
+            id: user.id.to_owned(),
+            status: user.status.to_owned(),
+            location: user.location.to_owned(),
         }
     }
+}
 
+impl User {
     pub(crate) fn get_img(&self) -> String {
         let img = match self.tags.iter().any(|tag| tag == VRC_P) {
             true if !self.userIcon.is_empty() => &self.userIcon,
@@ -56,7 +58,7 @@ async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
     let read = FRIENDS.read().await;
     let friends = read.get(req).with_context(|| format!("{req}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?;
 
-    let mut friends = friends.iter().map(User::to_friend).collect::<Vec<_>>();
+    let mut friends = friends.iter().map(ResFriend::from).collect::<Vec<_>>();
 
     friends.sort_by(|a, b| a.id.cmp(&b.id));
 

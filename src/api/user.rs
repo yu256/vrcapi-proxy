@@ -60,19 +60,19 @@ async fn fetch(req: &str) -> Result<ResUser> {
         .iter()
         .find(|u| u.id == user)
     {
-        return Ok(user.clone().to_user());
+        return Ok(user.clone().into());
     }
 
     let (_, token) = unsafe { find_matched_data(auth).unwrap_unchecked() };
     request("GET", &format!("{}{}", URL, user), &token)
-        .map(|res| Ok(res.into_json::<User>()?.to_user()))?
+        .map(|res| Ok(res.into_json::<User>()?.into()))?
 }
 
-impl User {
-    fn to_user(self) -> ResUser {
+impl From<User> for ResUser {
+    fn from(user: User) -> Self {
         let mut rank = {
             let mut rank = None;
-            for tag in self.tags.iter().rev() {
+            for tag in user.tags.iter().rev() {
                 match tag.as_str() {
                     "system_trust_veteran" => {
                         rank = Some("Trusted");
@@ -101,19 +101,19 @@ impl User {
             rank.unwrap_or("Visitor").to_owned()
         };
 
-        if self.tags.iter().any(|tag| tag == VRC_P) {
+        if user.tags.iter().any(|tag| tag == VRC_P) {
             rank += " VRC+"
         }
 
         ResUser {
-            currentAvatarThumbnailImageUrl: self.get_img(),
-            bio: self.bio,
-            bioLinks: self.bioLinks,
-            displayName: self.displayName,
-            isFriend: self.isFriend,
-            location: self.location,
-            status: self.status,
-            statusDescription: self.statusDescription,
+            currentAvatarThumbnailImageUrl: user.get_img(),
+            bio: user.bio,
+            bioLinks: user.bioLinks,
+            displayName: user.displayName,
+            isFriend: user.isFriend,
+            location: user.location,
+            status: user.status,
+            statusDescription: user.statusDescription,
             rank,
         }
     }

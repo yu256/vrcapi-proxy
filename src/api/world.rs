@@ -41,7 +41,7 @@ pub(crate) struct World {
 }
 
 impl World {
-    fn to_res(mut self) -> Self {
+    fn trim(mut self) -> Self {
         self.tags.retain(|tag| tag.starts_with("author_tag"));
         self.tags.iter_mut().for_each(|tag| {
             tag.replace_range(..11, "");
@@ -70,5 +70,5 @@ fn fetch(req: &str) -> Result<World> {
         &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
         &token,
     )
-    .map(|res| Ok(res.into_json::<World>()?.to_res()))?
+    .map(|res| Ok(res.into_json::<World>()?.trim()))?
 }

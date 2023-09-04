@@ -36,7 +36,7 @@ pub(crate) struct ResponseInstance {
 }
 
 impl InstanceData {
-    fn to_res(self, users: HashMap<String, String>) -> ResponseInstance {
+    fn into_res(self, users: HashMap<String, String>) -> ResponseInstance {
         ResponseInstance {
             ownerId: self.ownerId,
             userCount: self.userCount,
@@ -83,7 +83,7 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
             })
             .collect();
 
-            Ok(res.into_json::<InstanceData>()?.to_res(users))
+            Ok(res.into_json::<InstanceData>()?.into_res(users))
         }
         Err(e) => Err(anyhow!("{}", e.to_string())),
     }
