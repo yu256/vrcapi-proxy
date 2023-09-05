@@ -20,7 +20,7 @@ pub(crate) struct ResFriend {
     id: String,
     status: String,
     location: String,
-    undetermined: Option<bool>,
+    undetermined: bool,
 }
 
 impl From<&User> for ResFriend {

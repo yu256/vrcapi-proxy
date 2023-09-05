@@ -27,7 +27,8 @@ pub(crate) struct User {
     pub(crate) tags: Vec<String>,
     pub(crate) userIcon: String,
     pub(crate) profilePicOverride: String,
-	pub(crate) undetermined: Option<bool>,
+    #[serde(default)]
+    pub(crate) undetermined: bool,
 }
 
 #[allow(non_snake_case)]
