@@ -1,5 +1,8 @@
 use super::{user::User, utils::request};
-use crate::{api::response::ApiResponse, consts::VRC_P};
+use crate::{
+    api::response::ApiResponse,
+    consts::{INVALID_AUTH, VRC_P},
+};
 use anyhow::{Context as _, Result};
 use rocket::tokio::sync::RwLock;
 use serde::Serialize;
@@ -52,7 +55,7 @@ pub(crate) fn fetch_friends(token: &str) -> Result<Vec<User>> {
 
 async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {
     let read = FRIENDS.read().await;
-    let friends = read.get(req).with_context(|| format!("{req}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?;
+    let friends = read.get(req).context(INVALID_AUTH)?;
 
     let mut friends = friends.iter().map(ResFriend::from).collect::<Vec<_>>();
 

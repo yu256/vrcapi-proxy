@@ -1,5 +1,5 @@
 use crate::{
-    consts::{COOKIE, UA, UA_VALUE},
+    consts::{COOKIE, INVALID_AUTH, UA, UA_VALUE},
     general::read_json,
 };
 use anyhow::{Context as _, Result};
@@ -39,7 +39,7 @@ pub(crate) fn request_json(
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {
     let mut data: HashMap<String, String> = read_json("data.json")?;
 
-    let matched = data.remove_entry(auth).with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?;
+    let matched = data.remove_entry(auth).context(INVALID_AUTH)?;
 
     Ok(matched)
 }

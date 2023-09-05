@@ -2,7 +2,7 @@ use super::{
     utils::{find_matched_data, request},
     FRIENDS,
 };
-use crate::api::response::ApiResponse;
+use crate::{api::response::ApiResponse, consts::INVALID_AUTH};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -67,7 +67,7 @@ async fn fetch(req: &str) -> Result<ResponseInstance> {
         .read()
         .await
         .get(auth)
-        .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
+        .context(INVALID_AUTH)?
         .iter()
         .filter_map(|user| {
             if user.location == instance {

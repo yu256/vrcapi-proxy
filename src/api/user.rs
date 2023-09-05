@@ -2,7 +2,11 @@ use super::{
     utils::{find_matched_data, request},
     FRIENDS,
 };
-use crate::{api::response::ApiResponse, consts::VRC_P, split_colon};
+use crate::{
+    api::response::ApiResponse,
+    consts::{INVALID_AUTH, VRC_P},
+    split_colon,
+};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 
@@ -51,7 +55,7 @@ async fn fetch(req: &str) -> Result<ResUser> {
         .read()
         .await
         .get(auth)
-        .with_context(|| format!("{auth}での認証に失敗しました。サーバー側の初回fetchに失敗しているか、トークンが無効です。"))?
+        .context(INVALID_AUTH)?
         .iter()
         .find(|u| u.id == user)
     {
