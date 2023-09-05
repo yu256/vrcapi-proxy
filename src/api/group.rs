@@ -1,6 +1,5 @@
 use super::utils::{find_matched_data, request};
 use crate::{api::response::ApiResponse, split_colon};
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -67,18 +66,17 @@ pub(crate) struct Member {
 
 #[post("/group", data = "<req>")]
 pub(crate) fn api_group(req: &str) -> ApiResponse<Group> {
-    fetch(req).into()
-}
+    (|| {
+        split_colon!(req, [auth, id]);
 
-fn fetch(req: &str) -> Result<Group> {
-    split_colon!(req, [auth, id]);
+        let token = find_matched_data(auth)?.1;
 
-    let (_, token) = find_matched_data(auth)?;
-
-    request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
-        &token,
-    )
-    .map(|res| res.into_json::<Group>().map_err(From::from))?
+        request(
+            "GET",
+            &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
+            &token,
+        )
+        .map(|res| res.into_json::<Group>().map_err(From::from))?
+    })()
+    .into()
 }

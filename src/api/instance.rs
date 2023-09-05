@@ -3,7 +3,7 @@ use super::{
     FRIENDS,
 };
 use crate::{api::response::ApiResponse, consts::INVALID_AUTH};
-use anyhow::{Context as _, Result};
+use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -49,34 +49,34 @@ impl InstanceData {
 
 #[post("/instance", data = "<req>")]
 pub(crate) async fn api_instance(req: &str) -> ApiResponse<ResponseInstance> {
-    fetch(req).await.into()
-}
+    (|| async {
+        let (auth, instance) = req.split_once(':').context("Failed to split")?;
 
-async fn fetch(req: &str) -> Result<ResponseInstance> {
-    let (auth, instance) = req.split_once(':').context("Failed to split")?;
+        let token = find_matched_data(auth)?.1;
 
-    let (_, token) = find_matched_data(auth)?;
+        let res = request(
+            "GET",
+            &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
+            &token,
+        )?;
 
-    let res = request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
-        &token,
-    )?;
+        let users = FRIENDS
+            .read()
+            .await
+            .get(auth)
+            .context(INVALID_AUTH)?
+            .iter()
+            .filter_map(|user| {
+                if user.location == instance {
+                    Some((user.get_img(), user.displayName.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-    let users = FRIENDS
-        .read()
-        .await
-        .get(auth)
-        .context(INVALID_AUTH)?
-        .iter()
-        .filter_map(|user| {
-            if user.location == instance {
-                Some((user.get_img(), user.displayName.clone()))
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    Ok(res.into_json::<InstanceData>()?.into_res(users))
+        Ok(res.into_json::<InstanceData>()?.into_res(users))
+    })()
+    .await
+    .into()
 }

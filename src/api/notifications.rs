@@ -1,6 +1,5 @@
 use super::utils::{find_matched_data, request};
 use crate::api::response::ApiResponse;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -20,11 +19,9 @@ const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 
 #[post("/notifications", data = "<req>")]
 pub(crate) fn api_notifications(req: &str) -> ApiResponse<Vec<Notification>> {
-    fetch(req).into()
-}
-
-fn fetch(req: &str) -> Result<Vec<Notification>> {
-    let (_, token) = find_matched_data(req)?;
-    request("GET", URL, &token)
-        .map(|res| res.into_json::<Vec<Notification>>().map_err(From::from))?
+    (|| {
+        request("GET", URL, &find_matched_data(req)?.1)
+            .map(|res| res.into_json::<Vec<Notification>>().map_err(From::from))?
+    })()
+    .into()
 }

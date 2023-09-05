@@ -7,7 +7,7 @@ use crate::{
     consts::{INVALID_AUTH, VRC_P},
     split_colon,
 };
-use anyhow::{Context as _, Result};
+use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
@@ -45,26 +45,26 @@ pub(crate) struct ResUser {
 
 #[post("/user", data = "<req>")]
 pub(crate) async fn api_user(req: &str) -> ApiResponse<ResUser> {
-    fetch(req).await.into()
-}
+    (|| async {
+        split_colon!(req, [auth, user]);
 
-async fn fetch(req: &str) -> Result<ResUser> {
-    split_colon!(req, [auth, user]);
+        if let Some(user) = FRIENDS
+            .read()
+            .await
+            .get(auth)
+            .context(INVALID_AUTH)?
+            .iter()
+            .find(|u| u.id == user)
+        {
+            return Ok(user.clone().into());
+        }
 
-    if let Some(user) = FRIENDS
-        .read()
-        .await
-        .get(auth)
-        .context(INVALID_AUTH)?
-        .iter()
-        .find(|u| u.id == user)
-    {
-        return Ok(user.clone().into());
-    }
-
-    let (_, token) = unsafe { find_matched_data(auth).unwrap_unchecked() };
-    request("GET", &format!("{}{}", URL, user), &token)
-        .map(|res| Ok(res.into_json::<User>()?.into()))?
+        let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };
+        request("GET", &format!("{}{}", URL, user), &token)
+            .map(|res| Ok(res.into_json::<User>()?.into()))?
+    })()
+    .await
+    .into()
 }
 
 impl From<User> for ResUser {

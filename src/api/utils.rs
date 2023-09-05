@@ -13,13 +13,12 @@ pub(crate) fn request(
     method: &str,
     target: &str,
     cookie: &str,
-) -> Result<Response, Box<ureq::Error>> {
+) -> Result<Response, ureq::Error> {
     CLIENT
         .request(method, target)
         .set(UA, UA_VALUE)
         .set(COOKIE, cookie)
         .call()
-        .map_err(Box::new)
 }
 
 pub(crate) fn request_json(
@@ -27,13 +26,12 @@ pub(crate) fn request_json(
     target: &str,
     cookie: &str,
     data: impl serde::Serialize,
-) -> Result<Response, Box<ureq::Error>> {
+) -> Result<Response, ureq::Error> {
     CLIENT
         .request(method, target)
         .set(UA, UA_VALUE)
         .set(COOKIE, cookie)
         .send_json(data)
-        .map_err(Box::new)
 }
 
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {

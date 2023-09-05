@@ -3,23 +3,21 @@ use super::{
     utils::{find_matched_data, request},
 };
 use crate::split_colon;
-use anyhow::Result;
 
 #[post("/friend_accept", data = "<req>")]
 pub(crate) fn api_friend_accept(req: &str) -> ApiResponse<()> {
-    fetch(req).into()
-}
+    (|| {
+        split_colon!(req, [auth, id]);
 
-fn fetch(req: &str) -> Result<()> {
-    split_colon!(req, [auth, id]);
+        let token = find_matched_data(auth)?.1;
 
-    let (_, token) = find_matched_data(auth)?;
+        request(
+            "PUT",
+            &format!("https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"),
+            &token,
+        )?;
 
-    request(
-        "PUT",
-        &format!("https://api.vrchat.cloud/api/1/auth/user/notifications/{id}/accept"),
-        &token,
-    )?;
-
-    Ok(())
+        Ok(())
+    })()
+    .into()
 }

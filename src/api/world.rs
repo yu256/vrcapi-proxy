@@ -3,7 +3,6 @@ use super::{
     utils::{find_matched_data, request},
 };
 use crate::split_colon;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -52,18 +51,17 @@ impl World {
 
 #[post("/world", data = "<req>")]
 pub(crate) fn api_world(req: &str) -> ApiResponse<World> {
-    fetch(req).into()
-}
+    (|| {
+        split_colon!(req, [auth, world]);
 
-fn fetch(req: &str) -> Result<World> {
-    split_colon!(req, [auth, world]);
+        let token = find_matched_data(auth)?.1;
 
-    let (_, token) = find_matched_data(auth)?;
-
-    request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
-        &token,
-    )
-    .map(|res| Ok(res.into_json::<World>()?.trim()))?
+        request(
+            "GET",
+            &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
+            &token,
+        )
+        .map(|res| Ok(res.into_json::<World>()?.trim()))?
+    })()
+    .into()
 }

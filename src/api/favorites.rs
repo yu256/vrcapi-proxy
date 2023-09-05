@@ -3,35 +3,26 @@ use crate::{
     api::{response::ApiResponse, utils::request_json},
     split_colon,
 };
-use anyhow::{anyhow, Result};
+use anyhow::anyhow;
 use serde_json::json;
-const URL: &str = "https://api.vrchat.cloud/api/1/favorites";
 
 #[post("/favorites", data = "<req>")]
 pub(crate) fn api_add_favorites(req: &str) -> ApiResponse<bool> {
-    fetch(req).into()
-}
+    (|| {
+        split_colon!(req, [auth, r#type, id, tag]);
 
-fn fetch(req: &str) -> Result<bool> {
-    split_colon!(req, [auth, r#type, id, tag]);
+        let token = find_matched_data(auth)?.1;
 
-    let (_, token) = find_matched_data(auth)?;
-
-    request_json(
-        "POST",
-        URL,
-        &token,
-        json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ),
-    )
-    .map_err(|e| match *e {
-        ureq::Error::Status(400, _) => {
-            anyhow!("既に登録されています。")
+        match request_json(
+            "POST",
+            "https://api.vrchat.cloud/api/1/favorites",
+            &token,
+            json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ),
+        ) {
+            Ok(_) => Ok(true),
+            Err(ureq::Error::Status(400, _)) => Err(anyhow!("既に登録されています。")),
+            Err(e) => Err(e.into()),
         }
-        ureq::Error::Status(_, res) => {
-            anyhow!(res.into_string().unwrap_or_else(|e| e.to_string()))
-        }
-        _ => e.into(),
-    })?;
-
-    Ok(true)
+    })()
+    .into()
 }
