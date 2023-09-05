@@ -74,7 +74,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             eprintln!("not deserialized: {message}"); // debug
                         }
                     }
-                    "friend-offline" | "friend-delete" => {
+                    "friend-offline" | "friend-delete" | "friend-active" => {
                         if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
                             let mut unlocked = FRIENDS.write().await;
                             let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
