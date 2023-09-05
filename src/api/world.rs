@@ -2,9 +2,8 @@ use super::{
     response::ApiResponse,
     utils::{find_matched_data, request},
 };
-use crate::{into_err, split_colon};
+use crate::split_colon;
 use anyhow::Result;
-use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -52,12 +51,8 @@ impl World {
 }
 
 #[post("/world", data = "<req>")]
-pub(crate) fn api_world(req: &str) -> (Status, Json<ApiResponse<World>>) {
-    match fetch(req) {
-        Ok(status) => (Status::Ok, Json(status.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_world(req: &str) -> ApiResponse<World> {
+    fetch(req).into()
 }
 
 fn fetch(req: &str) -> Result<World> {

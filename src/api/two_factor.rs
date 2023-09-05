@@ -1,25 +1,24 @@
 use crate::{
     api::{response::ApiResponse, utils::request_json},
     general::{read_json, HashMapExt as _},
-    into_err, spawn, split_colon,
+    spawn, split_colon,
 };
 use anyhow::{ensure, Result};
-use rocket::{http::Status, serde::json::Json};
 use serde_json::json;
 use std::collections::HashMap;
 
 #[post("/twofactor", data = "<req>")]
-pub(crate) fn api_twofactor(req: &str) -> (Status, Json<ApiResponse<String>>) {
+pub(crate) fn api_twofactor(req: &str) -> ApiResponse<String> {
     match fetch(req) {
         Ok((auth, token)) => {
             if let Err(err) = update(auth, token) {
-                return (Status::InternalServerError, Json(into_err!(err)));
+                return ApiResponse::Error(err.to_string());
             }
 
-            (Status::Ok, Json(auth.into()))
+            auth.into()
         }
 
-        Err(err) => (Status::InternalServerError, Json(into_err!(err))),
+        Err(err) => ApiResponse::Error(err.to_string()),
     }
 }
 

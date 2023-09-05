@@ -1,22 +1,13 @@
-use super::utils::{find_matched_data, request};
-use crate::{into_err, split_colon};
+use super::{
+    response::ApiResponse,
+    utils::{find_matched_data, request},
+};
+use crate::split_colon;
 use anyhow::Result;
-use rocket::{http::Status, serde::json::Json};
-use serde::Serialize;
-
-#[derive(Serialize)]
-pub(crate) enum ApiResponse {
-    Success,
-    Error(String),
-}
 
 #[post("/friend_accept", data = "<req>")]
-pub(crate) fn api_friend_accept(req: &str) -> (Status, Json<ApiResponse>) {
-    match fetch(req) {
-        Ok(_) => (Status::Ok, Json(ApiResponse::Success)),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_friend_accept(req: &str) -> ApiResponse<()> {
+    fetch(req).into()
 }
 
 fn fetch(req: &str) -> Result<()> {

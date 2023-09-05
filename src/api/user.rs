@@ -2,9 +2,8 @@ use super::{
     utils::{find_matched_data, request},
     FRIENDS,
 };
-use crate::{api::response::ApiResponse, consts::VRC_P, into_err, split_colon};
+use crate::{api::response::ApiResponse, consts::VRC_P, split_colon};
 use anyhow::{Context as _, Result};
-use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
@@ -41,12 +40,8 @@ pub(crate) struct ResUser {
 }
 
 #[post("/user", data = "<req>")]
-pub(crate) async fn api_user(req: &str) -> (Status, Json<ApiResponse<ResUser>>) {
-    match fetch(req).await {
-        Ok(user) => (Status::Ok, Json(user.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) async fn api_user(req: &str) -> ApiResponse<ResUser> {
+    fetch(req).await.into()
 }
 
 async fn fetch(req: &str) -> Result<ResUser> {

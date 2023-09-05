@@ -1,7 +1,6 @@
 use super::utils::{find_matched_data, request};
-use crate::{api::response::ApiResponse, consts::VRC_P, into_err, split_colon};
+use crate::{api::response::ApiResponse, consts::VRC_P, split_colon};
 use anyhow::Result;
-use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users?search=";
@@ -48,12 +47,8 @@ impl From<User> for ResUser {
 }
 
 #[post("/search_user", data = "<req>")]
-pub(crate) fn api_search_user(req: &str) -> (Status, Json<ApiResponse<Vec<ResUser>>>) {
-    match fetch(req) {
-        Ok(users) => (Status::Ok, Json(users.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_search_user(req: &str) -> ApiResponse<Vec<ResUser>> {
+    fetch(req).into()
 }
 
 fn fetch(req: &str) -> Result<Vec<ResUser>> {

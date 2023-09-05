@@ -1,7 +1,7 @@
 use super::{user::User, utils::request};
-use crate::{api::response::ApiResponse, consts::VRC_P, into_err};
+use crate::{api::response::ApiResponse, consts::VRC_P};
 use anyhow::{Context as _, Result};
-use rocket::{http::Status, serde::json::Json, tokio::sync::RwLock};
+use rocket::tokio::sync::RwLock;
 use serde::Serialize;
 use std::{collections::HashMap, sync::LazyLock};
 
@@ -42,18 +42,12 @@ impl User {
 }
 
 #[post("/friends", data = "<req>")]
-pub(crate) async fn api_friends(req: &str) -> (Status, Json<ApiResponse<Vec<ResFriend>>>) {
-    match get_friends(req).await {
-        Ok(friends) => (Status::Ok, Json(friends.into())),
-
-        Err(e) => (Status::InternalServerError, Json(into_err!(e))),
-    }
+pub(crate) async fn api_friends(req: &str) -> ApiResponse<Vec<ResFriend>> {
+    get_friends(req).await.into()
 }
 
 pub(crate) fn fetch_friends(token: &str) -> Result<Vec<User>> {
-    request("GET", URL, token)
-        .map(|res| res.into_json::<Vec<User>>())?
-        .map_err(From::from)
+    request("GET", URL, token).map(|res| res.into_json::<Vec<User>>().map_err(From::from))?
 }
 
 async fn get_friends(req: &str) -> Result<Vec<ResFriend>> {

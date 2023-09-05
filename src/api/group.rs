@@ -1,7 +1,6 @@
 use super::utils::{find_matched_data, request};
-use crate::{api::response::ApiResponse, into_err, split_colon};
+use crate::{api::response::ApiResponse, split_colon};
 use anyhow::Result;
-use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -67,12 +66,8 @@ pub(crate) struct Member {
 }
 
 #[post("/group", data = "<req>")]
-pub(crate) fn api_group(req: &str) -> (Status, Json<ApiResponse<Group>>) {
-    match fetch(req) {
-        Ok(grp) => (Status::Ok, Json(grp.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_group(req: &str) -> ApiResponse<Group> {
+    fetch(req).into()
 }
 
 fn fetch(req: &str) -> Result<Group> {
@@ -85,6 +80,5 @@ fn fetch(req: &str) -> Result<Group> {
         &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
         &token,
     )
-    .map(|res| res.into_json::<Group>())?
-    .map_err(From::from)
+    .map(|res| res.into_json::<Group>().map_err(From::from))?
 }

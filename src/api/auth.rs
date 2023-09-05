@@ -2,22 +2,16 @@ use super::utils::CLIENT;
 use crate::{
     api::response::ApiResponse,
     consts::{UA, UA_VALUE},
-    into_err,
 };
 use anyhow::{Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
-use rocket::{http::Status, serde::json::Json};
 use serde_json::Value;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 
 #[post("/auth", data = "<req>")]
-pub(crate) fn api_auth(req: &str) -> (Status, Json<ApiResponse<String>>) {
-    match auth(req) {
-        Ok(token) => (Status::Ok, Json(token.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_auth(req: &str) -> ApiResponse<String> {
+    auth(req).into()
 }
 
 fn auth(req: &str) -> Result<String> {

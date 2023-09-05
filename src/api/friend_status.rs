@@ -1,7 +1,6 @@
 use super::utils::{find_matched_data, request};
-use crate::{api::response::ApiResponse, into_err, split_colon};
+use crate::{api::response::ApiResponse, split_colon};
 use anyhow::Result;
-use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
@@ -13,12 +12,8 @@ pub(crate) struct ResStatus {
 }
 
 #[post("/friend_status", data = "<req>")]
-pub(crate) fn api_friend_status(req: &str) -> (Status, Json<ApiResponse<ResStatus>>) {
-    match fetch(req) {
-        Ok(status) => (Status::Ok, Json(status.into())),
-
-        Err(error) => (Status::InternalServerError, Json(into_err!(error))),
-    }
+pub(crate) fn api_friend_status(req: &str) -> ApiResponse<ResStatus> {
+    fetch(req).into()
 }
 
 fn fetch(req: &str) -> Result<ResStatus> {
@@ -31,6 +26,5 @@ fn fetch(req: &str) -> Result<ResStatus> {
         &format!("https://api.vrchat.cloud/api/1/user/{user}/friendStatus"),
         &token,
     )
-    .map(|res| res.into_json::<ResStatus>())?
-    .map_err(From::from)
+    .map(|res| res.into_json::<ResStatus>().map_err(From::from))?
 }
