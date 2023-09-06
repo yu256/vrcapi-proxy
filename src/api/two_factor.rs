@@ -9,17 +9,10 @@ use std::collections::HashMap;
 
 #[post("/twofactor", data = "<req>")]
 pub(crate) fn api_twofactor(req: &str) -> anyhow::Result<String> {
-    match fetch(req) {
-        Ok((auth, token)) => {
-            if let Err(err) = update(auth, token) {
-                return Err(err);
-            }
+    let (auth, token) = fetch(req)?;
+    update(auth, token)?;
 
-            Ok(auth.into())
-        }
-
-        Err(e) => Err(e),
-    }
+    Ok(auth.to_owned())
 }
 
 fn fetch(req: &str) -> Result<(&str, &str)> {
