@@ -1,14 +1,12 @@
-use super::{user::User, utils::request};
+use super::user::User;
 use crate::consts::{INVALID_AUTH, VRC_P};
-use anyhow::{Context as _, Result};
+use anyhow::Context as _;
 use rocket::tokio::sync::RwLock;
 use serde::Serialize;
 use std::{collections::HashMap, sync::LazyLock};
 
 pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<User>>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
-
-const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false";
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
@@ -53,8 +51,4 @@ pub(crate) async fn api_friends(req: &str) -> anyhow::Result<Vec<ResFriend>> {
     friends.sort_by(|a, b| a.id.cmp(&b.id));
 
     Ok(friends)
-}
-
-pub(crate) fn fetch_friends(token: &str) -> Result<Vec<User>> {
-    request("GET", URL, token).map(|res| res.into_json::<Vec<User>>().map_err(From::from))?
 }
