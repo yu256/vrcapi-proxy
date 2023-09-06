@@ -9,13 +9,6 @@ use std::collections::HashMap;
 
 #[post("/twofactor", data = "<req>")]
 pub(crate) fn api_twofactor(req: &str) -> anyhow::Result<String> {
-    let (auth, token) = fetch(req)?;
-    update(auth, token)?;
-
-    Ok(auth.to_owned())
-}
-
-fn fetch(req: &str) -> Result<(&str, &str)> {
     split_colon!(req, [token, r#type, f, auth]);
 
     ensure!(auth.len() <= 50, "認証IDが長すぎます。");
@@ -27,7 +20,9 @@ fn fetch(req: &str) -> Result<(&str, &str)> {
         json!({ "code": f }),
     )?;
 
-    Ok((auth, token))
+    update(auth, token)?;
+
+    Ok(auth.to_owned())
 }
 
 fn update(auth: &str, token: &str) -> Result<()> {

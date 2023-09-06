@@ -51,8 +51,8 @@ pub(crate) fn api_search_user(req: &str) -> anyhow::Result<Vec<ResUser>> {
 
     let token = find_matched_data(auth)?.1;
 
-    request("GET", &format!("{}{}", URL, user), &token)?
-        .into_json::<Vec<User>>()
-        .map(|res| res.into_iter().map(ResUser::from).collect::<Vec<_>>())
-        .map_err(From::from)
+    match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<Vec<User>>() {
+        Ok(user) => Ok(user.into_iter().map(ResUser::from).collect()),
+        Err(err) => Err(err.into()),
+    }
 }

@@ -1,5 +1,5 @@
 use super::user::User;
-use crate::consts::{INVALID_AUTH, VRC_P};
+use crate::consts::INVALID_AUTH;
 use anyhow::Context as _;
 use rocket::tokio::sync::RwLock;
 use serde::Serialize;
@@ -27,17 +27,6 @@ impl From<&User> for ResFriend {
             location: user.location.to_owned(),
             undetermined: user.undetermined,
         }
-    }
-}
-
-impl User {
-    pub(crate) fn get_img(&self) -> String {
-        let img = match self.tags.iter().any(|tag| tag == VRC_P) {
-            true if !self.userIcon.is_empty() => &self.userIcon,
-            true if !self.profilePicOverride.is_empty() => &self.profilePicOverride,
-            _ => &self.currentAvatarThumbnailImageUrl,
-        };
-        img.to_owned()
     }
 }
 
