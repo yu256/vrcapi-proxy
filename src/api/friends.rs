@@ -32,10 +32,14 @@ impl From<&User> for ResFriend {
 
 #[post("/friends", data = "<req>")]
 pub(crate) async fn api_friends(req: &str) -> anyhow::Result<Vec<ResFriend>> {
-    let read = FRIENDS.read().await;
-    let friends = read.get(req).context(INVALID_AUTH)?;
-
-    let mut friends = friends.iter().map(ResFriend::from).collect::<Vec<_>>();
+    let mut friends = {
+        let read = FRIENDS.read().await;
+        read.get(req)
+            .context(INVALID_AUTH)?
+            .iter()
+            .map(ResFriend::from)
+            .collect::<Vec<_>>()
+    };
 
     friends.sort_by(|a, b| a.id.cmp(&b.id));
 
