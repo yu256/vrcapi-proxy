@@ -3,7 +3,7 @@ use crate::{
     general::{read_json, HashMapExt as _},
     spawn, split_colon,
 };
-use anyhow::{ensure, Result};
+use anyhow::ensure;
 use serde_json::json;
 use std::collections::HashMap;
 
@@ -20,17 +20,11 @@ pub(crate) fn api_twofactor(req: &str) -> anyhow::Result<String> {
         json!({ "code": f }),
     )?;
 
-    update(auth, token)?;
-
-    Ok(auth.to_owned())
-}
-
-fn update(auth: &str, token: &str) -> Result<()> {
     let mut data: HashMap<String, String> = read_json("data.json")?;
 
     data.add(auth, token)?;
 
     spawn(unsafe { data.remove_entry(auth).unwrap_unchecked() });
 
-    Ok(())
+    Ok(auth.to_owned())
 }

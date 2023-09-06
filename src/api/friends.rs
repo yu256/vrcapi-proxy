@@ -10,7 +10,7 @@ pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<User>>>> =
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
-pub(crate) struct ResFriend {
+pub(crate) struct Friend {
     currentAvatarThumbnailImageUrl: String,
     id: String,
     status: String,
@@ -18,7 +18,13 @@ pub(crate) struct ResFriend {
     undetermined: bool,
 }
 
-impl From<&User> for ResFriend {
+#[derive(Serialize)]
+pub(crate) struct ResFriend {
+    public: Vec<Friend>,
+    private: Vec<Friend>,
+}
+
+impl From<&User> for Friend {
     fn from(user: &User) -> Self {
         Self {
             currentAvatarThumbnailImageUrl: user.get_img(),
@@ -31,17 +37,28 @@ impl From<&User> for ResFriend {
 }
 
 #[post("/friends", data = "<req>")]
-pub(crate) async fn api_friends(req: &str) -> anyhow::Result<Vec<ResFriend>> {
-    let mut friends = {
+pub(crate) async fn api_friends(req: &str) -> anyhow::Result<ResFriend> {
+    let friends = {
         let read = FRIENDS.read().await;
         read.get(req)
             .context(INVALID_AUTH)?
             .iter()
-            .map(ResFriend::from)
+            .map(Friend::from)
             .collect::<Vec<_>>()
     };
 
-    friends.sort_by(|a, b| a.id.cmp(&b.id));
+    let mut res = ResFriend {
+        public: Vec::new(),
+        private: Vec::new(),
+    };
 
-    Ok(friends)
+    friends.into_iter().for_each(|friend| {
+        if friend.location == "private" {
+            res.private.push(friend);
+        } else {
+            res.public.push(friend);
+        }
+    });
+
+    Ok(res)
 }
