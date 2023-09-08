@@ -105,19 +105,17 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
 
     loop {
         sleep(std::time::Duration::from_secs(60)).await;
-        {
-            match count.fetch_add(0, Ordering::Acquire) {
-                0 => {}
-                1 => {
-                    if handle.is_finished() {
-                        return handle.await?;
-                    } else {
-                        handle.abort();
-                        bail!("disconnected.");
-                    }
+        match count.fetch_add(0, Ordering::Acquire) {
+            1 => {}
+            0 => {
+                if handle.is_finished() {
+                    return handle.await?;
+                } else {
+                    handle.abort();
+                    bail!("disconnected.");
                 }
-                _ => return Ok(()),
             }
+            _ => return Ok(()),
         }
     }
 }
