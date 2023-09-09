@@ -105,7 +105,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
 
     loop {
         sleep(std::time::Duration::from_secs(60)).await;
-        match count.fetch_add(0, Ordering::Acquire) {
+        match count.swap(0, Ordering::Acquire) {
             1 => {}
             0 => {
                 if handle.is_finished() {
