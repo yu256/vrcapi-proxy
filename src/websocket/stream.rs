@@ -37,11 +37,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
 
                 if message.contains("authToken doesn't correspond with an active session") {
                     cloned_count.store(2, Ordering::Release);
-                    return Ok::<(), anyhow::Error>(());
-                }
-
-                if msg.is_ping() {
+                } else if msg.is_ping() {
                     cloned_count.store(1, Ordering::Release);
+                    drop(msg);
                 } else if let Ok(body) = serde_json::from_str::<StreamBody>(&message) {
                     match body.r#type.as_str() {
                         "friend-online" | "friend-location" => {
@@ -97,7 +95,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         _ => {}
                     }
                 }
-                Ok(())
+                Ok::<(), anyhow::Error>(())
             });
         }
         Ok::<(), anyhow::Error>(())
@@ -108,12 +106,8 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
         match count.swap(0, Ordering::Acquire) {
             1 => {}
             0 => {
-                if handle.is_finished() {
-                    return handle.await?;
-                } else {
-                    handle.abort();
-                    bail!("disconnected.");
-                }
+                handle.abort();
+                bail!("disconnected.");
             }
             _ => return Ok(()),
         }

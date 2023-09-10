@@ -15,7 +15,7 @@ pub(crate) struct CorsConfig {
     pub(crate) url: String,
 }
 
-#[rocket::async_trait]
+#[async_trait]
 impl Fairing for Cors {
     fn info(&self) -> Info {
         Info {
