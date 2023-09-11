@@ -55,28 +55,6 @@ pub(crate) struct ResUser {
     rank: String,
 }
 
-#[post("/user", data = "<req>")]
-pub(crate) async fn api_user(req: &str) -> anyhow::Result<ResUser> {
-    split_colon!(req, [auth, user]);
-
-    if let Some(user) = FRIENDS
-        .read()
-        .await
-        .get(auth)
-        .context(INVALID_AUTH)?
-        .iter()
-        .find(|u| u.id == user)
-    {
-        return Ok(user.clone().into());
-    }
-
-    let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };
-    match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<User>() {
-        Ok(json) => Ok(json.into()),
-        Err(err) => Err(err.into()),
-    }
-}
-
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
         let mut rank = user
@@ -109,5 +87,27 @@ impl From<User> for ResUser {
             statusDescription: user.statusDescription,
             rank,
         }
+    }
+}
+
+#[post("/user", data = "<req>")]
+pub(crate) async fn api_user(req: &str) -> anyhow::Result<ResUser> {
+    split_colon!(req, [auth, user]);
+
+    if let Some(user) = FRIENDS
+        .read()
+        .await
+        .get(auth)
+        .context(INVALID_AUTH)?
+        .iter()
+        .find(|u| u.id == user)
+    {
+        return Ok(user.clone().into());
+    }
+
+    let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };
+    match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<User>() {
+        Ok(json) => Ok(json.into()),
+        Err(err) => Err(err.into()),
     }
 }

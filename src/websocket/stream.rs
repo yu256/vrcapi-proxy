@@ -22,7 +22,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
 
     while let Some(message) = read.next().await {
         let message = message?.to_string();
-        if message.contains("authToken doesn't correspond with an active session") {
+        if message.starts_with(r#"{"err":"authToken"#) {
             return Ok(());
         }
         let data = Arc::clone(&data);
