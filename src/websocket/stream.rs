@@ -49,7 +49,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         }
                     }
 
-                    "friend-add" | "friend-update" => {
+                    "friend-update" => {
                         if let Ok(content) =
                             serde_json::from_str::<FriendUpdateEventContent>(&body.content)
                         {
