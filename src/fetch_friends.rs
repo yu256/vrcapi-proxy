@@ -18,10 +18,11 @@ pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
 pub(crate) fn spawn(data: (String, String)) {
     tokio::spawn(async move {
         let data = Arc::new(data);
-        fetch_favorite_friends(&data.0, &data.1).await.unwrap();
 
         match fetch_friends(&data.1) {
             Ok(friends) => {
+                fetch_favorite_friends(&data.0, &data.1).await.unwrap();
+
                 let friends = friends
                     .into_iter()
                     .filter_map(|mut friend| {
