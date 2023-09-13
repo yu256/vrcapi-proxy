@@ -21,7 +21,7 @@ pub(crate) fn spawn(data: (String, String)) {
 
         match fetch_friends(&data.1) {
             Ok(friends) => {
-                fetch_favorite_friends(&data.0, &data.1).await.unwrap();
+                let _ = fetch_favorite_friends(&data.0, &data.1).await;
 
                 let friends = friends
                     .into_iter()
