@@ -1,5 +1,5 @@
 use crate::{
-    api::FRIENDS,
+    api::{request, User, FRIENDS},
     consts::{UA, UA_VALUE},
     websocket::structs::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
@@ -66,6 +66,20 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         } else {
                             eprintln!("not deserialized: {message}"); // debug
                         }
+                    }
+
+                    "friend-add" => {
+                        let content = serde_json::from_str::<UserIdContent>(&body.content)?;
+                        let mut unlocked = FRIENDS.write().await;
+                        let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
+                        friends.push(
+                            request(
+                                "GET",
+                                &format!("https://api.vrchat.cloud/api/1/users/{}", content.userId),
+                                &data.1,
+                            )?
+                            .into_json::<User>()?,
+                        );
                     }
 
                     "friend-offline" | "friend-delete" | "friend-active" => {
