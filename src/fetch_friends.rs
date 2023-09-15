@@ -20,22 +20,20 @@ pub(crate) fn spawn(data: (String, String)) {
         let data = Arc::new(data);
 
         match fetch_friends(&data.1) {
-            Ok(friends) => {
+            Ok(mut friends) => {
                 let _ = fetch_favorite_friends(&data.0, &data.1).await;
 
-                let friends = friends
-                    .into_iter()
-                    .filter_map(|mut friend| {
-                        if friend.location == "offline" {
-                            None
-                        } else {
-                            if friend.status == "ask me" {
-                                friend.undetermined = true;
-                            }
-                            Some(friend)
+                friends.retain_mut(|friend| {
+                    if friend.location == "offline" {
+                        false
+                    } else {
+                        if friend.status == "ask me" {
+                            friend.undetermined = true;
                         }
-                    })
-                    .collect();
+                        true
+                    }
+                });
+
                 FRIENDS.write().await.insert(data.0.clone(), friends);
 
                 loop {
