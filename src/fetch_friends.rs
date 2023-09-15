@@ -39,7 +39,7 @@ pub(crate) fn spawn(data: (String, String)) {
                 FRIENDS.write().await.insert(data.0.clone(), friends);
 
                 loop {
-                    if let Ok(_) = stream(Arc::clone(&data)).await {
+                    if stream(Arc::clone(&data)).await.is_ok() {
                         FRIENDS.write().await.remove(&data.0);
                         break;
                     }

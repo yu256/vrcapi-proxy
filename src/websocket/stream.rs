@@ -5,7 +5,7 @@ use crate::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
     },
 };
-use anyhow::{anyhow, Context as _, Result};
+use anyhow::{anyhow, Result};
 use futures::StreamExt;
 use rocket::tokio;
 use std::sync::Arc;
@@ -35,7 +35,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             serde_json::from_str::<FriendOnlineEventContent>(&body.content)
                         {
                             let mut unlocked = FRIENDS.write().await;
-                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
+                            let Some(friends) = unlocked.get_mut(&data.0) else {
+                                return Ok(());
+                            };
                             if let Some(friend) = friends
                                 .iter_mut()
                                 .find(|friend| friend.id == content.user.id)
@@ -54,7 +56,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             serde_json::from_str::<FriendUpdateEventContent>(&body.content)
                         {
                             let mut unlocked = FRIENDS.write().await;
-                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
+                            let Some(friends) = unlocked.get_mut(&data.0) else {
+                                return Ok(());
+                            };
                             if let Some(friend) = friends
                                 .iter_mut()
                                 .find(|friend| friend.id == content.user.id)
@@ -70,22 +74,31 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
 
                     "friend-add" => {
                         let content = serde_json::from_str::<UserIdContent>(&body.content)?;
-                        let mut unlocked = FRIENDS.write().await;
-                        let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
-                        friends.push(
-                            request(
-                                "GET",
-                                &format!("https://api.vrchat.cloud/api/1/users/{}", content.userId),
-                                &data.1,
-                            )?
-                            .into_json::<User>()?,
-                        );
+                        let mut new_friend = request(
+                            "GET",
+                            &format!("https://api.vrchat.cloud/api/1/users/{}", content.userId),
+                            &data.1,
+                        )?
+                        .into_json::<User>()?;
+
+                        if new_friend.location != "offline" {
+                            if new_friend.status == "ask me" {
+                                new_friend.undetermined = true;
+                            }
+                            let mut unlocked = FRIENDS.write().await;
+                            let Some(friends) = unlocked.get_mut(&data.0) else {
+                                return Ok(());
+                            };
+                            friends.push(new_friend);
+                        }
                     }
 
                     "friend-offline" | "friend-delete" | "friend-active" => {
                         if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
                             let mut unlocked = FRIENDS.write().await;
-                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
+                            let Some(friends) = unlocked.get_mut(&data.0) else {
+                                return Ok(());
+                            };
                             friends.retain(|f| f.id != content.userId)
                         } else {
                             eprintln!("not deserialized: {message}"); // debug
