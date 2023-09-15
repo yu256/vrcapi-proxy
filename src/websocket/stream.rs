@@ -5,7 +5,7 @@ use crate::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
     },
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context as _, Result};
 use futures::StreamExt;
 use rocket::tokio;
 use std::sync::Arc;
@@ -35,9 +35,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             serde_json::from_str::<FriendOnlineEventContent>(&body.content)
                         {
                             let mut unlocked = FRIENDS.write().await;
-                            let Some(friends) = unlocked.get_mut(&data.0) else {
-                                return;
-                            };
+                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
                             if let Some(friend) = friends
                                 .iter_mut()
                                 .find(|friend| friend.id == content.user.id)
@@ -56,9 +54,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             serde_json::from_str::<FriendUpdateEventContent>(&body.content)
                         {
                             let mut unlocked = FRIENDS.write().await;
-                            let Some(friends) = unlocked.get_mut(&data.0) else {
-                                return;
-                            };
+                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
                             if let Some(friend) = friends
                                 .iter_mut()
                                 .find(|friend| friend.id == content.user.id)
@@ -75,9 +71,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     "friend-offline" | "friend-delete" | "friend-active" => {
                         if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
                             let mut unlocked = FRIENDS.write().await;
-                            let Some(friends) = unlocked.get_mut(&data.0) else {
-                                return;
-                            };
+                            let friends = unlocked.get_mut(&data.0).context("No friends found.")?;
                             friends.retain(|f| f.id != content.userId)
                         } else {
                             eprintln!("not deserialized: {message}"); // debug
@@ -86,6 +80,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     _ => {}
                 }
             }
+            Ok::<(), anyhow::Error>(())
         });
     }
 
