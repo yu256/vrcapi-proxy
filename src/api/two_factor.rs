@@ -11,7 +11,7 @@ use std::collections::HashMap;
 pub(crate) fn api_twofactor(req: &str) -> Result<String> {
     split_colon!(req, [token, r#type, f, auth]);
 
-    ensure!(auth.len() <= 50, "認証IDが長すぎます。");
+    ensure!(auth.chars().count() <= 50, "認証IDが長すぎます。");
 
     request_json(
         "POST",
