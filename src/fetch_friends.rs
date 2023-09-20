@@ -44,7 +44,7 @@ pub(crate) fn spawn(data: (String, String)) {
                 }
             }
             Err(e) => {
-                eprintln!("Error(fetch_friends()): {}", e);
+                eprintln!("Error: {}", e);
             }
         }
     });

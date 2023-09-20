@@ -29,9 +29,9 @@ pub(crate) fn api_add_favorites(req: &str) -> Result<bool> {
 }
 
 #[post("/favorites/refresh", data = "<req>")]
-pub(crate) async fn api_re_fetch(req: &str) -> Result<()> {
+pub(crate) async fn api_re_fetch(req: &str) -> Result<bool> {
     let token = find_matched_data(req)?.1;
-    fetch_favorite_friends(req, &token).await
+    fetch_favorite_friends(req, &token).await.map(|_| true)
 }
 
 pub(crate) async fn fetch_favorite_friends(auth: &str, token: &str) -> Result<()> {
