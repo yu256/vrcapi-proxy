@@ -46,10 +46,17 @@ pub(crate) fn make_request(
 
     match res {
         Ok(ok) => Ok(ok),
-        Err(ureq::Error::Status(_, res)) => Err(anyhow!(
-            "{}",
-            res.into_json::<ErrorMessage>()?.error.message
-        )),
+        Err(ureq::Error::Status(_, res)) => {
+            let message = res.into_json::<ErrorMessage>()?.error.message;
+            Err(anyhow!(
+                "{}",
+                if message != r#""Missing Credentials""# {
+                    message
+                } else {
+                    "トークンが無効です。".to_owned()
+                }
+            ))
+        }
         Err(e) => Err(e.into()),
     }
 }
