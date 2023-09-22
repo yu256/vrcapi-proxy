@@ -1,6 +1,6 @@
 use crate::{
-    consts::{COOKIE, INVALID_AUTH, UA, UA_VALUE},
     general::read_json,
+    global::{COOKIE, INVALID_AUTH, UA, UA_VALUE},
 };
 use anyhow::{anyhow, Context as _, Result};
 use serde::{Deserialize, Serialize};

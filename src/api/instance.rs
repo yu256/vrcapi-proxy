@@ -1,8 +1,5 @@
-use super::{
-    utils::{find_matched_data, request},
-    FRIENDS,
-};
-use crate::consts::INVALID_AUTH;
+use super::utils::{find_matched_data, request};
+use crate::global::{FRIENDS, INVALID_AUTH};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,17 +1,7 @@
 use super::user::User;
-use crate::consts::INVALID_AUTH;
+use crate::global::{FAVORITE_FRIENDS, FRIENDS, INVALID_AUTH};
 use anyhow::{Context as _, Result};
-use rocket::tokio::sync::RwLock;
 use serde::Serialize;
-use std::{
-    collections::{HashMap, HashSet},
-    sync::LazyLock,
-};
-
-pub(crate) static FRIENDS: LazyLock<RwLock<HashMap<String, Vec<User>>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
-pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashMap<String, HashSet<String>>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]

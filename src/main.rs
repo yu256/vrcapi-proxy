@@ -8,10 +8,10 @@ use general::{read_json, write_json, DATA_PATH};
 use std::collections::HashMap;
 
 mod api;
-mod consts;
 mod cors;
 mod fetch_friends;
 mod general;
+mod global;
 mod macros;
 mod websocket;
 

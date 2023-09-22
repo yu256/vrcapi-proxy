@@ -1,5 +1,5 @@
 use super::utils::CLIENT;
-use crate::consts::{UA, UA_VALUE};
+use crate::global::{UA, UA_VALUE};
 use anyhow::{anyhow, Context as _, Result};
 use base64::{engine::general_purpose, Engine as _};
 
@@ -13,7 +13,8 @@ struct TwoFactor {
 
 #[post("/auth", data = "<req>")]
 pub(crate) fn api_auth(req: &str) -> Result<String> {
-    let res = CLIENT.as_ref()
+    let res = CLIENT
+        .as_ref()
         .map_err(|e| anyhow!("{}", e))?
         .get(URL)
         .set(

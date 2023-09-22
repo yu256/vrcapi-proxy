@@ -14,7 +14,6 @@ mod utils;
 mod world;
 
 pub(crate) use favorites::fetch_favorite_friends;
-pub(crate) use friends::{FAVORITE_FRIENDS, FRIENDS};
 pub(crate) use user::User;
 pub(crate) use utils::request;
 

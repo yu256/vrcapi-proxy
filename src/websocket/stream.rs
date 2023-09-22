@@ -1,6 +1,7 @@
+use crate::global::FRIENDS;
 use crate::{
-    api::{request, User, FRIENDS},
-    consts::{UA, UA_VALUE},
+    api::{request, User},
+    global::{UA, UA_VALUE},
     websocket::structs::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
     },

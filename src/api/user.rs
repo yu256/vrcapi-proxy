@@ -1,8 +1,6 @@
-use super::{
-    utils::{find_matched_data, request},
-    FRIENDS,
-};
-use crate::{consts::INVALID_AUTH, split_colon};
+use super::utils::{find_matched_data, request};
+use crate::global::FRIENDS;
+use crate::{global::INVALID_AUTH, split_colon};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 

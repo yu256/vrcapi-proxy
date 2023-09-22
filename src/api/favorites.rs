@@ -1,4 +1,5 @@
-use super::{request, utils::find_matched_data, FAVORITE_FRIENDS};
+use super::{request, utils::find_matched_data};
+use crate::global::FAVORITE_FRIENDS;
 use crate::{api::utils::request_json, split_colon};
 use anyhow::Result;
 use serde::Deserialize;

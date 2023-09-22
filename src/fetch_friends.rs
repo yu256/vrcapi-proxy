@@ -1,5 +1,6 @@
+use crate::global::FRIENDS;
 use crate::{
-    api::{fetch_favorite_friends, request, User, FRIENDS},
+    api::{fetch_favorite_friends, request, User},
     websocket::stream::stream,
 };
 use rocket::tokio;
