@@ -1,3 +1,4 @@
+use crate::get_img;
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, INVALID_AUTH};
 use crate::websocket::User;
 use anyhow::{Context as _, Result};
@@ -22,7 +23,7 @@ pub(crate) struct ResFriend {
 impl From<&User> for Friend {
     fn from(user: &User) -> Self {
         Self {
-            currentAvatarThumbnailImageUrl: user.get_img(),
+            currentAvatarThumbnailImageUrl: get_img!(user, clone),
             id: user.id.to_owned(),
             status: user.status.to_owned(),
             location: user.location.to_owned(),

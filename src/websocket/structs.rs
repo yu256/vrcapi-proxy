@@ -26,17 +26,6 @@ pub(crate) struct User {
     pub(crate) undetermined: bool,
 }
 
-impl User {
-    pub(crate) fn get_img(&self) -> String {
-        let img = match self.tags.iter().any(|tag| tag == "system_supporter") {
-            true if !self.userIcon.is_empty() => &self.userIcon,
-            true if !self.profilePicOverride.is_empty() => &self.profilePicOverride,
-            _ => &self.currentAvatarThumbnailImageUrl,
-        };
-        img.to_owned()
-    }
-}
-
 pub(crate) trait VecUserExt {
     fn update(&mut self, content: impl Into<User>);
 }

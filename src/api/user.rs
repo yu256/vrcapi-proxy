@@ -1,7 +1,7 @@
 use super::utils::{find_matched_data, request};
 use crate::global::FRIENDS;
 use crate::websocket::User;
-use crate::{global::INVALID_AUTH, split_colon};
+use crate::{get_img, global::INVALID_AUTH, split_colon};
 use anyhow::{Context as _, Result};
 use serde::Serialize;
 
@@ -44,7 +44,7 @@ impl From<User> for ResUser {
         }
 
         ResUser {
-            currentAvatarThumbnailImageUrl: user.get_img(),
+            currentAvatarThumbnailImageUrl: get_img!(user),
             bio: user.bio,
             bioLinks: user.bioLinks,
             displayName: user.displayName,

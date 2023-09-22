@@ -1,6 +1,7 @@
 use anyhow::Result;
 use dirs_2::home_dir;
 use serde::{de::DeserializeOwned, Serialize};
+use std::borrow::Cow;
 use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
@@ -39,6 +40,23 @@ where
     let mut file = BufWriter::new(file);
 
     file.write_all(json.as_bytes()).map_err(From::from)
+}
+
+pub(crate) fn return_not_empty<'a, T>(s1: T, s2: T, s3: T) -> String
+where
+    T: Into<Cow<'a, str>>,
+{
+    let s1: Cow<'a, str> = s1.into();
+    let s2: Cow<'a, str> = s2.into();
+    let s3: Cow<'a, str> = s3.into();
+
+    if !s1.is_empty() {
+        s1.into()
+    } else if !s2.is_empty() {
+        s2.into()
+    } else {
+        s3.into()
+    }
 }
 
 pub(crate) trait HashMapExt {

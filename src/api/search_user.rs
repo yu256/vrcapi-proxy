@@ -1,5 +1,5 @@
 use super::utils::{find_matched_data, request};
-use crate::split_colon;
+use crate::{get_img, split_colon};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -31,16 +31,8 @@ pub(crate) struct ResUser {
 
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
-        let img = if !user.userIcon.is_empty() {
-            user.userIcon
-        } else if !user.profilePicOverride.is_empty() {
-            user.profilePicOverride
-        } else {
-            user.currentAvatarThumbnailImageUrl
-        };
-
         ResUser {
-            currentAvatarThumbnailImageUrl: img,
+            currentAvatarThumbnailImageUrl: get_img!(user),
             displayName: user.displayName,
             id: user.id,
             isFriend: user.isFriend,

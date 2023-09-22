@@ -1,4 +1,5 @@
 use super::utils::{find_matched_data, request};
+use crate::get_img;
 use crate::global::{FRIENDS, INVALID_AUTH};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
@@ -64,7 +65,7 @@ pub(crate) async fn api_instance(req: &str) -> Result<ResponseInstance> {
         .iter()
         .filter_map(|user| {
             if user.location == instance {
-                Some((user.get_img(), user.displayName.clone()))
+                Some((get_img!(user, clone), user.displayName.clone()))
             } else {
                 None
             }
