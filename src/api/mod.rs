@@ -14,7 +14,6 @@ mod utils;
 mod world;
 
 pub(crate) use favorites::fetch_favorite_friends;
-pub(crate) use user::User;
 pub(crate) use utils::request;
 
 pub(crate) fn route() -> Vec<rocket::Route> {

@@ -1,5 +1,5 @@
-use super::user::User;
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, INVALID_AUTH};
+use crate::websocket::User;
 use anyhow::{Context as _, Result};
 use serde::Serialize;
 

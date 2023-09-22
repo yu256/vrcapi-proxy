@@ -1,4 +1,4 @@
-use crate::api::User;
+use crate::websocket::User;
 use rocket::tokio::sync::RwLock;
 use std::{
     collections::{HashMap, HashSet},

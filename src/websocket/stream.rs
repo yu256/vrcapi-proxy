@@ -1,6 +1,8 @@
 use crate::global::FRIENDS;
+use crate::websocket::structs::VecUserExt as _;
+use crate::websocket::User;
 use crate::{
-    api::{request, User},
+    api::request,
     global::{UA, UA_VALUE},
     websocket::structs::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
@@ -39,14 +41,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         let Some(friends) = unlocked.get_mut(&data.0) else {
                             return Ok(());
                         };
-                        if let Some(friend) = friends
-                            .iter_mut()
-                            .find(|friend| friend.id == content.user.id)
-                        {
-                            *friend = content.into();
-                        } else {
-                            friends.push(content.into());
-                        }
+                        friends.update(content);
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -60,14 +55,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         let Some(friends) = unlocked.get_mut(&data.0) else {
                             return Ok(());
                         };
-                        if let Some(friend) = friends
-                            .iter_mut()
-                            .find(|friend| friend.id == content.user.id)
-                        {
-                            *friend = content.user;
-                        } else {
-                            friends.push(content.user);
-                        }
+                        friends.update(content.user);
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -90,7 +78,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         let Some(friends) = unlocked.get_mut(&data.0) else {
                             return Ok(());
                         };
-                        friends.push(new_friend);
+                        friends.update(new_friend);
                     }
                 }
 
