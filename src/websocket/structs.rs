@@ -28,6 +28,7 @@ pub(crate) struct User {
 
 pub(crate) trait VecUserExt {
     fn update(&mut self, content: impl Into<User>);
+    fn del(&mut self, id: &str);
 }
 
 impl VecUserExt for Vec<User> {
@@ -37,6 +38,11 @@ impl VecUserExt for Vec<User> {
             *friend = user;
         } else {
             self.push(user);
+        }
+    }
+    fn del(&mut self, id: &str) {
+        if let Some(index) = self.iter().position(|x| x.id == id) {
+            self.remove(index);
         }
     }
 }

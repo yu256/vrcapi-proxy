@@ -94,7 +94,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                 "friend-offline" | "friend-delete" | "friend-active" => {
                     if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
                         write_friends(&FRIENDS, &data.0, |friends| {
-                            friends.retain(|f| f.id != content.userId)
+                            friends.del(&content.userId)
                         }).await;
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
