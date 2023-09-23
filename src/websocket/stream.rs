@@ -1,3 +1,5 @@
+#![allow(clippy::redundant_closure_call)]
+
 use crate::global::FRIENDS;
 use crate::websocket::structs::VecUserExt as _;
 use crate::websocket::User;
@@ -13,6 +15,15 @@ use futures::StreamExt as _;
 use rocket::tokio;
 use std::sync::Arc;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
+
+macro_rules! write_friends {
+    ($FRIENDS:expr, $data:expr, $fun:expr) => {{
+        let mut unlocked = $FRIENDS.write().await;
+        if let Some(friends) = unlocked.get_mut(&$data.0) {
+            $fun(friends);
+        }
+    }}
+}
 
 pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
     let mut req = format!("wss://pipeline.vrchat.cloud/?{}", &data.1).into_client_request()?;
@@ -37,11 +48,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     if let Ok(content) =
                         serde_json::from_str::<FriendOnlineEventContent>(&body.content)
                     {
-                        let mut unlocked = FRIENDS.write().await;
-                        let Some(friends) = unlocked.get_mut(&data.0) else {
-                            return Ok(());
-                        };
-                        friends.update(content);
+                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                            friends.update(content)
+                        });
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -51,11 +60,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     if let Ok(content) =
                         serde_json::from_str::<FriendUpdateEventContent>(&body.content)
                     {
-                        let mut unlocked = FRIENDS.write().await;
-                        let Some(friends) = unlocked.get_mut(&data.0) else {
-                            return Ok(());
-                        };
-                        friends.update(content.user);
+                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                            friends.update(content.user)
+                        });
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -68,27 +75,23 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         &format!("https://api.vrchat.cloud/api/1/users/{}", content.userId),
                         &data.1,
                     )?
-                    .into_json::<User>()?;
+                        .into_json::<User>()?;
 
                     if new_friend.location != "offline" {
                         if new_friend.status == "ask me" || new_friend.status == "busy" {
                             new_friend.undetermined = true;
                         }
-                        let mut unlocked = FRIENDS.write().await;
-                        let Some(friends) = unlocked.get_mut(&data.0) else {
-                            return Ok(());
-                        };
-                        friends.update(new_friend);
+                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                            friends.update(new_friend)
+                        });
                     }
                 }
 
                 "friend-offline" | "friend-delete" | "friend-active" => {
                     if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
-                        let mut unlocked = FRIENDS.write().await;
-                        let Some(friends) = unlocked.get_mut(&data.0) else {
-                            return Ok(());
-                        };
-                        friends.retain(|f| f.id != content.userId)
+                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                            friends.retain(|f| f.id != content.userId)
+                        });
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }

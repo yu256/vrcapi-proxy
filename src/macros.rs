@@ -12,14 +12,14 @@ macro_rules! split_colon {
 
 #[macro_export]
 macro_rules! get_img {
-    ($input:ident, clone) => {
+    ($input:expr, clone) => {
         $crate::general::return_not_empty(
             &$input.userIcon,
             &$input.profilePicOverride,
             &$input.currentAvatarThumbnailImageUrl,
         )
     };
-    ($input:ident) => {
+    ($input:expr) => {
         $crate::general::return_not_empty(
             $input.userIcon,
             $input.profilePicOverride,
