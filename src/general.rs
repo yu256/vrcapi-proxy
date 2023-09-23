@@ -1,7 +1,6 @@
 use anyhow::Result;
 use dirs_2::home_dir;
 use serde::{de::DeserializeOwned, Serialize};
-use std::borrow::Cow;
 use std::{
     collections::HashMap,
     fs::{create_dir_all, File},
@@ -14,8 +13,8 @@ pub(crate) static DATA_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| home_dir().unwrap().join("vrcapi_proxy"));
 
 pub(crate) fn read_json<T>(path: &str) -> Result<T>
-where
-    T: DeserializeOwned,
+    where
+        T: DeserializeOwned,
 {
     let mut file = BufReader::new(File::open(DATA_PATH.join(path))?);
 
@@ -27,8 +26,8 @@ where
 }
 
 pub(crate) fn write_json<T>(data: &T, name: &str) -> Result<()>
-where
-    T: Serialize,
+    where
+        T: Serialize,
 {
     let Ok(file) = File::create(DATA_PATH.join(format!("{}.json", name))) else {
         create_dir_all(&*DATA_PATH)?;
@@ -42,17 +41,13 @@ where
     file.write_all(json.as_bytes()).map_err(From::from)
 }
 
-pub(crate) fn return_not_empty<'a, T>(s1: T, s2: T, s3: T) -> String
-where
-    T: Into<Cow<'a, str>>,
+pub(crate) fn return_not_empty<T>(s1: T, s2: T, s3: T) -> String
+    where
+        T: Into<String> + AsRef<str>,
 {
-    let s1: Cow<'a, str> = s1.into();
-    let s2: Cow<'a, str> = s2.into();
-    let s3: Cow<'a, str> = s3.into();
-
-    if !s1.is_empty() {
+    if !s1.as_ref().is_empty() {
         s1.into()
-    } else if !s2.is_empty() {
+    } else if !s2.as_ref().is_empty() {
         s2.into()
     } else {
         s3.into()
