@@ -1,5 +1,4 @@
-#![allow(clippy::redundant_closure_call)]
-
+use std::collections::HashMap;
 use crate::global::FRIENDS;
 use crate::websocket::structs::VecUserExt as _;
 use crate::websocket::User;
@@ -14,15 +13,20 @@ use anyhow::{anyhow, Result};
 use futures::StreamExt as _;
 use rocket::tokio;
 use std::sync::Arc;
+use rocket::tokio::sync::RwLock;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 
-macro_rules! write_friends {
-    ($FRIENDS:expr, $data:expr, $fun:expr) => {{
-        let mut unlocked = $FRIENDS.write().await;
-        if let Some(friends) = unlocked.get_mut(&$data.0) {
-            $fun(friends);
-        }
-    }}
+async fn write_friends<F>(
+    friends: &RwLock<HashMap<String, Vec<User>>>,
+    auth: &str,
+    fun: F,
+) where
+    F: FnOnce(&mut Vec<User>),
+{
+    let mut unlocked = friends.write().await;
+    if let Some(friends) = unlocked.get_mut(auth) {
+        fun(friends);
+    }
 }
 
 pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
@@ -48,9 +52,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     if let Ok(content) =
                         serde_json::from_str::<FriendOnlineEventContent>(&body.content)
                     {
-                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                        write_friends(&FRIENDS, &data.0, |friends| {
                             friends.update(content)
-                        });
+                        }).await;
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -60,9 +64,9 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     if let Ok(content) =
                         serde_json::from_str::<FriendUpdateEventContent>(&body.content)
                     {
-                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                        write_friends(&FRIENDS, &data.0, |friends| {
                             friends.update(content.user)
-                        });
+                        }).await;
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
@@ -81,17 +85,17 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         if new_friend.status == "ask me" || new_friend.status == "busy" {
                             new_friend.undetermined = true;
                         }
-                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                        write_friends(&FRIENDS, &data.0, |friends| {
                             friends.update(new_friend)
-                        });
+                        }).await;
                     }
                 }
 
                 "friend-offline" | "friend-delete" | "friend-active" => {
                     if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
-                        write_friends!(FRIENDS, data, |friends: &mut Vec<User>| {
+                        write_friends(&FRIENDS, &data.0, |friends| {
                             friends.retain(|f| f.id != content.userId)
-                        });
+                        }).await;
                     } else {
                         eprintln!("not deserialized: {message}"); // debug
                     }
