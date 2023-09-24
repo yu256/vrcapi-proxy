@@ -49,34 +49,26 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
             let body = serde_json::from_str::<StreamBody>(&message)?;
             match body.r#type.as_str() {
                 "friend-online" | "friend-location" => {
-                    if let Ok(content) =
-                        serde_json::from_str::<FriendOnlineEventContent>(&body.content)
-                    {
-                        write_friends(&FRIENDS, &data.0, |friends| {
-                            friends.update(content)
-                        }).await;
-                    } else {
-                        eprintln!("not deserialized: {message}"); // debug
-                    }
+                    let content =
+                        serde_json::from_str::<FriendOnlineEventContent>(&body.content)?;
+                    write_friends(&FRIENDS, &data.0, |friends| {
+                        friends.update(content)
+                    }).await;
                 }
 
                 "friend-update" => {
-                    if let Ok(content) =
-                        serde_json::from_str::<FriendUpdateEventContent>(&body.content)
-                    {
-                        write_friends(&FRIENDS, &data.0, |friends| {
-                            friends.update(content.user)
-                        }).await;
-                    } else {
-                        eprintln!("not deserialized: {message}"); // debug
-                    }
+                    let user =
+                        serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
+                    write_friends(&FRIENDS, &data.0, |friends| {
+                        friends.update(user)
+                    }).await;
                 }
 
                 "friend-add" => {
-                    let content = serde_json::from_str::<UserIdContent>(&body.content)?;
+                    let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
                     let mut new_friend = request(
                         "GET",
-                        &format!("https://api.vrchat.cloud/api/1/users/{}", content.userId),
+                        &format!("https://api.vrchat.cloud/api/1/users/{id}"),
                         &data.1,
                     )?
                         .into_json::<User>()?;
@@ -92,13 +84,10 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                 }
 
                 "friend-offline" | "friend-delete" | "friend-active" => {
-                    if let Ok(content) = serde_json::from_str::<UserIdContent>(&body.content) {
-                        write_friends(&FRIENDS, &data.0, |friends| {
-                            friends.del(&content.userId)
-                        }).await;
-                    } else {
-                        eprintln!("not deserialized: {message}"); // debug
-                    }
+                    let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
+                    write_friends(&FRIENDS, &data.0, |friends| {
+                        friends.del(&id)
+                    }).await;
                 }
                 _ => {}
             }
