@@ -27,10 +27,7 @@ impl Fairing for Cors {
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
         if request.method() == Method::Options {
             response.set_status(Status::NoContent);
-            response.set_header(Header::new(
-                "Access-Control-Allow-Methods",
-                "POST",
-            ));
+            response.set_header(Header::new("Access-Control-Allow-Methods", "POST"));
             response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         }
 

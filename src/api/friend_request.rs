@@ -12,7 +12,6 @@ pub(crate) fn api_friend_request(req: &str) -> Result<bool> {
         method,
         &format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user),
         &token,
-    )?;
-
-    Ok(true)
+    )
+    .map(|_| true)
 }

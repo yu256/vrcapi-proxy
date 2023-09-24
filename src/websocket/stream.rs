@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::global::FRIENDS;
 use crate::websocket::structs::VecUserExt as _;
 use crate::websocket::User;
@@ -12,15 +11,13 @@ use crate::{
 use anyhow::{anyhow, Result};
 use futures::StreamExt as _;
 use rocket::tokio;
-use std::sync::Arc;
 use rocket::tokio::sync::RwLock;
+use std::collections::HashMap;
+use std::sync::Arc;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 
-async fn write_friends<F>(
-    friends: &RwLock<HashMap<String, Vec<User>>>,
-    auth: &str,
-    fun: F,
-) where
+async fn write_friends<F>(friends: &RwLock<HashMap<String, Vec<User>>>, auth: &str, fun: F)
+where
     F: FnOnce(&mut Vec<User>),
 {
     let mut unlocked = friends.write().await;
@@ -49,19 +46,14 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
             let body = serde_json::from_str::<StreamBody>(&message)?;
             match body.r#type.as_str() {
                 "friend-online" | "friend-location" => {
-                    let content =
-                        serde_json::from_str::<FriendOnlineEventContent>(&body.content)?;
-                    write_friends(&FRIENDS, &data.0, |friends| {
-                        friends.update(content)
-                    }).await;
+                    let content = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?;
+                    write_friends(&FRIENDS, &data.0, |friends| friends.update(content)).await;
                 }
 
                 "friend-update" => {
                     let user =
                         serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
-                    write_friends(&FRIENDS, &data.0, |friends| {
-                        friends.update(user)
-                    }).await;
+                    write_friends(&FRIENDS, &data.0, |friends| friends.update(user)).await;
                 }
 
                 "friend-add" => {
@@ -71,23 +63,20 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         &format!("https://api.vrchat.cloud/api/1/users/{id}"),
                         &data.1,
                     )?
-                        .into_json::<User>()?;
+                    .into_json::<User>()?;
 
                     if new_friend.location != "offline" {
                         if new_friend.status == "ask me" || new_friend.status == "busy" {
                             new_friend.undetermined = true;
                         }
-                        write_friends(&FRIENDS, &data.0, |friends| {
-                            friends.update(new_friend)
-                        }).await;
+                        write_friends(&FRIENDS, &data.0, |friends| friends.update(new_friend))
+                            .await;
                     }
                 }
 
                 "friend-offline" | "friend-delete" | "friend-active" => {
                     let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
-                    write_friends(&FRIENDS, &data.0, |friends| {
-                        friends.del(&id)
-                    }).await;
+                    write_friends(&FRIENDS, &data.0, |friends| friends.del(&id)).await;
                 }
                 _ => {}
             }
