@@ -1777,6 +1777,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "trie-match"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dbd04fe7bdc72f2e463f462827002ff823039bca0d291272e5450674939d763"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.35",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1917,6 +1928,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio-tungstenite",
+ "trie-match",
  "ureq",
 ]
 

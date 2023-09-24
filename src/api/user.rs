@@ -4,6 +4,7 @@ use crate::websocket::User;
 use crate::{get_img, global::INVALID_AUTH, split_colon};
 use anyhow::{Context as _, Result};
 use serde::Serialize;
+use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 
@@ -28,13 +29,17 @@ impl From<User> for ResUser {
             .tags
             .iter()
             .rev()
-            .find_map(|tag| match tag.as_str() {
-                "system_trust_veteran" => Some("Trusted"),
-                "system_trust_trusted" => Some("Known"),
-                "system_trust_known" => Some("User"),
-                "system_trust_basic" => Some("New User"),
-                "system_troll" => Some("Troll"),
-                _ => None,
+            .find_map(|tag| {
+                trie_match! {
+                    match tag.as_str() {
+                        "system_trust_veteran" => Some("Trusted"),
+                        "system_trust_trusted" => Some("Known"),
+                        "system_trust_known" => Some("User"),
+                        "system_trust_basic" => Some("New User"),
+                        "system_troll" => Some("Troll"),
+                        _ => None,
+                    }
+                }
             })
             .unwrap_or("Visitor")
             .to_owned();

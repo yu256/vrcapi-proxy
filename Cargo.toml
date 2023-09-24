@@ -16,3 +16,4 @@ dirs-2 = "*"
 tokio-tungstenite = { version = "*", features = ["native-tls"] }
 futures = "*"
 native-tls = "*"
+trie-match = "*"
