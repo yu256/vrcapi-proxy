@@ -32,12 +32,11 @@ impl From<&User> for Friend {
     }
 }
 
-#[post("/friends", data = "<req>")]
-pub(crate) async fn api_friends(req: &str) -> Result<ResFriend> {
+pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
     let (public, private) = FRIENDS
         .read()
         .await
-        .get(req)
+        .get(&req)
         .context(INVALID_AUTH)?
         .iter()
         .map(Friend::from)
@@ -46,10 +45,9 @@ pub(crate) async fn api_friends(req: &str) -> Result<ResFriend> {
     Ok(ResFriend { public, private })
 }
 
-#[post("/favfriends", data = "<req>")]
-pub(crate) async fn api_friends_filtered(req: &str) -> Result<ResFriend> {
+pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
     let unlocked = FAVORITE_FRIENDS.read().await;
-    let favorites = unlocked.get(req).context(INVALID_AUTH)?;
+    let favorites = unlocked.get(&req).context(INVALID_AUTH)?;
     api_friends(req).await.map(|mut friends| {
         friends
             .private

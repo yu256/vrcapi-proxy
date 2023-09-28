@@ -63,8 +63,7 @@ impl From<User> for ResUser {
     }
 }
 
-#[post("/user", data = "<req>")]
-pub(crate) async fn api_user(req: &str) -> Result<ResUser> {
+pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     split_colon!(req, [auth, user]);
 
     if let Some(user) = FRIENDS

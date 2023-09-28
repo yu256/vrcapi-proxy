@@ -45,8 +45,7 @@ impl InstanceData {
     }
 }
 
-#[post("/instance", data = "<req>")]
-pub(crate) async fn api_instance(req: &str) -> Result<ResponseInstance> {
+pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
     let (auth, instance) = req.split_once(':').context("Failed to split")?;
 
     let token = find_matched_data(auth)?.1;

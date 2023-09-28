@@ -1,9 +1,9 @@
 use crate::websocket::User;
-use rocket::tokio::sync::RwLock;
 use std::{
     collections::{HashMap, HashSet},
     sync::LazyLock,
 };
+use tokio::sync::RwLock;
 
 pub(crate) const UA: &str = "User-Agent";
 pub(crate) const UA_VALUE: &str = "vrcapi-proxy";

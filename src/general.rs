@@ -10,7 +10,7 @@ use std::{
 };
 
 pub(crate) static DATA_PATH: LazyLock<PathBuf> =
-    LazyLock::new(|| home_dir().unwrap().join("vrcapi_proxy"));
+    LazyLock::new(|| home_dir().expect("ホームディレクトリの取得に失敗しました。").join("vrcapi_proxy"));
 
 pub(crate) fn read_json<T>(path: &str) -> Result<T>
 where

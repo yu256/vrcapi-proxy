@@ -41,8 +41,7 @@ impl From<User> for ResUser {
     }
 }
 
-#[post("/search_user", data = "<req>")]
-pub(crate) fn api_search_user(req: &str) -> Result<Vec<ResUser>> {
+pub(crate) async fn api_search_user(req: String) -> Result<Vec<ResUser>> {
     split_colon!(req, [auth, user]);
 
     let token = find_matched_data(auth)?.1;

@@ -10,7 +10,6 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use futures::StreamExt as _;
-use rocket::tokio;
 use std::sync::Arc;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 use trie_match::trie_match;

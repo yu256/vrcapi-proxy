@@ -4,7 +4,6 @@ use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
 };
-use rocket::tokio;
 use std::sync::Arc;
 
 pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
@@ -23,7 +22,7 @@ pub(crate) fn spawn(data: (String, String)) {
 
         match fetch_friends(&data.1) {
             Ok(mut friends) => {
-                let _ = fetch_favorite_friends(&data.0, &data.1).await;
+                let _ = fetch_favorite_friends(data.0.clone(), &data.1).await;
 
                 friends.retain_mut(|friend| {
                     if friend.location == "offline" {

@@ -11,8 +11,7 @@ struct TwoFactor {
     requiresTwoFactorAuth: [String; 1],
 }
 
-#[post("/auth", data = "<req>")]
-pub(crate) fn api_auth(req: &str) -> Result<String> {
+pub(crate) async fn api_auth(req: String) -> Result<String> {
     let res = CLIENT
         .as_ref()
         .map_err(|e| anyhow!("{}", e))?
