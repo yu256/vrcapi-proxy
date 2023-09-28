@@ -23,6 +23,8 @@ async fn main() -> Result<()> {
         .into_iter()
         .for_each(spawn);
 
+    let conf = read_json::<Config>("config.json")?;
+
     let app = Router::new()
         .route("/auth", post(api::api_auth))
         .route("/favorites", post(api::api_add_favorites))
@@ -41,15 +43,11 @@ async fn main() -> Result<()> {
         .route("/world", post(api::api_world))
         .layer(
             CorsLayer::new()
-                .allow_origin(
-                    read_json::<CorsConfig>("config.json")?
-                        .url
-                        .parse::<HeaderValue>()?,
-                )
+                .allow_origin(conf.cors.parse::<HeaderValue>()?)
                 .allow_methods([Method::POST]),
         );
 
-    axum::Server::bind(&"0.0.0.0:8000".parse()?)
+    axum::Server::bind(&conf.listen.parse()?)
         .serve(app.into_make_service())
         .await?;
 
@@ -58,11 +56,23 @@ async fn main() -> Result<()> {
 
 fn init() -> Result<()> {
     if DATA_PATH.join("data.json").is_file() && DATA_PATH.join("config.json").is_file() {
+        #[derive(Deserialize)]
+        struct OldCorsConfig {
+            pub(crate) url: String,
+        }
+        if let Ok(json) = read_json::<OldCorsConfig>("config.json") {
+            let new_json = Config {
+                listen: "0.0.0.0:8000".into(),
+                cors: json.url,
+            };
+            write_json(&new_json, "config")?;
+        }
         return Ok(());
     }
 
-    let conf = CorsConfig {
-        url: "http://localhost:3000".to_owned(),
+    let conf = Config {
+        listen: "0.0.0.0:8000".into(),
+        cors: "http://localhost:3000".into(),
     };
     let data: HashMap<String, String> = HashMap::new();
 
@@ -73,6 +83,7 @@ fn init() -> Result<()> {
 }
 
 #[derive(Serialize, Deserialize)]
-struct CorsConfig {
-    pub(crate) url: String,
+struct Config {
+    pub(crate) listen: String,
+    pub(crate) cors: String,
 }
