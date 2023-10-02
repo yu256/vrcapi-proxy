@@ -1,4 +1,5 @@
 use crate::global::{COLOR, FRIENDS};
+use crate::websocket::structs::VecUserExt as _;
 use crate::websocket::User;
 use crate::{
     api::{fetch_favorite_friends, request},
@@ -42,6 +43,8 @@ pub(crate) fn spawn(data: (String, String)) {
                         true
                     }
                 });
+
+                friends.unsanitize();
 
                 FRIENDS.write().await.insert(data.0.clone(), friends);
 

@@ -15,6 +15,7 @@ mod general;
 mod global;
 mod init;
 mod macros;
+mod unsanitizer;
 mod websocket;
 
 #[tokio::main]
