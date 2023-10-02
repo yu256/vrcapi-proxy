@@ -1,9 +1,10 @@
-use crate::global::FRIENDS;
+use crate::global::{COLOR, FRIENDS};
 use crate::websocket::User;
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
 };
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
@@ -19,6 +20,13 @@ pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
 pub(crate) fn spawn(data: (String, String)) {
     tokio::spawn(async move {
         let data = Arc::new(data);
+
+        let color = COLOR.fetch_add(1, Ordering::Relaxed);
+
+        println!(
+            "\x1b[38;5;{}mTrying to connect stream... ({})\x1b[m",
+            color, &data.0
+        );
 
         match fetch_friends(&data.1) {
             Ok(mut friends) => {
@@ -45,7 +53,7 @@ pub(crate) fn spawn(data: (String, String)) {
                 }
             }
             Err(e) => {
-                eprintln!("Error: {}", e);
+                eprintln!("\x1b[38;5;{}mError: {}\x1b[m", color, e);
             }
         }
     });
