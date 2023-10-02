@@ -51,6 +51,10 @@ pub(crate) fn spawn(data: (String, String)) {
                 loop {
                     if stream(Arc::clone(&data)).await.is_ok() {
                         FRIENDS.write().await.remove(&data.0);
+                        println!(
+                            "\x1b[38;5;{}mトークンが失効しました。 ({})\x1b[m",
+                            color, &data.0
+                        );
                         break;
                     }
                 }
