@@ -81,7 +81,7 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<User>() {
         Ok(mut json) => Ok({
             json.unsanitize();
-            user.into()
+            json.into()
         }),
         Err(err) => Err(err.into()),
     }
