@@ -6,13 +6,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Notification {
     created_at: String,
-    details: String, // NotificationDetailInvite, NotificationDetailInviteResponse, NotificationDetailRequestInvite, NotificationDetailRequestInviteResponse, NotificationDetailVoteToKick
+    details: Details,
     id: String,
     message: String,
     seen: bool,
     receiverUserId: String,
     senderUserId: String,
     r#type: String,
+}
+
+#[derive(Serialize, Deserialize)]
+enum Details {
+    NotificationDetailInvite,
+    NotificationDetailInviteResponse,
+    NotificationDetailRequestInvite,
+    NotificationDetailRequestInviteResponse,
+    NotificationDetailVoteToKick,
 }
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
