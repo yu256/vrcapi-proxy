@@ -1,9 +1,13 @@
 #![feature(lazy_cell)]
 
 use crate::init::{init, Config};
+use crate::websocket::ws_handler;
 use anyhow::Result;
 use axum::http::{HeaderValue, Method};
-use axum::{routing::post, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use fetch_friends::spawn;
 use general::read_json;
 use std::collections::HashMap;
@@ -28,6 +32,7 @@ async fn main() -> Result<()> {
     let conf = read_json::<Config>("config.json")?;
 
     let app = Router::new()
+        .route("/ws", get(ws_handler))
         .route("/auth", post(api::api_auth))
         .route("/favorites", post(api::api_add_favorites))
         .route("/favorites/refresh", post(api::api_re_fetch))
@@ -46,7 +51,7 @@ async fn main() -> Result<()> {
         .layer(
             CorsLayer::new()
                 .allow_origin(conf.cors.parse::<HeaderValue>()?)
-                .allow_methods([Method::POST]),
+                .allow_methods([Method::POST, Method::GET]),
         );
 
     axum::Server::bind(&conf.listen.parse()?)

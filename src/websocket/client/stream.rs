@@ -1,11 +1,13 @@
 use crate::global::FRIENDS;
-use crate::websocket::structs::VecUserExt as _;
 use crate::websocket::User;
 use crate::{
     api::request,
     global::{UA, UA_VALUE},
-    websocket::structs::{
-        FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
+    websocket::{
+        client::structs::{
+            FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
+        },
+        VecUserExt,
     },
 };
 use anyhow::{anyhow, Result};

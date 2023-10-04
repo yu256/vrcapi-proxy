@@ -1,5 +1,5 @@
 use super::structs::FriendOnlineEventContent;
-use crate::websocket::structs::User;
+use crate::websocket::User;
 
 impl From<FriendOnlineEventContent> for User {
     fn from(value: FriendOnlineEventContent) -> Self {

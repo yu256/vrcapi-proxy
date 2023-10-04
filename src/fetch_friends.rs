@@ -1,10 +1,6 @@
+use crate::api::{fetch_favorite_friends, request};
 use crate::global::{COLOR, FRIENDS};
-use crate::websocket::structs::VecUserExt as _;
-use crate::websocket::User;
-use crate::{
-    api::{fetch_favorite_friends, request},
-    websocket::stream::stream,
-};
+use crate::websocket::{stream, User, VecUserExt as _};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
