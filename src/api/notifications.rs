@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Notification {
-    created_at: String,
-    details: Details,
     id: String,
-    message: String,
-    seen: bool,
-    receiverUserId: String,
     senderUserId: String,
+    senderUsername: String,
     r#type: String,
+    message: String,
+    details: Option<Details>,
+    seen: bool,
+    created_at: String,
 }
 
 #[derive(Serialize, Deserialize)]
