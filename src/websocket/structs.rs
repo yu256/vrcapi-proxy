@@ -28,7 +28,7 @@ pub(crate) struct User {
 }
 
 impl User {
-    fn unsanitize(&mut self) {
+    pub(crate) fn unsanitize(&mut self) {
         self.bio = self.bio.unsanitize();
         self.statusDescription = self.statusDescription.unsanitize();
     }
