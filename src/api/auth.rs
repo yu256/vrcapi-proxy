@@ -28,7 +28,10 @@ pub(crate) async fn api_auth(req: String) -> Result<String> {
             .and_then(|c| c.split('=').nth(1))
             .context("invalid cookie found.")?;
 
-    let auth_type = res.into_json::<TwoFactor>()?.requiresTwoFactorAuth[0].to_lowercase();
+    let res_string = res.into_string()?;
 
-    Ok(token + ":" + &auth_type)
+    match serde_json::from_str::<TwoFactor>(&res_string) {
+        Ok(json) => Ok(token + ":" + &json.requiresTwoFactorAuth[0].to_lowercase()),
+        Err(_) => Err(anyhow::anyhow!("failed to parse json: {}", res_string)),
+    }
 }
