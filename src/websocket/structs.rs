@@ -2,7 +2,7 @@ use crate::unsanitizer::Unsanitizer;
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
-#[derive(Deserialize, Clone, Eq, PartialOrd)]
+#[derive(Deserialize, Clone, Ord, Eq)]
 pub(crate) struct User {
     #[serde(default)]
     pub(crate) bio: String,
@@ -46,15 +46,15 @@ impl User {
     }
 }
 
-impl Ord for User {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.status.cmp(&self.status)
-    }
-}
-
 impl PartialEq for User {
     fn eq(&self, other: &Self) -> bool {
         self.status == other.status
+    }
+}
+
+impl PartialOrd for User {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.status.cmp(&other.status))
     }
 }
 
