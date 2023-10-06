@@ -1,5 +1,6 @@
 use super::utils::{find_matched_data, request};
 use crate::global::FRIENDS;
+use crate::websocket::structs::Status;
 use crate::websocket::User;
 use crate::{get_img, global::INVALID_AUTH, split_colon};
 use anyhow::{Context as _, Result};
@@ -18,7 +19,7 @@ pub(crate) struct ResUser {
     isFriend: bool,
     location: String,
     travelingToLocation: Option<String>,
-    status: String,
+    status: Status,
     statusDescription: String,
     rank: String,
 }

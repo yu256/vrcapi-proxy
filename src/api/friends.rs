@@ -1,5 +1,6 @@
 use crate::get_img;
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, INVALID_AUTH};
+use crate::websocket::structs::Status;
 use crate::websocket::User;
 use anyhow::{Context as _, Result};
 use serde::Serialize;
@@ -9,7 +10,7 @@ use serde::Serialize;
 struct Friend {
     currentAvatarThumbnailImageUrl: String,
     id: String,
-    status: String,
+    status: Status,
     location: String,
     undetermined: bool,
 }
@@ -25,7 +26,7 @@ impl From<&User> for Friend {
         Self {
             currentAvatarThumbnailImageUrl: get_img!(user, clone),
             id: user.id.to_owned(),
-            status: user.status.to_owned(),
+            status: user.status,
             location: user.location.to_owned(),
             undetermined: user.undetermined,
         }

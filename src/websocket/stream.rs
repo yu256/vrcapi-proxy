@@ -1,5 +1,5 @@
 use crate::global::FRIENDS;
-use crate::websocket::structs::VecUserExt as _;
+use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
     api::request,
@@ -21,13 +21,13 @@ where
     let mut unlocked = FRIENDS.write().await;
     if let Some(friends) = unlocked.get_mut(auth) {
         fun(friends);
+        friends.sort();
     }
 }
 
 pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
     let mut req = format!("wss://pipeline.vrchat.cloud/?{}", &data.1).into_client_request()?;
-    let headers = req.headers_mut();
-    headers.insert(UA, UA_VALUE.try_into()?);
+    req.headers_mut().insert(UA, UA_VALUE.try_into()?);
 
     let (stream, _) = connect_async(req).await?;
 
@@ -65,7 +65,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         .into_json::<User>()?;
 
                         if new_friend.location != "offline" {
-                            if new_friend.status == "ask me" || new_friend.status == "busy" {
+                            if matches!(new_friend.status, Status::AskMe | Status::Busy) {
                                 new_friend.undetermined = true;
                             }
                             write_friends(&data.0, |friends| friends.update(new_friend)).await;

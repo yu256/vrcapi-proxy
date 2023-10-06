@@ -1,5 +1,5 @@
 use crate::global::{COLOR, FRIENDS};
-use crate::websocket::structs::VecUserExt as _;
+use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
     api::{fetch_favorite_friends, request},
@@ -37,7 +37,7 @@ pub(crate) fn spawn(data: (String, String)) {
                     if friend.location == "offline" {
                         false
                     } else {
-                        if friend.status == "ask me" || friend.status == "busy" {
+                        if matches!(friend.status, Status::AskMe | Status::Busy) {
                             friend.undetermined = true;
                         }
                         true
@@ -45,6 +45,7 @@ pub(crate) fn spawn(data: (String, String)) {
                 });
 
                 friends.unsanitize();
+                friends.sort();
 
                 FRIENDS.write().await.insert(data.0.clone(), friends);
 
