@@ -2,7 +2,7 @@ use crate::unsanitizer::Unsanitizer;
 use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
-#[derive(Deserialize, Clone, Ord, Eq)]
+#[derive(Deserialize, Clone, Eq)]
 pub(crate) struct User {
     #[serde(default)]
     pub(crate) bio: String,
@@ -43,6 +43,12 @@ impl User {
     pub(crate) fn unsanitize(&mut self) {
         self.bio = self.bio.unsanitize();
         self.statusDescription = self.statusDescription.unsanitize();
+    }
+}
+
+impl Ord for User {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.status.cmp(&other.status)
     }
 }
 
