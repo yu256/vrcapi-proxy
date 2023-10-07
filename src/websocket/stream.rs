@@ -21,7 +21,6 @@ where
     let mut unlocked = FRIENDS.write().await;
     if let Some(friends) = unlocked.get_mut(auth) {
         fun(friends);
-        friends.sort();
     }
 }
 
@@ -65,7 +64,7 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                         .into_json::<User>()?;
 
                         if new_friend.location != "offline" {
-                            if matches!(new_friend.status, Status::AskMe | Status::Busy) {
+                            if let Status::AskMe | Status::Busy = new_friend.status {
                                 new_friend.undetermined = true;
                             }
                             write_friends(&data.0, |friends| friends.update(new_friend)).await;

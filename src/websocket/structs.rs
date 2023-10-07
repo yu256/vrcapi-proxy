@@ -79,6 +79,7 @@ impl VecUserExt for Vec<User> {
         } else {
             self.push(user);
         }
+        self.sort();
     }
     fn del(&mut self, id: &str) {
         if let Some(index) = self.iter().position(|x| x.id == id) {

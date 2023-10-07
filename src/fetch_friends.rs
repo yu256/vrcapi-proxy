@@ -37,7 +37,7 @@ pub(crate) fn spawn(data: (String, String)) {
                     if friend.location == "offline" {
                         false
                     } else {
-                        if matches!(friend.status, Status::AskMe | Status::Busy) {
+                        if let Status::AskMe | Status::Busy = friend.status {
                             friend.undetermined = true;
                         }
                         true
