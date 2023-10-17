@@ -1,10 +1,12 @@
 use super::utils::{find_matched_data, request};
+use crate::api::utils::request_json;
 use crate::global::FRIENDS;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
 use crate::{get_img, global::INVALID_AUTH, split_colon};
 use anyhow::{Context as _, Result};
-use serde::Serialize;
+use axum::Json;
+use serde::{Deserialize, Serialize};
 use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
@@ -22,6 +24,7 @@ pub(crate) struct ResUser {
     status: Status,
     statusDescription: String,
     rank: String,
+    hasUserIcon: bool,
 }
 
 impl From<User> for ResUser {
@@ -50,6 +53,7 @@ impl From<User> for ResUser {
         }
 
         ResUser {
+            hasUserIcon: !user.userIcon.is_empty(),
             currentAvatarThumbnailImageUrl: get_img!(user),
             bio: user.bio,
             bioLinks: user.bioLinks,
@@ -86,4 +90,21 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
         }),
         Err(err) => Err(err.into()),
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub(crate) struct ProfileUpdateQuery {
+    auth: String,
+    user: String,
+    query: serde_json::Value,
+}
+
+pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
+    request_json(
+        "PUT",
+        &format!("{}{}", URL, req.user),
+        &find_matched_data(&req.auth)?.1,
+        req.query,
+    )
+    .map(|_| true)
 }
