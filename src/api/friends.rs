@@ -35,13 +35,13 @@ impl From<&User> for Friend {
 
 pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
     let (public, private) = FRIENDS
-        .read()
-        .await
-        .get(&req)
-        .context(INVALID_AUTH)?
-        .iter()
-        .map(Friend::from)
-        .partition(|friend| friend.location != "private");
+        .read(&req, |friends| {
+            friends
+                .iter()
+                .map(Friend::from)
+                .partition(|friend| friend.location != "private")
+        })
+        .await?;
 
     Ok(ResFriend { public, private })
 }

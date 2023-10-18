@@ -3,8 +3,8 @@ use crate::api::utils::request_json;
 use crate::global::FRIENDS;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
-use crate::{get_img, global::INVALID_AUTH, split_colon};
-use anyhow::{Context as _, Result};
+use crate::{get_img, split_colon};
+use anyhow::Result;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use trie_match::trie_match;
@@ -72,14 +72,12 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     split_colon!(req, [auth, user]);
 
     if let Some(user) = FRIENDS
-        .read()
-        .await
-        .get(auth)
-        .context(INVALID_AUTH)?
-        .iter()
-        .find(|u| u.id == user)
+        .read(auth, |friends| {
+            friends.iter().find(|u| u.id == user).map(Clone::clone)
+        })
+        .await?
     {
-        return Ok(user.clone().into());
+        return Ok(user.into());
     }
 
     let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };

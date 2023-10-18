@@ -14,16 +14,6 @@ use std::sync::Arc;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 use trie_match::trie_match;
 
-async fn write_friends<F>(auth: &str, fun: F)
-where
-    F: FnOnce(&mut Vec<User>),
-{
-    let mut unlocked = FRIENDS.write().await;
-    if let Some(friends) = unlocked.get_mut(auth) {
-        fun(friends);
-    }
-}
-
 pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
     let mut req = format!("wss://pipeline.vrchat.cloud/?{}", &data.1).into_client_request()?;
     req.headers_mut().insert(UA, UA_VALUE.try_into()?);
@@ -45,13 +35,13 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                 match body.r#type.as_str() {
                     "friend-online" | "friend-location" => {
                         let content = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?;
-                        write_friends(&data.0, |friends| friends.update(content)).await;
+                        FRIENDS.write(&data.0, |friends| friends.update(content)).await;
                     }
 
                     "friend-update" => {
                         let user =
                             serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
-                        write_friends(&data.0, |friends| friends.update(user)).await;
+                        FRIENDS.write(&data.0, |friends| friends.update(user)).await;
                     }
 
                     "friend-add" => {
@@ -67,13 +57,13 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                             if let Status::AskMe | Status::Busy = new_friend.status {
                                 new_friend.undetermined = true;
                             }
-                            write_friends(&data.0, |friends| friends.update(new_friend)).await;
+                            FRIENDS.write(&data.0, |friends| friends.update(new_friend)).await;
                         }
                     }
 
                     "friend-offline" | "friend-delete" | "friend-active" => {
                         let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
-                        write_friends(&data.0, |friends| friends.del(&id)).await;
+                        FRIENDS.write(&data.0, |friends| friends.del(&id)).await;
                     }
                     _ => {}
                 }
