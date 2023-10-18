@@ -1,5 +1,5 @@
 use crate::websocket::User;
-use anyhow::{Context as _, Result};
+use anyhow::{anyhow, Result};
 use std::sync::atomic::AtomicU8;
 use std::{
     collections::{HashMap, HashSet},
@@ -15,6 +15,11 @@ pub(crate) const INVALID_AUTH: &str = "サーバー側の初回fetchに失敗し
 pub(crate) static FRIENDS: OnlineFriends = OnlineFriends {
     inner: LazyLock::new(|| RwLock::new(HashMap::new())),
 };
+
+pub(crate) static USERS: LazyLock<Users> = LazyLock::new(|| Users {
+    inner: RwLock::new(HashMap::new()),
+});
+
 pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashMap<String, HashSet<String>>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
@@ -30,8 +35,11 @@ impl OnlineFriends {
         F: FnOnce(&Vec<User>) -> T,
     {
         let friends = self.inner.read().await;
-        let friends = friends.get(auth).context(INVALID_AUTH)?;
-        Ok(fun(&friends))
+        if let Some(friends) = friends.get(auth) {
+            Ok(fun(&friends))
+        } else {
+            Err(anyhow!(INVALID_AUTH))
+        }
     }
 
     pub(crate) async fn write<F>(&self, auth: &str, fun: F)
@@ -50,5 +58,24 @@ impl OnlineFriends {
 
     pub(crate) async fn remove(&self, key: &str) {
         self.inner.write().await.remove(key);
+    }
+}
+
+pub(crate) struct Users {
+    inner: RwLock<HashMap<String, User>>,
+}
+
+impl Users {
+    pub(crate) async fn insert(&self, auth: &str, user: User) {
+        self.inner.write().await.insert(auth.to_owned(), user);
+    }
+    pub(crate) async fn read(&self, auth: &str) -> Option<User> {
+        self.inner.read().await.get(auth).cloned()
+    }
+    pub(crate) async fn write(&self, auth: &str, fun: impl FnOnce(&mut User)) {
+        let mut users = self.inner.write().await;
+        if let Some(user) = users.get_mut(auth) {
+            fun(user)
+        }
     }
 }

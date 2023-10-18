@@ -1,4 +1,4 @@
-use crate::global::FRIENDS;
+use crate::global::{FRIENDS, USERS};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
@@ -64,6 +64,16 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
                     "friend-offline" | "friend-delete" | "friend-active" => {
                         let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
                         FRIENDS.write(&data.0, |friends| friends.del(&id)).await;
+                    }
+
+                    "user-update" => {
+                        let user = serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
+                        USERS.insert(&data.0, user).await;
+                    }
+
+                    "user-location" => {
+                        let user = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?.into();
+                        USERS.insert(&data.0, user).await;
                     }
                     _ => {}
                 }
