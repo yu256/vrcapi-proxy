@@ -14,6 +14,7 @@ const URL: &str = "https://api.vrchat.cloud/api/1/users/";
 #[allow(non_snake_case)]
 #[derive(Serialize)]
 pub(crate) struct ResUser {
+    id: String,
     bio: String,
     bioLinks: Vec<String>,
     currentAvatarThumbnailImageUrl: String,
@@ -53,6 +54,7 @@ impl From<User> for ResUser {
         }
 
         ResUser {
+            id: user.id,
             hasUserIcon: !user.userIcon.is_empty(),
             currentAvatarThumbnailImageUrl: get_img!(user),
             bio: user.bio,
