@@ -124,7 +124,7 @@ pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> R
     )?;
 
     USERS
-        .write(&req.user, |user| {
+        .write(&req.auth, |user| {
             user.status = req.query.status;
             user.statusDescription = req.query.statusDescription;
             user.bio = req.query.bio;
