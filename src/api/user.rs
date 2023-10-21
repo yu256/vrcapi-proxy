@@ -89,6 +89,7 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
         return Ok(user.into());
     }
 
+    // Safety: 存在しない場合FRIENDS.read()で早期returnされるので、必ずOkである
     let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };
     match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<User>() {
         Ok(mut json) => Ok({
