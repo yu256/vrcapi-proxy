@@ -73,7 +73,10 @@ impl From<User> for ResUser {
 pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     if !req.contains(':') {
         return match USERS.read(&req).await {
-            Some(user) => Ok(user.into()),
+            Some(mut user) => Ok({
+                user.unsanitize();
+                user.into()
+            }),
             None => Err(anyhow!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")),
         };
     }
