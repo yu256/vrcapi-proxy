@@ -36,7 +36,7 @@ impl OnlineFriends {
     {
         let friends = self.inner.read().await;
         if let Some(friends) = friends.get(auth) {
-            Ok(fun(&friends))
+            Ok(fun(friends))
         } else {
             Err(anyhow!(INVALID_AUTH))
         }
