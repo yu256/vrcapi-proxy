@@ -1,4 +1,4 @@
-use crate::general::{read_json, write_json, DATA_PATH};
+use crate::general::{write_json, DATA_PATH};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,17 +11,6 @@ pub(crate) struct Config {
 
 pub(crate) fn init() -> Result<()> {
     if DATA_PATH.join("data.json").is_file() && DATA_PATH.join("config.json").is_file() {
-        #[derive(Deserialize)]
-        struct OldCorsConfig {
-            url: String,
-        }
-        if let Ok(json) = read_json::<OldCorsConfig>("config.json") {
-            let new_json = Config {
-                listen: "0.0.0.0:8000".into(),
-                cors: json.url,
-            };
-            write_json(&new_json, "config")?;
-        }
         return Ok(());
     }
 
