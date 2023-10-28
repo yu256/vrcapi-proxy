@@ -20,6 +20,7 @@ pub(crate) fn init() -> Result<()> {
     if !is_data_exist {
         let data: HashMap<String, String> = HashMap::new();
         write_json(&data, "data")?;
+        return Ok(());
     }
 
     if !is_config_exist {
