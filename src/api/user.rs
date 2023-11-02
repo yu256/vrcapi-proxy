@@ -21,6 +21,7 @@ pub(crate) struct ResUser {
     displayName: String,
     isFriend: bool,
     location: String,
+	#[serde(skip_serializing_if = "Option::is_none")]
     travelingToLocation: Option<String>,
     status: Status,
     statusDescription: String,

@@ -10,6 +10,7 @@ pub(crate) struct Notification {
     senderUsername: String,
     r#type: String,
     message: String,
+	#[serde(skip_serializing_if = "Option::is_none")]
     details: Option<Details>,
     seen: bool,
     created_at: String,

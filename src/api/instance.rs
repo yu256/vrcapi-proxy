@@ -25,6 +25,7 @@ struct InstanceData {
 #[allow(non_snake_case)]
 #[derive(Serialize)]
 pub(crate) struct ResponseInstance {
+	#[serde(skip_serializing_if = "Option::is_none")]
     ownerId: Option<String>,
     userCount: i32,
     name: String,
