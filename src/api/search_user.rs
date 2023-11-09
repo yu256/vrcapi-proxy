@@ -1,5 +1,5 @@
 use super::utils::{find_matched_data, request};
-use crate::{get_img, split_colon};
+use crate::split_colon;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -27,16 +27,22 @@ pub(crate) struct ResUser {
     id: String,
     isFriend: bool,
     statusDescription: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    userIcon: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    profilePicOverride: String,
 }
 
 impl From<User> for ResUser {
     fn from(user: User) -> Self {
         ResUser {
-            currentAvatarThumbnailImageUrl: get_img!(user),
+            currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
             displayName: user.displayName,
             id: user.id,
             isFriend: user.isFriend,
             statusDescription: user.statusDescription,
+            userIcon: user.userIcon,
+            profilePicOverride: user.profilePicOverride,
         }
     }
 }

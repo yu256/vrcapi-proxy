@@ -1,9 +1,9 @@
 use super::utils::{find_matched_data, request};
 use crate::api::utils::request_json;
 use crate::global::{FRIENDS, USERS};
+use crate::split_colon;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
-use crate::{get_img, split_colon};
 use anyhow::{anyhow, Result};
 use axum::Json;
 use serde::{Deserialize, Serialize};
@@ -21,12 +21,15 @@ pub(crate) struct ResUser {
     displayName: String,
     isFriend: bool,
     location: String,
-	#[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     travelingToLocation: Option<String>,
     status: Status,
     statusDescription: String,
     rank: String,
-    hasUserIcon: bool,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    userIcon: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    profilePicOverride: String,
 }
 
 impl From<User> for ResUser {
@@ -56,8 +59,7 @@ impl From<User> for ResUser {
 
         ResUser {
             id: user.id,
-            hasUserIcon: !user.userIcon.is_empty(),
-            currentAvatarThumbnailImageUrl: get_img!(user),
+            currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl,
             bio: user.bio,
             bioLinks: user.bioLinks,
             displayName: user.displayName,
@@ -67,6 +69,8 @@ impl From<User> for ResUser {
             status: user.status,
             statusDescription: user.statusDescription,
             rank,
+            userIcon: user.userIcon,
+            profilePicOverride: user.profilePicOverride,
         }
     }
 }

@@ -9,21 +9,3 @@ macro_rules! split_colon {
         )+
     };
 }
-
-#[macro_export]
-macro_rules! get_img {
-    ($input:expr, clone) => {
-        $crate::general::return_not_empty(
-            &$input.userIcon,
-            &$input.profilePicOverride,
-            &$input.currentAvatarThumbnailImageUrl,
-        )
-    };
-    ($input:expr) => {
-        $crate::general::return_not_empty(
-            $input.userIcon,
-            $input.profilePicOverride,
-            $input.currentAvatarThumbnailImageUrl,
-        )
-    };
-}

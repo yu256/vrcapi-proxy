@@ -9,8 +9,11 @@ use std::{
     sync::LazyLock,
 };
 
-pub(crate) static DATA_PATH: LazyLock<PathBuf> =
-    LazyLock::new(|| home_dir().expect("ホームディレクトリの取得に失敗しました。").join("vrcapi_proxy"));
+pub(crate) static DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    home_dir()
+        .expect("ホームディレクトリの取得に失敗しました。")
+        .join("vrcapi_proxy")
+});
 
 pub(crate) fn read_json<T>(path: &str) -> Result<T>
 where
@@ -39,19 +42,6 @@ where
     let mut file = BufWriter::new(file);
 
     file.write_all(json.as_bytes()).map_err(From::from)
-}
-
-pub(crate) fn return_not_empty<T>(s1: T, s2: T, s3: T) -> String
-where
-    T: Into<String> + AsRef<str>,
-{
-    if !s1.as_ref().is_empty() {
-        s1.into()
-    } else if !s2.as_ref().is_empty() {
-        s2.into()
-    } else {
-        s3.into()
-    }
 }
 
 pub(crate) trait HashMapExt {

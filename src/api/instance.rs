@@ -1,5 +1,4 @@
 use super::utils::{find_matched_data, request};
-use crate::get_img;
 use crate::global::FRIENDS;
 use crate::unsanitizer::Unsanitizer;
 use anyhow::{Context as _, Result};
@@ -25,7 +24,7 @@ struct InstanceData {
 #[allow(non_snake_case)]
 #[derive(Serialize)]
 pub(crate) struct ResponseInstance {
-	#[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     ownerId: Option<String>,
     userCount: i32,
     name: String,
@@ -64,7 +63,16 @@ pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
                 .iter()
                 .filter_map(|user| {
                     if user.location == instance {
-                        Some((get_img!(user, clone), user.displayName.clone()))
+                        Some((
+                            if !user.userIcon.is_empty() {
+                                user.userIcon.clone()
+                            } else if !user.profilePicOverride.is_empty() {
+                                user.profilePicOverride.clone()
+                            } else {
+                                user.currentAvatarThumbnailImageUrl.clone()
+                            },
+                            user.displayName.clone(),
+                        ))
                     } else {
                         None
                     }
