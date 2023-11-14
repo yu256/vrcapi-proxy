@@ -85,7 +85,5 @@ pub(crate) fn request_json(
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {
     let mut data: HashMap<String, String> = read_json("data.json")?;
 
-    let matched = data.remove_entry(auth).context(INVALID_AUTH)?;
-
-    Ok(matched)
+    data.remove_entry(auth).context(INVALID_AUTH)
 }
