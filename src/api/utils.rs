@@ -82,6 +82,7 @@ pub(crate) fn request_json(
     make_request(method, target, Header::Cookie(cookie), Some(data))
 }
 
+/// Returns a tuple of auth and token.
 pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {
     let mut data: HashMap<String, String> = read_json("data.json")?;
 

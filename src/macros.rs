@@ -4,7 +4,7 @@ macro_rules! split_colon {
         let mut parts_ = $input.split(':');
         $(
             let Some($var) = parts_.next() else {
-                anyhow::bail!("Failed to split");
+                anyhow::bail!($crate::global::INVALID_REQUEST);
             };
         )+
     };

@@ -1,5 +1,5 @@
 use super::utils::{find_matched_data, request};
-use crate::global::FRIENDS;
+use crate::global::{FRIENDS, INVALID_REQUEST};
 use crate::unsanitizer::Unsanitizer;
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
@@ -47,7 +47,7 @@ impl InstanceData {
 }
 
 pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
-    let (auth, instance) = req.split_once(':').context("Failed to split")?;
+    let (auth, instance) = req.split_once(':').context(INVALID_REQUEST)?;
 
     let token = find_matched_data(auth)?.1;
 
