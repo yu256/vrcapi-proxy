@@ -23,7 +23,12 @@ pub(crate) async fn stream(data: Arc<(String, String)>) -> Result<()> {
     let (_, mut read) = stream.split();
 
     while let Some(message) = read.next().await {
-        let message = message?.to_string();
+        let message = match message {
+            Ok(message) if message.is_ping() => continue,
+            Ok(message) => message.to_string(),
+            Err(e) => return Err(e.into()),
+        };
+
         if message.starts_with(r#"{"err":"authToken"#) {
             return Ok(());
         }
