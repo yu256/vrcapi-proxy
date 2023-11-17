@@ -38,7 +38,7 @@ pub(crate) async fn fetch_favorite_friends(auth: String, token: &str) -> Result<
         auth,
         request(
             "GET",
-            "https://api.vrchat.cloud/api/1/favorites?type=friend",
+            "https://api.vrchat.cloud/api/1/favorites?type=friend&n=60",
             token,
         )?
         .into_json::<Vec<Favorite>>()?
