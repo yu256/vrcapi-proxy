@@ -17,7 +17,7 @@ pub(crate) struct World {
     heat: u32,
     // id: String,
     imageUrl: String,
-    // instances: Option<Vec<Instance>>,
+    instances: Option<Vec<Option<Vec<serde_json::Value>>>>,
     labsPublicationDate: String,
     name: String,
     namespace: String,
