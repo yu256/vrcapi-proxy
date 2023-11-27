@@ -17,6 +17,7 @@ pub(crate) struct World {
     heat: u32,
     // id: String,
     imageUrl: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     instances: Option<Vec<Option<Vec<serde_json::Value>>>>,
     labsPublicationDate: String,
     name: String,
