@@ -50,7 +50,7 @@ pub(crate) async fn api_instance(
     req: std::str::Split<'_, char>,
     token: &str,
 ) -> Result<ResponseInstance> {
-    let instance: String = req.collect();
+    let instance = req.collect::<Vec<_>>().join(":");
 
     let res = request(
         "GET",
