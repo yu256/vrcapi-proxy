@@ -1,4 +1,4 @@
-use super::utils::{find_matched_data, request};
+use super::utils::request;
 use crate::split_colon;
 use crate::unsanitizer::Unsanitizer;
 use anyhow::Result;
@@ -52,15 +52,13 @@ impl World {
     }
 }
 
-pub(crate) async fn api_world(req: String) -> Result<World> {
-    split_colon!(req, [auth, world]);
-
-    let token = find_matched_data(auth)?.1;
+pub(crate) async fn api_world(mut req: std::str::Split<'_, char>, token: &str) -> Result<World> {
+    split_colon!(req, [world]);
 
     match request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
-        &token,
+        token,
     )?
     .into_json::<World>()
     {

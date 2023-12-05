@@ -1,10 +1,6 @@
 use crate::websocket::User;
-use anyhow::{anyhow, Result};
 use std::sync::atomic::AtomicU8;
-use std::{
-    collections::{HashMap, HashSet},
-    sync::LazyLock,
-};
+use std::{collections::HashSet, sync::LazyLock};
 use tokio::sync::RwLock;
 
 pub(crate) const UA: &str = "User-Agent";
@@ -14,68 +10,53 @@ pub(crate) const INVALID_AUTH: &str = "サーバー側の初回fetchに失敗し
 pub(crate) const INVALID_REQUEST: &str = "リクエストが不正です。";
 
 pub(crate) static FRIENDS: OnlineFriends = OnlineFriends {
-    inner: LazyLock::new(|| RwLock::new(HashMap::new())),
+    inner: LazyLock::new(|| RwLock::new(Vec::new())),
 };
 
 pub(crate) static USERS: LazyLock<Users> = LazyLock::new(|| Users {
-    inner: RwLock::new(HashMap::new()),
+    inner: RwLock::new(None),
 });
 
-pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashMap<String, HashSet<String>>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
+pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashSet<String>>> =
+    LazyLock::new(|| RwLock::new(HashSet::new()));
 
 pub(crate) static COLOR: AtomicU8 = AtomicU8::new(1);
 
 pub(crate) struct OnlineFriends {
-    inner: LazyLock<RwLock<HashMap<String, Vec<User>>>>,
+    inner: LazyLock<RwLock<Vec<User>>>,
 }
 
 impl OnlineFriends {
-    pub(crate) async fn read<T, F>(&self, auth: &str, fun: F) -> Result<T>
+    pub(crate) async fn read<T, F>(&self, fun: F) -> T
     where
         F: FnOnce(&Vec<User>) -> T,
     {
         let friends = self.inner.read().await;
-        if let Some(friends) = friends.get(auth) {
-            Ok(fun(friends))
-        } else {
-            Err(anyhow!(INVALID_AUTH))
-        }
+        fun(&friends)
     }
 
-    pub(crate) async fn write<F>(&self, auth: &str, fun: F)
+    pub(crate) async fn write<F>(&self, fun: F)
     where
         F: FnOnce(&mut Vec<User>),
     {
         let mut friends = self.inner.write().await;
-        if let Some(friends) = friends.get_mut(auth) {
-            fun(friends)
-        }
-    }
-
-    pub(crate) async fn insert(&self, key: String, value: Vec<User>) {
-        self.inner.write().await.insert(key, value);
-    }
-
-    pub(crate) async fn remove(&self, key: &str) {
-        self.inner.write().await.remove(key);
+        fun(&mut friends)
     }
 }
 
 pub(crate) struct Users {
-    inner: RwLock<HashMap<String, User>>,
+    inner: RwLock<Option<User>>,
 }
 
 impl Users {
-    pub(crate) async fn insert(&self, auth: &str, user: User) {
-        self.inner.write().await.insert(auth.to_owned(), user);
+    pub(crate) async fn insert(&self, user: User) {
+        *self.inner.write().await = Some(user);
     }
-    pub(crate) async fn read(&self, auth: &str) -> Option<User> {
-        self.inner.read().await.get(auth).cloned()
+    pub(crate) async fn read(&self) -> Option<User> {
+        self.inner.read().await.clone()
     }
-    pub(crate) async fn write(&self, auth: &str, fun: impl FnOnce(&mut User)) {
-        let mut users = self.inner.write().await;
-        if let Some(user) = users.get_mut(auth) {
+    pub(crate) async fn write(&self, fun: impl FnOnce(&mut User)) {
+        if let Some(ref mut user) = *self.inner.write().await {
             fun(user)
         }
     }

@@ -1,10 +1,9 @@
-use super::utils::{find_matched_data, request};
+use super::utils::request;
 use crate::api::utils::request_json;
 use crate::global::{FRIENDS, USERS};
-use crate::split_colon;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, ensure, Result};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use trie_match::trie_match;
@@ -75,36 +74,31 @@ impl From<User> for ResUser {
     }
 }
 
-pub(crate) async fn api_user(req: String) -> Result<ResUser> {
-    if !req.contains(':') {
-        return match USERS.read(&req).await {
+pub(crate) async fn api_user(mut req: std::str::Split<'_, char>, token: &str) -> Result<ResUser> {
+    match req.next() {
+		None => match USERS.read().await {
             Some(mut user) => Ok({
                 user.unsanitize();
                 user.into()
             }),
             None => Err(anyhow!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")),
-        };
-    }
+        }
+		Some(user) => {
+			if let Some(user) = FRIENDS
+			.read(|friends| friends.iter().find(|u| u.id == user).cloned())
+			.await
+		{
+			return Ok(user.into());
+		}
 
-    split_colon!(req, [auth, user]);
-
-    if let Some(user) = FRIENDS
-        .read(auth, |friends| {
-            friends.iter().find(|u| u.id == user).cloned()
-        })
-        .await?
-    {
-        return Ok(user.into());
-    }
-
-    // Safety: 存在しない場合FRIENDS.read()で早期returnされるので、必ずOkである
-    let token = unsafe { find_matched_data(auth).unwrap_unchecked().1 };
-    match request("GET", &format!("{}{}", URL, user), &token)?.into_json::<User>() {
-        Ok(mut json) => Ok({
-            json.unsanitize();
-            json.into()
-        }),
-        Err(err) => Err(err.into()),
+		match request("GET", &format!("{}{}", URL, user), token)?.into_json::<User>() {
+			Ok(mut json) => Ok({
+				json.unsanitize();
+				json.into()
+			}),
+			Err(err) => Err(err.into()),
+		}
+		}
     }
 }
 
@@ -126,16 +120,22 @@ struct Query {
     userIcon: Option<String>,
 }
 
-pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
+pub(crate) async fn api_update_profile(
+    Json(req): Json<ProfileUpdateQuery>,
+    credentials: crate::types::Credentials,
+) -> Result<bool> {
+    let (auth, ref token) = *credentials.read().await;
+    ensure!(req.auth == auth, crate::global::INVALID_AUTH);
+
     request_json(
         "PUT",
         &format!("{}{}", URL, req.user),
-        &find_matched_data(&req.auth)?.1,
+        token,
         req.query.clone(),
     )?;
 
     USERS
-        .write(&req.auth, |user| {
+        .write(|user| {
             user.status = req.query.status;
             user.statusDescription = req.query.statusDescription;
             user.bio = req.query.bio;

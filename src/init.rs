@@ -1,35 +1,88 @@
-use crate::general::{write_json, DATA_PATH};
+use crate::general::{read_json, write_json, DATA_PATH};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::remove_file, io};
 
-#[derive(Serialize, Deserialize)]
-pub(crate) struct Config {
+#[derive(Serialize, Deserialize, Default)]
+pub(crate) struct Data {
     pub(crate) listen: String,
     pub(crate) cors: String,
+    pub(crate) auth: String,
+    pub(crate) token: String,
 }
 
 pub(crate) fn init() -> Result<()> {
-    let is_data_exist = DATA_PATH.join("data.json").is_file();
-    let is_config_exist = DATA_PATH.join("config.json").is_file();
+    #[derive(Serialize, Deserialize)]
+    pub(crate) struct Config {
+        listen: String,
+        cors: String,
+    }
 
-    if is_config_exist && is_data_exist {
+    impl Default for Config {
+        fn default() -> Self {
+            Self {
+                listen: "0.0.0.0:8000".into(),
+                cors: "http://localhost:3000".into(),
+            }
+        }
+    }
+
+    if read_json::<Data>("data.json").is_ok() {
         return Ok(());
     }
 
-    if !is_data_exist {
-        let data: HashMap<String, String> = HashMap::new();
-        write_json(&data, "data")?;
-        return Ok(());
-    }
+    let old_config = read_json::<Config>("config.json").unwrap_or_default();
 
-    if !is_config_exist {
-        let conf = Config {
-            listen: "0.0.0.0:8000".into(),
-            cors: "http://localhost:3000".into(),
-        };
-        write_json(&conf, "config")?;
-    }
+    let data = if let Ok(old_data) = read_json::<HashMap<String, String>>("data.json") {
+        let fmt = old_data
+            .iter()
+            .enumerate()
+            .map(|(index, (auth, token))| format!("{index}: {auth} {token}"))
+            .reduce(|acc, val| acc + "\n" + &val);
+
+        if let Some(fmt) = fmt {
+            println!("マイグレーションする認証情報を選択してください。\n{}", fmt);
+            let mut buffer = String::new();
+            let old_data = loop {
+                io::stdin().read_line(&mut buffer)?;
+                match buffer.trim().parse::<usize>() {
+                    Ok(index) => match old_data.iter().enumerate().find(|data| data.0 == index) {
+                        Some(data) => break data.1,
+                        None => {
+                            eprintln!("{index}は存在しません。");
+                            buffer.clear();
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("{e}");
+                        buffer.clear();
+                    }
+                }
+            };
+
+            Data {
+                listen: old_config.listen,
+                cors: old_config.cors,
+                auth: old_data.0.into(),
+                token: old_data.1.into(),
+            }
+        } else {
+            Data {
+                listen: old_config.listen,
+                cors: old_config.cors,
+                ..Default::default()
+            }
+        }
+    } else {
+        Data {
+            listen: old_config.listen,
+            cors: old_config.cors,
+            ..Default::default()
+        }
+    };
+
+    write_json(&data, "data.json")?;
+    remove_file(DATA_PATH.join("config.json"))?;
 
     println!("{}にjsonを生成しました。", DATA_PATH.display());
 

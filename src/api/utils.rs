@@ -1,11 +1,8 @@
-use crate::{
-    general::read_json,
-    global::{COOKIE, INVALID_AUTH, UA, UA_VALUE},
-};
-use anyhow::{anyhow, Context as _, Result};
+use crate::global::{COOKIE, UA, UA_VALUE};
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use std::{collections::HashMap, sync::LazyLock};
+use std::sync::LazyLock;
 use ureq::Response;
 
 #[derive(Deserialize)]
@@ -80,11 +77,4 @@ pub(crate) fn request_json(
     data: impl Serialize,
 ) -> Result<Response> {
     make_request(method, target, Header::Cookie(cookie), Some(data))
-}
-
-/// Returns a tuple of auth and token.
-pub(crate) fn find_matched_data(auth: &str) -> Result<(String, String)> {
-    let mut data: HashMap<String, String> = read_json("data.json")?;
-
-    data.remove_entry(auth).context(INVALID_AUTH)
 }

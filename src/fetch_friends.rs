@@ -6,7 +6,6 @@ use crate::{
     websocket::stream::stream,
 };
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 
 pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
     request(
@@ -18,20 +17,19 @@ pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
     .map_err(From::from)
 }
 
-pub(crate) fn spawn(data: (String, String)) {
+pub(crate) fn spawn(data: crate::types::Credentials) {
     tokio::spawn(async move {
-        let data = Arc::new(data);
-
         let color = COLOR.fetch_add(1, Ordering::Relaxed);
 
         println!(
             "\x1b[38;5;{}mTrying to connect stream... ({})\x1b[m",
-            color, &data.0
+            color,
+            data.read().await.0
         );
 
-        match fetch_friends(&data.1) {
+        match fetch_friends(&data.read().await.1) {
             Ok(mut friends) => {
-                let _ = fetch_favorite_friends(data.0.clone(), &data.1).await;
+                let _ = fetch_favorite_friends(&data.read().await.1).await;
 
                 friends.retain_mut(|friend| {
                     if friend.location == "offline" {
@@ -47,15 +45,11 @@ pub(crate) fn spawn(data: (String, String)) {
                 friends.unsanitize();
                 friends.sort();
 
-                FRIENDS.insert(data.0.clone(), friends).await;
+                FRIENDS.write(|users| *users = friends).await;
 
                 loop {
-                    if stream(Arc::clone(&data)).await.is_ok() {
-                        FRIENDS.remove(&data.0).await;
-                        println!(
-                            "\x1b[38;5;{}mトークンが失効しました。 ({})\x1b[m",
-                            color, &data.0
-                        );
+                    if stream(data).await.is_ok() {
+                        println!("\x1b[38;5;{color}mトークンが失効しました。");
                         break;
                     }
                 }

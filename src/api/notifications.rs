@@ -1,4 +1,4 @@
-use super::utils::{find_matched_data, request};
+use super::utils::request;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -28,8 +28,9 @@ enum Details {
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 
-pub(crate) async fn api_notifications(auth: String) -> Result<Vec<Notification>> {
-    request("GET", URL, &find_matched_data(&auth)?.1)?
-        .into_json()
-        .map_err(From::from)
+pub(crate) async fn api_notifications(
+    _auth: std::str::Split<'_, char>,
+    token: &str,
+) -> Result<Vec<Notification>> {
+    request("GET", URL, token)?.into_json().map_err(From::from)
 }

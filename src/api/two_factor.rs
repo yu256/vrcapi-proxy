@@ -1,14 +1,13 @@
-use crate::{
-    api::utils::request_json,
-    general::{read_json, HashMapExt as _},
-    spawn, split_colon,
-};
+use crate::{api::utils::request_json, spawn, split_colon};
 use anyhow::{ensure, Result};
 use serde_json::json;
-use std::collections::HashMap;
 
-pub(crate) async fn api_twofactor(req: String) -> Result<String> {
-    split_colon!(req, [token, r#type, f, auth]);
+pub(crate) async fn api_twofactor(
+    req: String,
+    credentials: crate::types::Credentials,
+) -> Result<String> {
+    let mut iter = req.split(':');
+    split_colon!(iter, [token, r#type, f, auth]);
 
     ensure!(auth.chars().count() <= 50, "認証IDが長すぎます。");
 
@@ -19,12 +18,9 @@ pub(crate) async fn api_twofactor(req: String) -> Result<String> {
         json!({ "code": f }),
     )?;
 
-    let mut data: HashMap<String, String> = read_json("data.json")?;
+    credentials.write().await.1 = token.to_owned();
 
-    data.add(auth, token)?;
-
-    // Safety: 前の行で追加したものなので必ずSomeである
-    spawn(unsafe { data.remove_entry(auth).unwrap_unchecked() });
+    spawn(credentials);
 
     Ok(auth.to_owned())
 }

@@ -1,12 +1,10 @@
 use super::request;
-use crate::{api::utils::find_matched_data, global::INVALID_REQUEST};
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/invite/myself/to/";
 
-pub(crate) async fn api_invite_myself(req: String) -> Result<bool> {
-    let (auth, instance_id) = req.split_once(':').context(INVALID_REQUEST)?;
+pub(crate) async fn api_invite_myself(req: std::str::Split<'_, char>, token: &str) -> Result<bool> {
+    let instance_id: String = req.collect();
     let url = format!("{}{}", URL, instance_id);
-    let token = find_matched_data(auth)?.1;
-    request("POST", &url, &token).map(|_| true)
+    request("POST", &url, token).map(|_| true)
 }

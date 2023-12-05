@@ -1,9 +1,8 @@
 #[macro_export]
 macro_rules! split_colon {
     ($input:expr, [$($var:ident),+]) => {
-        let mut parts_ = $input.split(':');
         $(
-            let Some($var) = parts_.next() else {
+            let Some($var) = $input.next() else {
                 anyhow::bail!($crate::global::INVALID_REQUEST);
             };
         )+

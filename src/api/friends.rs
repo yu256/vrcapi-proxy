@@ -1,7 +1,7 @@
-use crate::global::{FAVORITE_FRIENDS, FRIENDS, INVALID_AUTH};
+use crate::global::{FAVORITE_FRIENDS, FRIENDS};
 use crate::websocket::structs::Status;
 use crate::websocket::User;
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use serde::Serialize;
 
 #[allow(non_snake_case)]
@@ -38,23 +38,22 @@ impl From<&User> for Friend {
     }
 }
 
-pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
+pub(crate) async fn api_friends() -> Result<ResFriend> {
     let (public, private) = FRIENDS
-        .read(&req, |friends| {
+        .read(|friends| {
             friends
                 .iter()
                 .map(Friend::from)
                 .partition(|friend| friend.location != "private")
         })
-        .await?;
+        .await;
 
     Ok(ResFriend { public, private })
 }
 
-pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
-    let unlocked = FAVORITE_FRIENDS.read().await;
-    let favorites = unlocked.get(&req).context(INVALID_AUTH)?;
-    api_friends(req).await.map(|mut friends| {
+pub(crate) async fn api_friends_filtered() -> Result<ResFriend> {
+    let favorites = FAVORITE_FRIENDS.read().await;
+    api_friends().await.map(|mut friends| {
         friends
             .private
             .retain(|friend| favorites.contains(&friend.id));

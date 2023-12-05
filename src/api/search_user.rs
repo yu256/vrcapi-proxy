@@ -1,4 +1,4 @@
-use super::utils::{find_matched_data, request};
+use super::utils::request;
 use crate::split_colon;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -47,15 +47,16 @@ impl From<User> for ResUser {
     }
 }
 
-pub(crate) async fn api_search_user(req: String) -> Result<Vec<ResUser>> {
-    split_colon!(req, [auth, user]);
-
-    let token = find_matched_data(auth)?.1;
+pub(crate) async fn api_search_user(
+    mut req: std::str::Split<'_, char>,
+    token: &str,
+) -> Result<Vec<ResUser>> {
+    split_colon!(req, [user]);
 
     match request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/users?search={}&n=100", user),
-        &token,
+        token,
     )?
     .into_json::<Vec<User>>()
     {
