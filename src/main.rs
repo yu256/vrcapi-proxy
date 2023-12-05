@@ -55,9 +55,20 @@ async fn main() -> Result<()> {
     let credentials: &'static RwLock<(&str, String)> =
         Box::leak(Box::new(RwLock::new(credentials)));
 
-    spawn(credentials);
+    spawn(credentials).await;
 
     let app = Router::new()
+        .route(
+            "/reboot",
+            post(move |req: String| async move {
+                if req == credentials.read().await.0 {
+                    spawn(credentials).await;
+                    Ok(true)
+                } else {
+                    Err(anyhow::anyhow!(global::INVALID_AUTH))
+                }
+            }),
+        )
         .route("/auth", post(api::api_auth))
         .route("/user", post(with_credentials!(api_user, credentials)))
         .route(

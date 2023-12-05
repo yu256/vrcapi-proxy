@@ -1,11 +1,10 @@
-use crate::global::{COLOR, FRIENDS};
+use crate::global::{FRIENDS, HANDLER};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
 };
-use std::sync::atomic::Ordering;
 
 pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
     request(
@@ -17,19 +16,21 @@ pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
     .map_err(From::from)
 }
 
-pub(crate) fn spawn(data: crate::types::Credentials) {
-    tokio::spawn(async move {
-        let color = COLOR.fetch_add(1, Ordering::Relaxed);
+pub(crate) async fn spawn(data: crate::types::Credentials) {
+    if let Some(ref handler) = *HANDLER.read().await {
+        if !handler.is_finished() {
+            handler.abort();
+        }
+    }
 
-        println!(
-            "\x1b[38;5;{}mTrying to connect stream... ({})\x1b[m",
-            color,
-            data.read().await.0
-        );
+    *HANDLER.write().await = Some(tokio::spawn(async move {
+        println!("Trying to connect stream...");
 
-        match fetch_friends(&data.read().await.1) {
+        let token = &data.read().await.1;
+
+        match fetch_friends(token) {
             Ok(mut friends) => {
-                let _ = fetch_favorite_friends(&data.read().await.1).await;
+                let _ = fetch_favorite_friends(token).await;
 
                 friends.retain_mut(|friend| {
                     if friend.location == "offline" {
@@ -47,16 +48,12 @@ pub(crate) fn spawn(data: crate::types::Credentials) {
 
                 FRIENDS.write(|users| *users = friends).await;
 
-                loop {
-                    if stream(data).await.is_ok() {
-                        println!("\x1b[38;5;{color}mトークンが失効しました。");
-                        break;
-                    }
-                }
+                while stream(data).await.is_err() {}
+                println!("トークンが失効しました。");
             }
             Err(e) => {
-                eprintln!("\x1b[38;5;{}mError: {}\x1b[m", color, e);
+                eprintln!("Error: {}", e);
             }
         }
-    });
+    }));
 }

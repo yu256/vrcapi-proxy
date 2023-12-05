@@ -1,5 +1,4 @@
 use crate::websocket::User;
-use std::sync::atomic::AtomicU8;
 use std::{collections::HashSet, sync::LazyLock};
 use tokio::sync::RwLock;
 
@@ -20,7 +19,8 @@ pub(crate) static USERS: LazyLock<Users> = LazyLock::new(|| Users {
 pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashSet<String>>> =
     LazyLock::new(|| RwLock::new(HashSet::new()));
 
-pub(crate) static COLOR: AtomicU8 = AtomicU8::new(1);
+pub(crate) static HANDLER: LazyLock<RwLock<Option<tokio::task::JoinHandle<()>>>> =
+    LazyLock::new(|| RwLock::new(None));
 
 pub(crate) struct OnlineFriends {
     inner: LazyLock<RwLock<Vec<User>>>,

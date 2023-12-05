@@ -1,11 +1,11 @@
-use crate::{api::utils::request_json, spawn, split_colon};
+use crate::{api::utils::request_json, init::Data, spawn, split_colon};
 use anyhow::{ensure, Result};
 use serde_json::json;
 
 pub(crate) async fn api_twofactor(
     req: String,
     credentials: crate::types::Credentials,
-) -> Result<String> {
+) -> Result<&'static str> {
     let mut iter = req.split(':');
     split_colon!(iter, [token, r#type, f, auth]);
 
@@ -18,9 +18,21 @@ pub(crate) async fn api_twofactor(
         json!({ "code": f }),
     )?;
 
-    credentials.write().await.1 = token.to_owned();
+    let data = {
+        let data = crate::general::read_json::<Data>("data.json")?;
+        Data {
+            listen: data.listen,
+            cors: data.cors,
+            auth: data.auth,
+            token: token.into(),
+        }
+    };
 
-    spawn(credentials);
+    crate::general::write_json::<Data>(&data, "data.json")?;
 
-    Ok(auth.to_owned())
+    credentials.write().await.1 = data.token;
+
+    spawn(credentials).await;
+
+    Ok(credentials.read().await.0)
 }

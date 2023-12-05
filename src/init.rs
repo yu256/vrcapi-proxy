@@ -42,20 +42,23 @@ pub(crate) fn init() -> Result<()> {
 
         if let Some(fmt) = fmt {
             println!("マイグレーションする認証情報を選択してください。\n{}", fmt);
-            let mut buffer = String::new();
-            let old_data = loop {
-                io::stdin().read_line(&mut buffer)?;
-                match buffer.trim().parse::<usize>() {
-                    Ok(index) => match old_data.iter().enumerate().find(|data| data.0 == index) {
-                        Some(data) => break data.1,
-                        None => {
-                            eprintln!("{index}は存在しません。");
+            let old_data = {
+                let mut buffer = String::new();
+                loop {
+                    io::stdin().read_line(&mut buffer)?;
+                    match buffer.trim().parse::<usize>() {
+                        Ok(index) => match old_data.iter().enumerate().find(|data| data.0 == index)
+                        {
+                            Some(data) => break data.1,
+                            None => {
+                                eprintln!("{index}は存在しません。");
+                                buffer.clear();
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("{e}");
                             buffer.clear();
                         }
-                    },
-                    Err(e) => {
-                        eprintln!("{e}");
-                        buffer.clear();
                     }
                 }
             };
