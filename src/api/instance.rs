@@ -63,20 +63,16 @@ pub(crate) async fn api_instance(
             friends
                 .iter()
                 .filter_map(|user| {
-                    if user.location == instance {
-                        Some((
-                            if !user.userIcon.is_empty() {
-                                user.userIcon.clone()
-                            } else if !user.profilePicOverride.is_empty() {
-                                user.profilePicOverride.clone()
-                            } else {
-                                user.currentAvatarThumbnailImageUrl.clone()
-                            },
-                            user.displayName.clone(),
-                        ))
-                    } else {
-                        None
-                    }
+                    user.location.eq(&instance).then(|| (
+                        if !user.userIcon.is_empty() {
+                            user.userIcon.clone()
+                        } else if !user.profilePicOverride.is_empty() {
+                            user.profilePicOverride.clone()
+                        } else {
+                            user.currentAvatarThumbnailImageUrl.clone()
+                        },
+                        user.displayName.clone(),
+                    ))
                 })
                 .collect()
         })

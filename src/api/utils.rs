@@ -35,20 +35,18 @@ pub(crate) fn make_request(
 ) -> Result<Response> {
     match CLIENT.as_ref() {
         Ok(agent) => {
-            let mut builder = agent.request(method, target).set(UA, UA_VALUE);
+            let builder = agent.request(method, target).set(UA, UA_VALUE);
 
-            builder = match header {
+            let builder = match header {
                 Header::Cookie(cookie) => builder.set(COOKIE, cookie),
                 Header::Auth((header, value)) => builder.set(header, value),
             };
 
-            let res = if let Some(data) = data {
+            match if let Some(data) = data {
                 builder.send_json(data)
             } else {
                 builder.call()
-            };
-
-            match res {
+            } {
                 Ok(ok) => Ok(ok),
                 Err(ureq::Error::Status(_, res)) => Err(anyhow!(
                     "{}",
