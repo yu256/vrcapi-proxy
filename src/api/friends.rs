@@ -1,4 +1,5 @@
 use crate::global::{FAVORITE_FRIENDS, FRIENDS};
+use crate::validate;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
 use anyhow::Result;
@@ -38,7 +39,8 @@ impl From<&User> for Friend {
     }
 }
 
-pub(crate) async fn api_friends() -> Result<ResFriend> {
+pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
+    validate!(req);
     let (public, private) = FRIENDS
         .read(|friends| {
             friends
@@ -51,9 +53,9 @@ pub(crate) async fn api_friends() -> Result<ResFriend> {
     Ok(ResFriend { public, private })
 }
 
-pub(crate) async fn api_friends_filtered() -> Result<ResFriend> {
+pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
     let favorites = FAVORITE_FRIENDS.read().await;
-    api_friends().await.map(|mut friends| {
+    api_friends(req).await.map(|mut friends| {
         friends
             .private
             .retain(|friend| favorites.contains(&friend.id));

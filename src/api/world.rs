@@ -1,6 +1,6 @@
 use super::utils::request;
-use crate::split_colon;
 use crate::unsanitizer::Unsanitizer;
+use crate::{split_colon, validate};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -52,8 +52,9 @@ impl World {
     }
 }
 
-pub(crate) async fn api_world(mut req: std::str::Split<'_, char>, token: &str) -> Result<World> {
-    split_colon!(req, [world]);
+pub(crate) async fn api_world(req: String) -> Result<World> {
+    split_colon!(req, [auth, world]);
+    validate!(auth, token);
 
     match request(
         "GET",

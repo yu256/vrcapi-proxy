@@ -1,12 +1,10 @@
 use super::utils::request;
-use crate::split_colon;
+use crate::{split_colon, validate};
 use anyhow::Result;
 
-pub(crate) async fn api_friend_accept(
-    mut req: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<()> {
-    split_colon!(req, [id]);
+pub(crate) async fn api_friend_accept(req: String) -> Result<()> {
+    split_colon!(req, [auth, id]);
+    validate!(auth, token);
 
     request(
         "PUT",

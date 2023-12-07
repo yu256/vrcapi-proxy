@@ -1,4 +1,4 @@
-use crate::global::{FRIENDS, HANDLER};
+use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
@@ -16,7 +16,7 @@ pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
     .map_err(From::from)
 }
 
-pub(crate) async fn spawn(data: crate::types::Credentials) {
+pub(crate) async fn spawn() {
     if let Some(ref handler) = *HANDLER.read().await {
         if !handler.is_finished() {
             handler.abort();
@@ -26,29 +26,25 @@ pub(crate) async fn spawn(data: crate::types::Credentials) {
     *HANDLER.write().await = Some(tokio::spawn(async move {
         println!("Trying to connect stream...");
 
-        let token = &data.read().await.1;
+        let token = &AUTHORIZATION.read().await.1;
 
         match fetch_friends(token) {
             Ok(mut friends) => {
                 let _ = fetch_favorite_friends(token).await;
 
                 friends.retain_mut(|friend| {
-                    if friend.location == "offline" {
-                        false
-                    } else {
-                        if let Status::AskMe | Status::Busy = friend.status {
+                    let is_online = friend.location != "offline";
+                    if is_online && let Status::AskMe | Status::Busy = friend.status {
                             friend.undetermined = true;
                         }
-                        true
-                    }
+                    is_online
                 });
-
                 friends.unsanitize();
                 friends.sort();
 
                 FRIENDS.write(|users| *users = friends).await;
 
-                while stream(data).await.is_err() {}
+                while stream().await.is_err() {}
                 println!("トークンが失効しました。");
             }
             Err(e) => {

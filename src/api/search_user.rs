@@ -1,5 +1,5 @@
 use super::utils::request;
-use crate::split_colon;
+use crate::{split_colon, validate};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -47,11 +47,9 @@ impl From<User> for ResUser {
     }
 }
 
-pub(crate) async fn api_search_user(
-    mut req: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<Vec<ResUser>> {
-    split_colon!(req, [user]);
+pub(crate) async fn api_search_user(req: String) -> Result<Vec<ResUser>> {
+    split_colon!(req, [auth, user]);
+    validate!(auth, token);
 
     match request(
         "GET",

@@ -1,4 +1,5 @@
 use super::utils::request;
+use crate::validate;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -28,9 +29,7 @@ enum Details {
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 
-pub(crate) async fn api_notifications(
-    _auth: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<Vec<Notification>> {
+pub(crate) async fn api_notifications(req: String) -> Result<Vec<Notification>> {
+    validate!(req, token);
     request("GET", URL, token)?.into_json().map_err(From::from)
 }

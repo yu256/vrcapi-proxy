@@ -1,5 +1,5 @@
 use super::utils::request;
-use crate::split_colon;
+use crate::{split_colon, validate};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -70,8 +70,9 @@ struct Member {
     permissions: Vec<String>,
 }
 
-pub(crate) async fn api_group(mut req: std::str::Split<'_, char>, token: &str) -> Result<Group> {
-    split_colon!(req, [id]);
+pub(crate) async fn api_group(req: String) -> Result<Group> {
+    split_colon!(req, [auth, id]);
+    validate!(auth, token);
 
     request(
         "GET",

@@ -1,9 +1,10 @@
 use super::utils::request;
 use crate::api::utils::request_json;
-use crate::global::{FRIENDS, USERS};
+use crate::global::{AUTHORIZATION, FRIENDS, USERS};
+use crate::validate;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, Context, Result};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use trie_match::trie_match;
@@ -74,8 +75,10 @@ impl From<User> for ResUser {
     }
 }
 
-pub(crate) async fn api_user(mut req: std::str::Split<'_, char>, token: &str) -> Result<ResUser> {
-    match req.next() {
+pub(crate) async fn api_user(req: String) -> Result<ResUser> {
+    let mut iter = req.split(':');
+    validate!(iter.next().context(crate::global::INVALID_AUTH)?, token);
+    match iter.next() {
 		None => match USERS.read().await {
             Some(mut user) => Ok({
                 user.unsanitize();
@@ -120,12 +123,10 @@ struct Query {
     userIcon: Option<String>,
 }
 
-pub(crate) async fn api_update_profile(
-    Json(req): Json<ProfileUpdateQuery>,
-    credentials: crate::types::Credentials,
-) -> Result<bool> {
-    let (auth, ref token) = *credentials.read().await;
-    ensure!(req.auth == auth, crate::global::INVALID_AUTH);
+pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
+    let (auth, ref token) = *AUTHORIZATION.read().await;
+
+    validate!(auth);
 
     request_json(
         "PUT",

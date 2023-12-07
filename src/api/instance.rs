@@ -1,7 +1,7 @@
 use super::utils::request;
-use crate::global::FRIENDS;
 use crate::unsanitizer::Unsanitizer;
-use anyhow::Result;
+use crate::{global::FRIENDS, validate};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -46,11 +46,11 @@ impl InstanceData {
     }
 }
 
-pub(crate) async fn api_instance(
-    req: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<ResponseInstance> {
-    let instance = req.collect::<Vec<_>>().join(":");
+pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
+    let (auth, instance) = req
+        .split_once(':')
+        .context(crate::global::INVALID_REQUEST)?;
+    validate!(auth, token);
 
     let res = request(
         "GET",
@@ -63,16 +63,18 @@ pub(crate) async fn api_instance(
             friends
                 .iter()
                 .filter_map(|user| {
-                    user.location.eq(&instance).then(|| (
-                        if !user.userIcon.is_empty() {
-                            user.userIcon.clone()
-                        } else if !user.profilePicOverride.is_empty() {
-                            user.profilePicOverride.clone()
-                        } else {
-                            user.currentAvatarThumbnailImageUrl.clone()
-                        },
-                        user.displayName.clone(),
-                    ))
+                    user.location.eq(&instance).then(|| {
+                        (
+                            if !user.userIcon.is_empty() {
+                                user.userIcon.clone()
+                            } else if !user.profilePicOverride.is_empty() {
+                                user.profilePicOverride.clone()
+                            } else {
+                                user.currentAvatarThumbnailImageUrl.clone()
+                            },
+                            user.displayName.clone(),
+                        )
+                    })
                 })
                 .collect()
         })

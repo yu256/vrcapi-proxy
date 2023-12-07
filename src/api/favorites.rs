@@ -1,5 +1,6 @@
 use super::request;
 use crate::global::FAVORITE_FRIENDS;
+use crate::validate;
 use crate::{api::utils::request_json, split_colon};
 use anyhow::Result;
 use serde::Deserialize;
@@ -14,11 +15,9 @@ struct Favorite {
     // tags: Vec<String>,
 }
 
-pub(crate) async fn api_add_favorites(
-    mut req: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<bool> {
-    split_colon!(req, [r#type, id, tag]);
+pub(crate) async fn api_add_favorites(req: String) -> Result<bool> {
+    split_colon!(req, [auth, r#type, id, tag]);
+    validate!(auth, token);
 
     request_json(
         "POST",
@@ -29,7 +28,8 @@ pub(crate) async fn api_add_favorites(
     .map(|_| true)
 }
 
-pub(crate) async fn api_re_fetch(_req: std::str::Split<'_, char>, token: &str) -> Result<bool> {
+pub(crate) async fn api_re_fetch(req: String) -> Result<bool> {
+    validate!(req, token);
     fetch_favorite_friends(token).await.map(|_| true)
 }
 

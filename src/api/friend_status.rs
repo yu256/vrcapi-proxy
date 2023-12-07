@@ -1,5 +1,5 @@
 use super::utils::request;
-use crate::split_colon;
+use crate::{split_colon, validate};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -11,11 +11,9 @@ pub(crate) struct ResStatus {
     incomingRequest: bool,
 }
 
-pub(crate) async fn api_friend_status(
-    mut req: std::str::Split<'_, char>,
-    token: &str,
-) -> Result<ResStatus> {
-    split_colon!(req, [user]);
+pub(crate) async fn api_friend_status(req: String) -> Result<ResStatus> {
+    split_colon!(req, [auth, user]);
+    validate!(auth, token);
 
     request(
         "GET",

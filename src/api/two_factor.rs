@@ -1,13 +1,12 @@
-use crate::{api::utils::request_json, init::Data, spawn, split_colon};
+use crate::{
+    api::utils::request_json, global::AUTHORIZATION, init::Data, spawn, split_colon, validate,
+};
 use anyhow::{ensure, Result};
 use serde_json::json;
 
-pub(crate) async fn api_twofactor(
-    req: String,
-    credentials: crate::types::Credentials,
-) -> Result<&'static str> {
-    let mut iter = req.split(':');
-    split_colon!(iter, [token, r#type, f, auth]);
+pub(crate) async fn api_twofactor(req: String) -> Result<&'static str> {
+    split_colon!(req, [token, r#type, f, auth]);
+    validate!(auth, auth_, _token);
 
     ensure!(auth.chars().count() <= 50, "認証IDが長すぎます。");
 
@@ -30,9 +29,9 @@ pub(crate) async fn api_twofactor(
 
     crate::general::write_json::<Data>(&data, "data.json")?;
 
-    credentials.write().await.1 = data.token;
+    AUTHORIZATION.write().await.1 = data.token;
 
-    spawn(credentials).await;
+    spawn().await;
 
-    Ok(credentials.read().await.0)
+    Ok(auth_)
 }

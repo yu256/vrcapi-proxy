@@ -1,5 +1,5 @@
 use crate::general::{read_json, write_json, DATA_PATH};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::remove_file, io};
 
@@ -27,7 +27,11 @@ pub(crate) fn init() -> Result<()> {
         }
     }
 
-    if read_json::<Data>("data.json").is_ok() {
+    if let Ok(data) = read_json::<Data>("data.json") {
+        ensure!(
+            !data.auth.is_empty(),
+            "認証IDが空です。入力して再度起動してください。"
+        );
         return Ok(());
     }
 

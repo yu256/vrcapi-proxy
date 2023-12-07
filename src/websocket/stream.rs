@@ -1,4 +1,4 @@
-use crate::global::{FRIENDS, USERS};
+use crate::global::{AUTHORIZATION, FRIENDS, USERS};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
 use crate::{
@@ -13,9 +13,12 @@ use futures::StreamExt as _;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 use trie_match::trie_match;
 
-pub(crate) async fn stream(data: crate::types::Credentials) -> Result<()> {
-    let mut req =
-        format!("wss://pipeline.vrchat.cloud/?{}", &data.read().await.1).into_client_request()?;
+pub(crate) async fn stream() -> Result<()> {
+    let mut req = format!(
+        "wss://pipeline.vrchat.cloud/?{}",
+        &AUTHORIZATION.read().await.1
+    )
+    .into_client_request()?;
     req.headers_mut().insert(UA, UA_VALUE.try_into()?);
 
     let (stream, _) = connect_async(req).await?;
@@ -53,7 +56,7 @@ pub(crate) async fn stream(data: crate::types::Credentials) -> Result<()> {
                         let mut new_friend = request(
                             "GET",
                             &format!("https://api.vrchat.cloud/api/1/users/{id}"),
-                            data.read().await.0,
+                            &AUTHORIZATION.read().await.1,
                         )?
                         .into_json::<User>()?;
 
