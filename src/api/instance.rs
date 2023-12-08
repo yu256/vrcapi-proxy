@@ -62,19 +62,18 @@ pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
         .read(|friends| {
             friends
                 .iter()
-                .filter_map(|user| {
-                    user.location.eq(&instance).then(|| {
-                        (
-                            if !user.userIcon.is_empty() {
-                                user.userIcon.clone()
-                            } else if !user.profilePicOverride.is_empty() {
-                                user.profilePicOverride.clone()
-                            } else {
-                                user.currentAvatarThumbnailImageUrl.clone()
-                            },
-                            user.displayName.clone(),
-                        )
-                    })
+                .filter(|user| user.location == instance)
+                .map(|user| {
+                    (
+                        if !user.userIcon.is_empty() {
+                            user.userIcon.clone()
+                        } else if !user.profilePicOverride.is_empty() {
+                            user.profilePicOverride.clone()
+                        } else {
+                            user.currentAvatarThumbnailImageUrl.clone()
+                        },
+                        user.displayName.clone(),
+                    )
                 })
                 .collect()
         })

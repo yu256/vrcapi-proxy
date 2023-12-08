@@ -56,7 +56,7 @@ pub(crate) async fn stream() -> Result<()> {
                         let mut new_friend = request(
                             "GET",
                             &format!("https://api.vrchat.cloud/api/1/users/{id}"),
-                            &*AUTHORIZATION.1.read().await,
+                            &AUTHORIZATION.1.read().await,
                         )?
                         .into_json::<User>()?;
 
