@@ -6,7 +6,7 @@ use serde_json::json;
 
 pub(crate) async fn api_twofactor(req: String) -> Result<&'static str> {
     split_colon!(req, [token, r#type, f, auth]);
-    validate!(auth, auth_, _token);
+    let auth = validate!(auth);
 
     ensure!(auth.chars().count() <= 50, "認証IDが長すぎます。");
 
@@ -29,9 +29,9 @@ pub(crate) async fn api_twofactor(req: String) -> Result<&'static str> {
 
     crate::general::write_json::<Data>(&data, "data.json")?;
 
-    AUTHORIZATION.write().await.1 = data.token;
+    *AUTHORIZATION.1.write().await = data.token;
 
     spawn().await;
 
-    Ok(auth_)
+    Ok(auth)
 }

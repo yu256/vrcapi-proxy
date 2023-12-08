@@ -22,11 +22,9 @@ pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashSet<String>>> =
 pub(crate) static HANDLER: LazyLock<RwLock<Option<tokio::task::JoinHandle<()>>>> =
     LazyLock::new(|| RwLock::new(None));
 
-pub(crate) static AUTHORIZATION: LazyLock<RwLock<(&'static str, String)>> = LazyLock::new(|| {
-    RwLock::new({
-        let data = crate::general::read_json::<crate::init::Data>("data.json").unwrap();
-        (data.auth.leak(), data.token)
-    })
+pub(crate) static AUTHORIZATION: LazyLock<(&'static str, RwLock<String>)> = LazyLock::new(|| {
+    let data = crate::general::read_json::<crate::init::Data>("data.json").unwrap();
+    (data.auth.leak(), RwLock::new(data.token))
 });
 
 pub(crate) struct OnlineFriends {

@@ -26,7 +26,7 @@ pub(crate) async fn spawn() {
     *HANDLER.write().await = Some(tokio::spawn(async move {
         println!("Trying to connect stream...");
 
-        let token = &AUTHORIZATION.read().await.1;
+        let token = &*AUTHORIZATION.1.read().await;
 
         match fetch_friends(token) {
             Ok(mut friends) => {

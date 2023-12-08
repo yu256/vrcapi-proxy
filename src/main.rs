@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
 
     spawn().await;
 
-    let (cors, ref listen) = {
+    let (cors, listen) = {
         let data = general::read_json::<init::Data>("data.json")?;
         (data.cors.parse::<HeaderValue>()?, data.listen.parse()?)
     };
@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
                 Ok(true)
             }),
         )
-        .route("/auth", post(api::api_auth))
+        .route("/auth", post(api_auth))
         .route("/user", post(api_user))
         .route("/profile", post(api_update_profile))
         .route("/friends", post(api_friends))
@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
                 .allow_headers([CONTENT_TYPE]),
         );
 
-    axum::Server::bind(listen)
+    axum::Server::bind(&listen)
         .serve(app.into_make_service())
         .await?;
 

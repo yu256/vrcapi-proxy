@@ -16,7 +16,7 @@ use trie_match::trie_match;
 pub(crate) async fn stream() -> Result<()> {
     let mut req = format!(
         "wss://pipeline.vrchat.cloud/?{}",
-        &AUTHORIZATION.read().await.1
+        &*AUTHORIZATION.1.read().await
     )
     .into_client_request()?;
     req.headers_mut().insert(UA, UA_VALUE.try_into()?);
@@ -56,7 +56,7 @@ pub(crate) async fn stream() -> Result<()> {
                         let mut new_friend = request(
                             "GET",
                             &format!("https://api.vrchat.cloud/api/1/users/{id}"),
-                            &AUTHORIZATION.read().await.1,
+                            &*AUTHORIZATION.1.read().await,
                         )?
                         .into_json::<User>()?;
 

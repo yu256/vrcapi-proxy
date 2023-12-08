@@ -1,6 +1,6 @@
 use super::utils::request;
 use crate::api::utils::request_json;
-use crate::global::{AUTHORIZATION, FRIENDS, USERS};
+use crate::global::{FRIENDS, USERS};
 use crate::validate;
 use crate::websocket::structs::Status;
 use crate::websocket::User;
@@ -124,9 +124,7 @@ struct Query {
 }
 
 pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
-    let (auth, ref token) = *AUTHORIZATION.read().await;
-
-    validate!(auth);
+    validate!(req.auth, token);
 
     request_json(
         "PUT",
