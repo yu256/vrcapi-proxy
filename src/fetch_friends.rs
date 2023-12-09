@@ -1,3 +1,4 @@
+use crate::general::CustomAndThen;
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
@@ -5,16 +6,6 @@ use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
 };
-
-pub(crate) fn fetch_friends(token: &str) -> anyhow::Result<Vec<User>> {
-    request(
-        "GET",
-        "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false",
-        token,
-    )?
-    .into_json()
-    .map_err(From::from)
-}
 
 pub(crate) async fn spawn() {
     if let Some(ref handler) = *HANDLER.read().await {
@@ -28,7 +19,13 @@ pub(crate) async fn spawn() {
 
         let token = &AUTHORIZATION.1.read().await;
 
-        match fetch_friends(token) {
+        match request(
+            "GET",
+            "https://api.vrchat.cloud/api/1/auth/user/friends?offline=false",
+            token,
+        )
+        .and_then2(ureq::Response::into_json::<Vec<User>>)
+        {
             Ok(mut friends) => {
                 let _ = fetch_favorite_friends(token).await;
 
@@ -47,9 +44,7 @@ pub(crate) async fn spawn() {
                 while stream().await.is_err() {}
                 println!("トークンが失効しました。");
             }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
+            Err(e) => eprintln!("Error: {}", e),
         }
     }));
 }
