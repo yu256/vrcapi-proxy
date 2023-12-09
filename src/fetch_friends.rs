@@ -1,4 +1,4 @@
-use crate::general::CustomAndThen;
+use crate::general::CustomAndThen as _;
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::websocket::structs::{Status, VecUserExt as _};
 use crate::websocket::User;
@@ -44,7 +44,7 @@ pub(crate) async fn spawn() {
                 while stream().await.is_err() {}
                 println!("トークンが失効しました。");
             }
-            Err(e) => eprintln!("Error: {}", e),
+            Err(e) => eprintln!("Error: {e}"),
         }
     }));
 }

@@ -8,7 +8,7 @@ pub(crate) async fn api_friend_request(req: String) -> Result<bool> {
 
     request(
         method,
-        &format!("https://api.vrchat.cloud/api/1/user/{}/friendRequest", user),
+        &format!("https://api.vrchat.cloud/api/1/user/{user}/friendRequest"),
         token,
     )
     .map(|_| true)

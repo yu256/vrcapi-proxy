@@ -45,7 +45,7 @@ pub(crate) fn init() -> Result<()> {
             .reduce(|acc, val| acc + "\n" + &val);
 
         if let Some(fmt) = fmt {
-            println!("マイグレーションする認証情報を選択してください。\n{}", fmt);
+            println!("マイグレーションする認証情報を選択してください。\n{fmt}");
             let old_data = {
                 let mut buffer = String::new();
                 loop {

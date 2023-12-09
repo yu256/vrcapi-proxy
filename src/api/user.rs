@@ -94,14 +94,14 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
 			return Ok(user.into());
 		}
 
-		match request("GET", &format!("{}{}", URL, user), token)?.into_json::<User>() {
-			Ok(mut json) => Ok({
-				json.unsanitize();
-				json.into()
-			}),
-			Err(err) => Err(err.into()),
-		}
-		}
+            match request("GET", &format!("{URL}{user}"), token)?.into_json::<User>() {
+                Ok(mut json) => Ok({
+                    json.unsanitize();
+                    json.into()
+                }),
+                Err(err) => Err(err.into()),
+            }
+        }
     }
 }
 
@@ -128,7 +128,7 @@ pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> R
 
     request_json(
         "PUT",
-        &format!("{}{}", URL, req.user),
+        &format!("{URL}{}", req.user),
         token,
         req.query.clone(),
     )?;

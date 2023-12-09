@@ -53,7 +53,7 @@ pub(crate) async fn api_search_user(req: String) -> Result<Vec<ResUser>> {
 
     match request(
         "GET",
-        &format!("https://api.vrchat.cloud/api/1/users?search={}&n=100", user),
+        &format!("https://api.vrchat.cloud/api/1/users?search={user}&n=100"),
         token,
     )?
     .into_json::<Vec<User>>()
