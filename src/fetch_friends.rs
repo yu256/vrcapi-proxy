@@ -26,7 +26,7 @@ pub(crate) async fn spawn() {
     *HANDLER.write().await = Some(tokio::spawn(async move {
         println!("Trying to connect stream...");
 
-        let token = &*AUTHORIZATION.1.read().await;
+        let token = &AUTHORIZATION.1.read().await;
 
         match fetch_friends(token) {
             Ok(mut friends) => {
@@ -35,8 +35,8 @@ pub(crate) async fn spawn() {
                 friends.retain_mut(|friend| {
                     let is_online = friend.location != "offline";
                     if is_online && let Status::AskMe | Status::Busy = friend.status {
-                            friend.undetermined = true;
-                        }
+                        friend.undetermined = true;
+                    }
                     is_online
                 });
                 friends.unsanitize();
