@@ -56,12 +56,8 @@ pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
 pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
     let favorites = FAVORITE_FRIENDS.read().await;
     api_friends(req).await.map(|mut friends| {
-        friends
-            .private
-            .retain(|friend| favorites.contains(&friend.id));
-        friends
-            .public
-            .retain(|friend| favorites.contains(&friend.id));
+        let fun = |friend: &Friend| favorites.contains(&friend.id);
+        crate::struct_foreach!(friends, [private, public], retain(fun));
         friends
     })
 }

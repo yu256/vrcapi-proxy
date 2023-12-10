@@ -26,3 +26,12 @@ macro_rules! validate {
         auth
     }};
 }
+
+#[macro_export]
+macro_rules! struct_foreach {
+    ($struct_name:ident, [$($field:ident),*], $operation:ident($operation_arg:expr)) => {
+        $(
+            $struct_name.$field.$operation($operation_arg);
+        )*
+    };
+}
