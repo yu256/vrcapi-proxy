@@ -4,16 +4,16 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::remove_file, io};
 
 #[derive(Serialize, Deserialize, Default)]
-pub(crate) struct Data {
+pub(super) struct Data {
     pub(crate) listen: String,
     pub(crate) cors: String,
     pub(crate) auth: String,
     pub(crate) token: String,
 }
 
-pub(crate) fn init() -> Result<()> {
+pub(super) fn init() -> Result<()> {
     #[derive(Serialize, Deserialize)]
-    pub(crate) struct Config {
+    struct Config {
         listen: String,
         cors: String,
     }

@@ -27,16 +27,16 @@ where
     serde_json::from_str(&content).map_err(From::from)
 }
 
-pub(crate) fn write_json<T>(data: &T, name: &str) -> Result<()>
+pub(crate) fn write_json<T>(serializable: &T, name: &str) -> Result<()>
 where
     T: Serialize,
 {
     let Ok(file) = File::create(DATA_PATH.join(name)) else {
         create_dir_all(&*DATA_PATH)?;
-        return write_json(data, name);
+        return write_json(serializable, name);
     };
 
-    let json = serde_json::to_string(data)?;
+    let json = serde_json::to_string(serializable)?;
 
     let mut file = BufWriter::new(file);
 

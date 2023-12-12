@@ -22,16 +22,16 @@ static CLIENT: LazyLock<Result<ureq::Agent>> = LazyLock::new(|| {
         .build())
 });
 
-pub(crate) enum Header<'a> {
+pub(super) enum Header<'a> {
     Cookie(&'a str),
     Auth((&'a str, &'a str)),
 }
 
-pub(crate) fn make_request(
+pub(super) fn make_request(
     method: &str,
     target: &str,
     header: Header,
-    data: Option<impl Serialize>,
+    serializable: Option<impl Serialize>,
 ) -> Result<Response> {
     match CLIENT.as_ref() {
         Ok(agent) => {
@@ -42,8 +42,8 @@ pub(crate) fn make_request(
                 Header::Auth((header, value)) => builder.set(header, value),
             };
 
-            match if let Some(data) = data {
-                builder.send_json(data)
+            match if let Some(serializable) = serializable {
+                builder.send_json(serializable)
             } else {
                 builder.call()
             } {
@@ -72,7 +72,7 @@ pub(crate) fn request_json(
     method: &str,
     target: &str,
     cookie: &str,
-    data: impl Serialize,
+    serializable: impl Serialize,
 ) -> Result<Response> {
-    make_request(method, target, Header::Cookie(cookie), Some(data))
+    make_request(method, target, Header::Cookie(cookie), Some(serializable))
 }
