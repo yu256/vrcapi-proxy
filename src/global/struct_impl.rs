@@ -1,4 +1,4 @@
-use crate::websocket::User;
+use crate::user_impl::User;
 use std::sync::LazyLock;
 use tokio::sync::RwLock;
 

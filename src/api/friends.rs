@@ -1,7 +1,6 @@
 use crate::global::{FAVORITE_FRIENDS, FRIENDS};
+use crate::user_impl::{Status, User};
 use crate::validate;
-use crate::websocket::structs::Status;
-use crate::websocket::User;
 use anyhow::Result;
 use serde::Serialize;
 

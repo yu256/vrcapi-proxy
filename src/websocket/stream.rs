@@ -1,6 +1,5 @@
 use crate::global::{AUTHORIZATION, FRIENDS, USERS};
-use crate::websocket::structs::{Status, VecUserExt as _};
-use crate::websocket::User;
+use crate::user_impl::{VecUserExt as _, User, Status};
 use crate::{
     api::request,
     global::{UA, UA_VALUE},

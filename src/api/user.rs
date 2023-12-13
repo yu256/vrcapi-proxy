@@ -1,9 +1,8 @@
 use super::utils::request;
 use crate::api::utils::request_json;
 use crate::global::{FRIENDS, USERS};
+use crate::user_impl::{Status, User};
 use crate::validate;
-use crate::websocket::structs::Status;
-use crate::websocket::User;
 use anyhow::{anyhow, Context, Result};
 use axum::Json;
 use serde::{Deserialize, Serialize};

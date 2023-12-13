@@ -1,7 +1,6 @@
 use crate::general::CustomAndThen as _;
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
-use crate::websocket::structs::{Status, VecUserExt as _};
-use crate::websocket::User;
+use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
