@@ -1,14 +1,17 @@
-use crate::general::{read_json, write_json, DATA_PATH};
+use crate::{
+    general::{read_json, write_json},
+    global::DATA_PATH,
+};
 use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::remove_file, io};
 
 #[derive(Serialize, Deserialize, Default)]
 pub(super) struct Data {
-    pub(crate) listen: String,
-    pub(crate) cors: String,
-    pub(crate) auth: String,
-    pub(crate) token: String,
+    pub(super) listen: String,
+    pub(super) cors: String,
+    pub(super) auth: String,
+    pub(super) token: String,
 }
 
 pub(super) fn init() -> Result<()> {

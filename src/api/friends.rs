@@ -1,7 +1,7 @@
-use crate::global::{FAVORITE_FRIENDS, FRIENDS};
+use crate::global::{FAVORITE_FRIENDS, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User};
 use crate::validate;
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use serde::Serialize;
 
 #[allow(non_snake_case)]
@@ -40,6 +40,11 @@ impl From<&User> for Friend {
 
 pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
     validate!(req);
+    ensure!(
+        HANDLER.read().await.is_some(),
+        "トークンが無効です。再認証を行ってください。"
+    );
+
     let (public, private) = FRIENDS
         .read(|friends| {
             friends

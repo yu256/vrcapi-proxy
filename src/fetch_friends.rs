@@ -1,6 +1,7 @@
 use crate::general::CustomAndThen as _;
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User, VecUserExt as _};
+use crate::websocket::error::WSError::OtherError;
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
@@ -40,8 +41,10 @@ pub(crate) async fn spawn() {
 
                 FRIENDS.write(|users| *users = friends).await;
 
-                while stream().await.is_err() {}
-                println!("トークンが失効しました。");
+                while let OtherError(e) = stream().await {
+                    eprintln!("{e}");
+                }
+                *HANDLER.write().await = None;
             }
             Err(e) => eprintln!("Error: {e}"),
         }

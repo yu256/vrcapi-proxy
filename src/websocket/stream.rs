@@ -1,26 +1,30 @@
+use super::error::WSError;
 use crate::global::{AUTHORIZATION, FRIENDS, USERS};
-use crate::user_impl::{VecUserExt as _, User, Status};
+use crate::try_;
+use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::request,
-    global::{UA, UA_VALUE},
+    global::{APP_NAME, UA},
     websocket::structs::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
     },
 };
-use anyhow::{anyhow, Result};
 use futures::StreamExt as _;
+use tokio_tungstenite::tungstenite::http::HeaderValue;
 use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
 use trie_match::trie_match;
+use WSError::*;
 
-pub(crate) async fn stream() -> Result<()> {
-    let mut req = format!(
+pub(crate) async fn stream() -> WSError {
+    let mut req = try_!(format!(
         "wss://pipeline.vrchat.cloud/?{}",
         &*AUTHORIZATION.1.read().await
     )
-    .into_client_request()?;
-    req.headers_mut().insert(UA, UA_VALUE.try_into()?);
+    .into_client_request());
+    req.headers_mut()
+        .insert(UA, HeaderValue::from_static(APP_NAME));
 
-    let (stream, _) = connect_async(req).await?;
+    let (stream, _) = try_!(connect_async(req).await);
 
     let (_, mut read) = stream.split();
 
@@ -28,11 +32,11 @@ pub(crate) async fn stream() -> Result<()> {
         let message = match message {
             Ok(message) if message.is_ping() => continue,
             Ok(message) => message.to_string(),
-            Err(e) => return Err(e.into()),
+            Err(e) => return OtherError(e.to_string()),
         };
 
         if message.starts_with(r#"{"err":"authToken"#) {
-            return Ok(());
+            return TokenError;
         }
 
         tokio::spawn(async move {
@@ -89,5 +93,5 @@ pub(crate) async fn stream() -> Result<()> {
         });
     }
 
-    Err(anyhow!("disconnected"))
+    OtherError("disconnected".into())
 }

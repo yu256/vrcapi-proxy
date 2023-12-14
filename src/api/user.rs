@@ -76,7 +76,7 @@ impl From<User> for ResUser {
 
 pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     let mut iter = req.split(':');
-    validate!(iter.next().context(crate::global::INVALID_AUTH)?, token);
+    validate!(iter.next().context(crate::global::INVALID_REQUEST)?, token);
     match iter.next() {
 		None => match USERS.read().await {
             Some(mut user) => Ok({

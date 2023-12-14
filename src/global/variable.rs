@@ -1,13 +1,21 @@
 use super::struct_impl::{OnlineFriends, Users};
-use std::{collections::HashSet, sync::LazyLock};
+use dirs_2::home_dir;
+use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
 use tokio::sync::RwLock;
 
+pub(crate) const APP_NAME: &str = "vrcapi-proxy";
 pub(crate) const UA: &str = "User-Agent";
-pub(crate) const UA_VALUE: &str = "vrcapi-proxy";
 pub(crate) const COOKIE: &str = "Cookie";
-pub(crate) const INVALID_AUTH: &str = "サーバー側の初回fetchに失敗しているか、トークンが無効です。";
+pub(crate) const INVALID_AUTH: &str = "認証情報が不正です。";
 pub(crate) const INVALID_REQUEST: &str = "リクエストが不正です。";
 
+pub(crate) static DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    home_dir()
+        .expect("ホームディレクトリの取得に失敗しました。")
+        .join(APP_NAME)
+});
+
+// Interior mutable
 pub(crate) static FRIENDS: OnlineFriends = OnlineFriends {
     inner: LazyLock::new(|| RwLock::new(Vec::new())),
 };

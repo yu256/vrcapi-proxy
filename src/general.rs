@@ -1,18 +1,10 @@
+use crate::global::DATA_PATH;
 use anyhow::Result;
-use dirs_2::home_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{create_dir_all, File},
     io::{BufReader, BufWriter, Read, Write},
-    path::PathBuf,
-    sync::LazyLock,
 };
-
-pub(crate) static DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    home_dir()
-        .expect("ホームディレクトリの取得に失敗しました。")
-        .join("vrcapi_proxy")
-});
 
 pub(crate) fn read_json<T>(path: &str) -> Result<T>
 where

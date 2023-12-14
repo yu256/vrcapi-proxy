@@ -1,4 +1,4 @@
-use crate::global::{COOKIE, UA, UA_VALUE};
+use crate::global::{COOKIE, UA, APP_NAME};
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -35,7 +35,7 @@ pub(super) fn make_request(
 ) -> Result<Response> {
     match CLIENT.as_ref() {
         Ok(agent) => {
-            let builder = agent.request(method, target).set(UA, UA_VALUE);
+            let builder = agent.request(method, target).set(UA, APP_NAME);
 
             let builder = match header {
                 Header::Cookie(cookie) => builder.set(COOKIE, cookie),
