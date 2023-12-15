@@ -3,7 +3,7 @@ use dirs_2::home_dir;
 use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
 use tokio::sync::RwLock;
 
-pub(crate) const APP_NAME: &str = "vrcapi-proxy";
+pub(crate) const APP_NAME: &str = "vrcapi_proxy";
 pub(crate) const UA: &str = "User-Agent";
 pub(crate) const COOKIE: &str = "Cookie";
 pub(crate) const INVALID_AUTH: &str = "認証情報が不正です。";
