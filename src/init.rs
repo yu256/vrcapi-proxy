@@ -38,7 +38,20 @@ pub(super) fn init() -> Result<()> {
         return Ok(());
     }
 
-    let old_config = read_json::<Config>("config.json").unwrap_or_default();
+    let old_config = {
+        #[derive(Deserialize)]
+        struct OldCorsConfig {
+            url: String,
+        }
+        if let Ok(old_config) = read_json::<OldCorsConfig>("config.json") {
+            Config {
+                cors: old_config.url,
+                ..Default::default()
+            }
+        } else {
+            read_json::<Config>("config.json").unwrap_or_default()
+        }
+    };
 
     let data = if let Ok(old_data) = read_json::<HashMap<String, String>>("data.json") {
         let fmt = old_data
