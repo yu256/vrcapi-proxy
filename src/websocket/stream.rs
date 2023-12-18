@@ -19,6 +19,7 @@ use WSError::*;
 static IS_DISCONNECTED: AtomicBool = AtomicBool::new(false);
 
 pub(crate) async fn stream() -> WSError {
+	// Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
     let mut req = unsafe {
         format!(
             "wss://pipeline.vrchat.cloud/?{}",

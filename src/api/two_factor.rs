@@ -5,16 +5,16 @@ use anyhow::{ensure, Result};
 use serde_json::json;
 
 pub(crate) async fn api_twofactor(req: String) -> Result<&'static str> {
-    split_colon!(req, [token, r#type, f, auth]);
+    split_colon!(req, [auth, token, r#two_fa_type, two_fa_code]);
     let auth = validate!(auth);
 
     ensure!(auth.chars().count() <= 50, "認証IDが長すぎます。");
 
     request_json(
         "POST",
-        &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{type}/verify"),
+        &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{two_fa_type}/verify"),
         token,
-        json!({ "code": f }),
+        json!({ "code": two_fa_code }),
     )?;
 
     let data = {
