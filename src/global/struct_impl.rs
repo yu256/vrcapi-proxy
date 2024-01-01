@@ -24,11 +24,11 @@ impl OnlineFriends {
     }
 }
 
-pub(crate) struct Users {
+pub(crate) struct MySelf {
     pub(super) inner: RwLock<Option<User>>,
 }
 
-impl Users {
+impl MySelf {
     pub(crate) async fn insert(&self, user: User) {
         *self.inner.write().await = Some(user);
     }

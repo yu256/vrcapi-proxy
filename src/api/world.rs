@@ -41,12 +41,11 @@ pub(crate) struct World {
 impl World {
     fn modify(&mut self) {
         self.tags.retain_mut(|tag| {
-            if tag.starts_with("author_tag") {
+            let is_tag = tag.starts_with("author_tag");
+            if is_tag {
                 tag.replace_range(..11, "");
-                true
-            } else {
-                false
             }
+            is_tag
         });
         self.description = self.description.unsanitize();
     }

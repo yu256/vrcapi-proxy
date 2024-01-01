@@ -1,4 +1,4 @@
-use super::struct_impl::{OnlineFriends, Users};
+use super::struct_impl::{OnlineFriends, MySelf};
 use dirs_2::home_dir;
 use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
 use tokio::sync::RwLock;
@@ -20,7 +20,7 @@ pub(crate) static FRIENDS: OnlineFriends = OnlineFriends {
     inner: LazyLock::new(|| RwLock::new(Vec::new())),
 };
 
-pub(crate) static USERS: LazyLock<Users> = LazyLock::new(|| Users {
+pub(crate) static MYSELF: LazyLock<MySelf> = LazyLock::new(|| MySelf {
     inner: RwLock::new(None),
 });
 

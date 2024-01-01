@@ -1,5 +1,5 @@
 use super::error::WSError;
-use crate::global::{AUTHORIZATION, FRIENDS, USERS};
+use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
 use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::request,
@@ -40,10 +40,10 @@ pub(crate) async fn stream() -> WSError {
             Err(e) => {
                 use tokio_tungstenite::tungstenite::error::Error::Io;
                 return if let Io(io_err) = e {
-                    OtherErr(io_err.to_string())
+                    Other(io_err.to_string())
                 } else {
                     eprintln!("Unknown Error: {e}");
-                    UnknownErr
+                    Unknown
                 };
             }
         };
@@ -57,14 +57,14 @@ pub(crate) async fn stream() -> WSError {
                     continue;
                 }
                 Ok(message) => message.to_string(),
-                Err(e) => return OtherErr(e.to_string()),
+                Err(e) => return Other(e.to_string()),
             };
 
             if message.starts_with(r#"{"err"#) {
                 if !message.contains("authToken") {
                     eprintln!("Unknown Error: {message}");
                 }
-                return TokenErr;
+                return Token;
             }
 
             tokio::spawn(async move {
@@ -106,12 +106,12 @@ pub(crate) async fn stream() -> WSError {
 
                         "user-update" => {
                             let user = serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
-                            USERS.insert(user).await;
+                            MYSELF.insert(user).await;
                         }
 
                         "user-location" => {
                             let user = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?.into();
-                            USERS.insert(user).await;
+                            MYSELF.insert(user).await;
                         }
                         _ => {}
                     }
@@ -120,7 +120,7 @@ pub(crate) async fn stream() -> WSError {
                 Ok::<(), anyhow::Error>(())
             });
         }
-        OtherErr("disconnected".into())
+        Other("disconnected".into())
     });
 
     loop {
@@ -130,11 +130,11 @@ pub(crate) async fn stream() -> WSError {
                 return if handle.is_finished() {
                     match handle.await {
                         Ok(err) => err,
-                        Err(e) => OtherErr(e.to_string()),
+                        Err(e) => Other(e.to_string()),
                     }
                 } else {
                     handle.abort();
-                    OtherErr("disconnected".into())
+                    Other("disconnected".into())
                 };
             }
             IS_DISCONNECTED.store(true, Release);

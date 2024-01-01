@@ -1,6 +1,6 @@
 use super::utils::request;
 use crate::api::utils::request_json;
-use crate::global::{FRIENDS, USERS};
+use crate::global::{FRIENDS, MYSELF};
 use crate::user_impl::{Status, User};
 use crate::validate;
 use anyhow::{anyhow, Context, Result};
@@ -78,7 +78,7 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     let mut iter = req.split(':');
     validate!(iter.next().context(crate::global::INVALID_REQUEST)?, token);
     match iter.next() {
-		None => match USERS.read().await {
+		None => match MYSELF.read().await {
             Some(mut user) => Ok({
                 user.unsanitize();
                 user.into()
@@ -132,7 +132,7 @@ pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> R
         req.query.clone(),
     )?;
 
-    USERS
+    MYSELF
         .write(|user| {
             user.status = req.query.status;
             user.statusDescription = req.query.statusDescription;
