@@ -35,7 +35,7 @@ pub(crate) async fn stream() -> WSError {
     IS_DISCONNECTED.store(true, Release);
 
     let handle = tokio::spawn(async {
-        let (stream, _) = match connect_async(req).await {
+        let (mut stream, _) = match connect_async(req).await {
             Ok(ok) => ok,
             Err(e) => {
                 use tokio_tungstenite::tungstenite::error::Error::Io;
@@ -48,9 +48,7 @@ pub(crate) async fn stream() -> WSError {
             }
         };
 
-        let (_, mut read) = stream.split();
-
-        while let Some(message) = read.next().await {
+        while let Some(message) = stream.next().await {
             let message = match message {
                 Ok(message) if message.is_ping() => {
                     IS_DISCONNECTED.store(false, Release);

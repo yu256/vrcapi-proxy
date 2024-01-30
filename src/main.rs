@@ -6,9 +6,11 @@ use anyhow::Result;
 use api::*;
 use axum::http::header::CONTENT_TYPE;
 use axum::http::{HeaderValue, Method};
+use axum::routing::get;
 use axum::{routing::post, Router};
 use fetch_friends::spawn;
 use tower_http::cors::CorsLayer;
+use websocket::backend::handler::ws_handler;
 
 mod api;
 mod fetch_friends;
@@ -32,6 +34,7 @@ async fn main() -> Result<()> {
     };
 
     let app = Router::new()
+        .route("/ws", get(ws_handler))
         .route(
             "/reboot",
             post(move |req: String| async move {
