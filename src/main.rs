@@ -21,6 +21,7 @@ mod macros;
 mod unsanitizer;
 mod user_impl;
 mod websocket;
+mod notification;
 
 #[tokio::main]
 async fn main() -> Result<()> {

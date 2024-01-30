@@ -19,7 +19,7 @@ use WSError::*;
 static IS_DISCONNECTED: AtomicBool = AtomicBool::new(false);
 
 pub(crate) async fn stream() -> WSError {
-	// Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
+    // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
     let mut req = unsafe {
         format!(
             "wss://pipeline.vrchat.cloud/?{}",
@@ -111,6 +111,7 @@ pub(crate) async fn stream() -> WSError {
                             let user = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?.into();
                             MYSELF.insert(user).await;
                         }
+
                         _ => {}
                     }
                 }
