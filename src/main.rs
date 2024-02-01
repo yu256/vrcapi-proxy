@@ -9,10 +9,12 @@ use axum::http::{HeaderValue, Method};
 use axum::routing::get;
 use axum::{routing::post, Router};
 use fetch_friends::spawn;
+use global::SQLITE_POOL;
 use tower_http::cors::CorsLayer;
 use websocket::backend::handler::ws_handler;
 
 mod api;
+mod database;
 mod fetch_friends;
 mod general;
 mod global;
@@ -25,6 +27,8 @@ mod websocket;
 #[tokio::main]
 async fn main() -> Result<()> {
     init()?;
+
+    std::sync::LazyLock::force(&SQLITE_POOL);
 
     spawn().await;
 

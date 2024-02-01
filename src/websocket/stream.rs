@@ -1,5 +1,5 @@
 use super::error::WSError;
-use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
+use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, SQLITE_POOL};
 use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::request,
@@ -19,7 +19,7 @@ use WSError::*;
 static IS_DISCONNECTED: AtomicBool = AtomicBool::new(false);
 
 pub(crate) async fn stream() -> WSError {
-	// Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
+    // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
     let mut req = unsafe {
         format!(
             "wss://pipeline.vrchat.cloud/?{}",
@@ -113,6 +113,24 @@ pub(crate) async fn stream() -> WSError {
                         }
                         _ => {}
                     }
+                }
+
+                let mut tx = SQLITE_POOL.begin().await?;
+
+                sqlx::query("INSERT INTO event (type, content) VALUES (?, ?)")
+                    .bind(body.r#type)
+                    .bind(body.content)
+                    .execute(&mut *tx)
+                    .await?;
+
+                tx.commit().await?;
+
+                if cfg!(debug_assertions) {
+                    let rows = sqlx::query_as::<_, StreamBody>("SELECT * FROM event")
+                        .fetch_all(&*SQLITE_POOL)
+                        .await;
+
+                    println!("{:?}", rows);
                 }
 
                 Ok::<(), anyhow::Error>(())

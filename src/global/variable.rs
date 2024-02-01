@@ -1,5 +1,6 @@
-use super::struct_impl::{OnlineFriends, MySelf};
+use super::struct_impl::{MySelf, OnlineFriends};
 use dirs_2::home_dir;
+use futures::executor::block_on;
 use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
 use tokio::sync::RwLock;
 
@@ -13,6 +14,11 @@ pub(crate) static DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     home_dir()
         .expect("ホームディレクトリの取得に失敗しました。")
         .join(APP_NAME)
+});
+
+pub(crate) static SQLITE_POOL: LazyLock<sqlx::SqlitePool> = LazyLock::new(|| {
+    block_on(crate::database::create_sqlite_pool())
+        .unwrap_or_else(|e| panic!("Failed to create SQLite Pool: {e}"))
 });
 
 // Interior mutable

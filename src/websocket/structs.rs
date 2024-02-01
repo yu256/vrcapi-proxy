@@ -1,8 +1,9 @@
 use crate::user_impl::{Status, User};
 use serde::Deserialize;
+use sqlx::FromRow;
 
 #[allow(non_snake_case)]
-#[derive(Deserialize)]
+#[derive(Deserialize, FromRow, Debug)]
 pub(super) struct StreamBody {
     pub(super) r#type: String,
     pub(super) content: String, // json
