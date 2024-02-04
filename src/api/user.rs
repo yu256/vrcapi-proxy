@@ -77,16 +77,16 @@ impl From<User> for ResUser {
 pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     let mut iter = req.split(':');
     validate!(iter.next().context(crate::global::INVALID_REQUEST)?, token);
-    match iter.next() {
-		None => match MYSELF.read().await {
+    match (iter.next(), iter.next()) {
+		(None, None) => match MYSELF.read().await {
             Some(mut user) => Ok({
                 user.unsanitize();
                 user.into()
             }),
             None => Err(anyhow!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")),
         }
-		Some(user) => {
-			if let Some(user) = FRIENDS
+		(Some(user), force) => {
+			if force != Some("true") && let Some(user) = FRIENDS
 			.read(|friends| friends.iter().find(|u| u.id == user).cloned())
 			.await
 		{
@@ -101,6 +101,7 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
                 Err(err) => Err(err.into()),
             }
         }
+        (None, Some(_)) => unsafe { std::hint::unreachable_unchecked() } // イテレータからNoneの次にSomeが返ってくることはない
     }
 }
 
