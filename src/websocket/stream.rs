@@ -123,7 +123,7 @@ pub(crate) async fn stream() -> WSError {
     });
 
     loop {
-        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(120)).await;
         {
             if IS_DISCONNECTED.fetch_xor(true, Acquire) {
                 return if handle.is_finished() {
