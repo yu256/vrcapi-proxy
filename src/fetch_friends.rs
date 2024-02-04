@@ -42,7 +42,7 @@ pub(crate) async fn spawn() {
                 FRIENDS.write(|users| *users = friends).await;
 
                 while let Other(e) = stream().await {
-                    eprintln!("{e}");
+                    eprintln!("{e} ({})", chrono::Local::now());
                 }
             }
             Err(e) => eprintln!("Error: {e}"),
