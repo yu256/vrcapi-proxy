@@ -22,3 +22,4 @@ dirs-2 = "*"
 trie-match = "*"
 aho-corasick = "*"
 chrono = "0.4.33"
+uuid = { version = "1.7.0", features = ["v4", "fast-rng", "macro-diagnostics"] }

@@ -1,7 +1,12 @@
-use super::struct_impl::{OnlineFriends, MySelf};
+use super::struct_impl::{MySelf, OnlineFriends};
 use dirs_2::home_dir;
-use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
-use tokio::sync::RwLock;
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    path::PathBuf,
+    sync::LazyLock,
+};
+use tokio::sync::{Mutex, RwLock};
+use uuid::Uuid;
 
 pub(crate) const APP_NAME: &str = "vrcapi_proxy";
 pub(crate) const UA: &str = "User-Agent";
@@ -34,3 +39,6 @@ pub(crate) static AUTHORIZATION: LazyLock<(&'static str, RwLock<String>)> = Lazy
     let data = crate::general::read_json::<crate::init::Data>("data.json").unwrap();
     (data.auth.leak(), RwLock::new(data.token))
 });
+
+pub(crate) static STREAM_DEQUE: LazyLock<Mutex<HashMap<Uuid, VecDeque<String>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));

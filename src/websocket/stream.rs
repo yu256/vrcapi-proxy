@@ -1,5 +1,5 @@
 use super::error::WSError;
-use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
+use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_DEQUE};
 use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::request,
@@ -67,6 +67,15 @@ pub(crate) async fn stream() -> WSError {
 
             tokio::spawn(async move {
                 let body = serde_json::from_str::<StreamBody>(&message)?;
+
+                STREAM_DEQUE
+                    .lock()
+                    .await
+                    .iter_mut()
+                    .for_each(|(_, deques)| {
+                        deques.push_back(message.clone());
+                    });
+
                 trie_match! {
                     match body.r#type.as_str() {
                         "friend-online" | "friend-location" => {
