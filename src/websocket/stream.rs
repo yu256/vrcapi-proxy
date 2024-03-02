@@ -9,14 +9,14 @@ use crate::{
     },
 };
 use futures::StreamExt as _;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering::{Acquire, Release};
+use std::time::Duration;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::error::SendError;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest as _;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
-use tokio_tungstenite::{connect_async, tungstenite::client::IntoClientRequest as _};
+use tokio_tungstenite::{connect_async, tungstenite};
 use trie_match::trie_match;
 use WSError::*;
-
-static IS_DISCONNECTED: AtomicBool = AtomicBool::new(false);
 
 pub(crate) async fn stream() -> WSError {
     // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
@@ -32,37 +32,38 @@ pub(crate) async fn stream() -> WSError {
     req.headers_mut()
         .insert(UA, HeaderValue::from_static(APP_NAME));
 
-    IS_DISCONNECTED.store(true, Release);
+    let (tx, mut rx) = mpsc::channel(0);
 
-    let handle = tokio::spawn(async {
+    let handle = tokio::spawn(async move {
         let (mut stream, _) = match connect_async(req).await {
             Ok(ok) => ok,
             Err(e) => {
-                use tokio_tungstenite::tungstenite::error::Error::Io;
-                return if let Io(io_err) = e {
-                    Other(io_err.to_string())
-                } else {
-                    eprintln!("Unknown Error: {e}");
-                    Unknown
-                };
+                return tx
+                    .send(if let tungstenite::error::Error::Io(e) = e {
+                        Other(e.to_string())
+                    } else {
+                        Unknown(e.to_string())
+                    })
+                    .await;
             }
         };
 
         while let Some(message) = stream.next().await {
             let message = match message {
-                Ok(message) if message.is_ping() => {
-                    IS_DISCONNECTED.store(false, Release);
-                    continue;
-                }
-                Ok(message) => message.to_string(),
-                Err(e) => return Other(e.to_string()),
+                Ok(tungstenite::Message::Text(message)) => message,
+                Ok(tungstenite::Message::Close(_)) => return tx.send(Disconnected).await,
+                Err(e) => return tx.send(Other(e.to_string())).await,
+                _ => continue,
             };
 
             if message.starts_with(r#"{"err"#) {
-                if !message.contains("authToken") {
-                    eprintln!("Unknown Error: {message}");
-                }
-                return Token;
+                return tx
+                    .send(if !message.contains("authToken") {
+                        Unknown(message)
+                    } else {
+                        Token
+                    })
+                    .await;
             }
 
             tokio::spawn(async move {
@@ -128,24 +129,24 @@ pub(crate) async fn stream() -> WSError {
                 Ok::<(), anyhow::Error>(())
             });
         }
-        Other("disconnected".into())
+        tx.send(Disconnected).await
     });
 
+    let mut interval = tokio::time::interval(Duration::from_secs(60));
+
     loop {
-        tokio::time::sleep(std::time::Duration::from_secs(120)).await;
-        {
-            if IS_DISCONNECTED.fetch_xor(true, Acquire) {
-                return if handle.is_finished() {
-                    match handle.await {
-                        Ok(err) => err,
+        tokio::select! {
+            Some(msg) = rx.recv() => break msg,
+
+            _ = interval.tick() => {
+                if handle.is_finished() {
+                    break match handle.await {
+                        Ok(Err(SendError(err))) => err,
                         Err(e) => Other(e.to_string()),
+                        Ok(Ok(())) => unreachable!(),
                     }
-                } else {
-                    handle.abort();
-                    Other("disconnected".into())
-                };
+                }
             }
-            IS_DISCONNECTED.store(true, Release);
         }
     }
 }

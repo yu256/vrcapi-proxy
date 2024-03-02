@@ -1,7 +1,7 @@
 use crate::general::CustomAndThen as _;
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User, VecUserExt as _};
-use crate::websocket::error::WSError::Other;
+use crate::websocket::error::WSError::{Disconnected, Other, Unknown};
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
@@ -41,8 +41,18 @@ pub(crate) async fn spawn() {
 
                 FRIENDS.write(|users| *users = friends).await;
 
-                while let Other(e) = stream().await {
-                    eprintln!("{e} ({})", chrono::Local::now());
+                loop {
+                    match stream().await {
+                        Disconnected => (),
+                        Other(e) => {
+                            eprintln!("{e} ({})", chrono::Local::now())
+                        }
+                        Unknown(e) => {
+                            eprintln!("Unknown Error: {e} ({})", chrono::Local::now());
+                            break;
+                        }
+                        _ => break,
+                    }
                 }
             }
             Err(e) => eprintln!("Error: {e}"),

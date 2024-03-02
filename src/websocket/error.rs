@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub(crate) enum WSError {
-	Unknown,
+    Disconnected,
     Token,
+    Unknown(String),
     Other(String),
 }
