@@ -32,7 +32,7 @@ pub(crate) async fn stream() -> WSError {
     req.headers_mut()
         .insert(UA, HeaderValue::from_static(APP_NAME));
 
-    let (tx, mut rx) = mpsc::channel(0);
+    let (tx, mut rx) = mpsc::channel(1);
 
     let handle = tokio::spawn(async move {
         let (mut stream, _) = match connect_async(req).await {
