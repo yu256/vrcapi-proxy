@@ -144,6 +144,8 @@ pub(crate) async fn stream() -> WSError {
 
     let mut interval = tokio::time::interval(Duration::from_secs(60));
 
+    interval.tick().await;
+
     loop {
         tokio::select! {
             Some(msg) = rx.recv() => break msg,
