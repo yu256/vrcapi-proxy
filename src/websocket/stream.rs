@@ -1,5 +1,5 @@
 use super::error::WSError;
-use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_DEQUE};
+use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_SENDERS};
 use crate::user_impl::{Status, User, VecUserExt as _};
 use crate::{
     api::request,
@@ -20,7 +20,7 @@ use tokio_tungstenite::{connect_async, tungstenite};
 use trie_match::trie_match;
 use WSError::*;
 
-static IS_DISCONNECTED: AtomicBool = AtomicBool::new(false);
+static IS_DISCONNECTED: AtomicBool = AtomicBool::new(true);
 
 pub(crate) async fn stream() -> WSError {
     // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
@@ -35,8 +35,6 @@ pub(crate) async fn stream() -> WSError {
 
     req.headers_mut()
         .insert(UA, HeaderValue::from_static(APP_NAME));
-
-    IS_DISCONNECTED.store(true, Release);
 
     let (tx, mut rx) = mpsc::channel(1);
 
@@ -78,14 +76,6 @@ pub(crate) async fn stream() -> WSError {
 
             tokio::spawn(async move {
                 let body = serde_json::from_str::<StreamBody>(&message)?;
-
-                STREAM_DEQUE
-                    .lock()
-                    .await
-                    .iter_mut()
-                    .for_each(|(_, deques)| {
-                        deques.push_back(message.clone());
-                    });
 
                 trie_match! {
                     match body.r#type.as_str() {
@@ -136,6 +126,10 @@ pub(crate) async fn stream() -> WSError {
                     }
                 }
 
+                for (_, sender) in STREAM_SENDERS.lock().await.iter_mut() {
+                    sender.send(message.clone()).await?;
+                }
+
                 Ok::<(), anyhow::Error>(())
             });
         }
@@ -151,7 +145,7 @@ pub(crate) async fn stream() -> WSError {
             Some(msg) = rx.recv() => break msg,
 
             _ = interval.tick() => {
-                if IS_DISCONNECTED.fetch_xor(true, Acquire) {
+                if IS_DISCONNECTED.swap(true, Acquire) {
                     break if handle.is_finished() {
                         match handle.await {
                             Ok(Err(SendError(err))) => err,

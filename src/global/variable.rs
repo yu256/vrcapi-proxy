@@ -1,10 +1,11 @@
 use super::struct_impl::{MySelf, OnlineFriends};
 use dirs_2::home_dir;
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet},
     path::PathBuf,
     sync::LazyLock,
 };
+use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
@@ -40,5 +41,5 @@ pub(crate) static AUTHORIZATION: LazyLock<(&'static str, RwLock<String>)> = Lazy
     (data.auth.leak(), RwLock::new(data.token))
 });
 
-pub(crate) static STREAM_DEQUE: LazyLock<Mutex<HashMap<Uuid, VecDeque<String>>>> =
+pub(crate) static STREAM_SENDERS: LazyLock<Mutex<HashMap<Uuid, Sender<String>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
