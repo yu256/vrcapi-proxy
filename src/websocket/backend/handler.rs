@@ -31,7 +31,7 @@ async fn websocket(stream: WebSocket) {
 
     STREAM_SENDERS.lock().await.insert(uuid, tx);
 
-    let mut interval = tokio::time::interval(Duration::from_millis(1000));
+    let mut interval = tokio::time::interval(Duration::from_secs(60));
 
     let delete = || async {
         STREAM_SENDERS.lock().await.remove(&uuid);
