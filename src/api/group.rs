@@ -72,12 +72,12 @@ struct Member {
 
 pub(crate) async fn api_group(req: String) -> Result<Group> {
     split_colon!(req, [auth, id]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
-        token,
+        &token,
     )?
     .into_json()
     .map_err(From::from)

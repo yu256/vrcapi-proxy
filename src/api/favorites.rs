@@ -17,20 +17,20 @@ struct Favorite {
 
 pub(crate) async fn api_add_favorites(req: String) -> Result<bool> {
     split_colon!(req, [auth, r#type, id, tag]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     request_json(
         "POST",
         "https://api.vrchat.cloud/api/1/favorites",
-        token,
+        &token,
         json!( {"type": r#type, "favoriteId": id, "tags": [tag]} ),
     )
     .map(|_| true)
 }
 
-pub(crate) async fn api_re_fetch(req: String) -> Result<bool> {
-    validate!(req, token);
-    fetch_favorite_friends(token).await.map(|_| true)
+pub(crate) async fn api_re_fetch(auth: String) -> Result<bool> {
+    let token = validate::validate(&auth)?.await;
+    fetch_favorite_friends(&token).await.map(|_| true)
 }
 
 pub(crate) async fn fetch_favorite_friends(token: &str) -> Result<()> {

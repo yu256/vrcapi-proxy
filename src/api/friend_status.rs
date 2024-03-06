@@ -13,12 +13,12 @@ pub(crate) struct ResStatus {
 
 pub(crate) async fn api_friend_status(req: String) -> Result<ResStatus> {
     split_colon!(req, [auth, user]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/user/{user}/friendStatus"),
-        token,
+        &token,
     )?
     .into_json()
     .map_err(From::from)

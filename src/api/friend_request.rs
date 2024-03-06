@@ -4,12 +4,12 @@ use anyhow::Result;
 
 pub(crate) async fn api_friend_request(req: String) -> Result<bool> {
     split_colon!(req, [auth, user, method]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     request(
         method,
         &format!("https://api.vrchat.cloud/api/1/user/{user}/friendRequest"),
-        token,
+        &token,
     )
     .map(|_| true)
 }

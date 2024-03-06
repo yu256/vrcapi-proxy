@@ -53,12 +53,12 @@ impl World {
 
 pub(crate) async fn api_world(req: String) -> Result<World> {
     split_colon!(req, [auth, world]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     match request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
-        token,
+        &token,
     )?
     .into_json::<World>()
     {

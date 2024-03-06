@@ -50,12 +50,12 @@ pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
     let (auth, instance) = req
         .split_once(':')
         .context(crate::global::INVALID_REQUEST)?;
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     let res = request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
-        token,
+        &token,
     )?;
 
     let users = FRIENDS

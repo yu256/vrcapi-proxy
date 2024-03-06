@@ -38,8 +38,9 @@ impl From<&User> for Friend {
     }
 }
 
-pub(crate) async fn api_friends(req: String) -> Result<ResFriend> {
-    validate!(req);
+pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
+    let _ = validate::validate(&auth)?;
+
     ensure!(
         HANDLER.read().await.is_some(),
         "トークンが無効です。再認証を行ってください。"
@@ -61,7 +62,8 @@ pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
     let favorites = FAVORITE_FRIENDS.read().await;
     api_friends(req).await.map(|mut friends| {
         let fun = |friend: &Friend| favorites.contains(&friend.id);
-        crate::struct_foreach!(friends, [private, public], retain(fun));
+        friends.private.retain(fun);
+        friends.public.retain(fun);
         friends
     })
 }

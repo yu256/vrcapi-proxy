@@ -76,7 +76,7 @@ impl From<User> for ResUser {
 
 pub(crate) async fn api_user(req: String) -> Result<ResUser> {
     let mut iter = req.split(':');
-    validate!(iter.next().context(crate::global::INVALID_REQUEST)?, token);
+    let token = validate::validate(iter.next().context(crate::global::INVALID_REQUEST)?)?.await;
     match (iter.next(), iter.next()) {
 		(None, None) => match MYSELF.read().await {
             Some(mut user) => Ok({
@@ -93,7 +93,7 @@ pub(crate) async fn api_user(req: String) -> Result<ResUser> {
 			return Ok(user.into());
 		}
 
-            match request("GET", &format!("{URL}{user}"), token)?.into_json::<User>() {
+            match request("GET", &format!("{URL}{user}"), &token)?.into_json::<User>() {
                 Ok(mut json) => Ok({
                     json.unsanitize();
                     json.into()
@@ -124,12 +124,12 @@ struct Query {
 }
 
 pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
-    validate!(req.auth, token);
+    let token = validate::validate(&req.auth)?.await;
 
     request_json(
         "PUT",
         &format!("{URL}{}", req.user),
-        token,
+        &token,
         req.query.clone(),
     )?;
 

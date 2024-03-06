@@ -18,10 +18,11 @@ mod general;
 mod global;
 mod init;
 mod macros;
+mod notification;
 mod unsanitizer;
 mod user_impl;
+mod validate;
 mod websocket;
-mod notification;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -38,8 +39,8 @@ async fn main() -> Result<()> {
         .route("/ws", get(ws_handler))
         .route(
             "/reboot",
-            post(move |req: String| async move {
-                validate!(req);
+            post(move |auth: String| async move {
+                let _ = validate::validate(&auth)?;
                 spawn().await;
                 Ok(true)
             }),

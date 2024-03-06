@@ -49,12 +49,12 @@ impl From<User> for ResUser {
 
 pub(crate) async fn api_search_user(req: String) -> Result<Vec<ResUser>> {
     split_colon!(req, [auth, user]);
-    validate!(auth, token);
+    let token = validate::validate(auth)?.await;
 
     match request(
         "GET",
         &format!("https://api.vrchat.cloud/api/1/users?search={user}&n=100"),
-        token,
+        &token,
     )?
     .into_json::<Vec<User>>()
     {
