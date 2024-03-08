@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     let (cors, listen) = {
         let data = general::read_json::<init::Data>("data.json")?;
-        (data.cors.parse::<HeaderValue>()?, data.listen.parse()?)
+        (data.cors.parse::<HeaderValue>()?, data.listen)
     };
 
     let app = Router::new()
@@ -68,9 +68,9 @@ async fn main() -> Result<()> {
                 .allow_headers([CONTENT_TYPE]),
         );
 
-    axum::Server::bind(&listen)
-        .serve(app.into_make_service())
-        .await?;
+    let listener = tokio::net::TcpListener::bind(&listen).await?;
+
+    axum::serve(listener, app).await?;
 
     Ok(())
 }
