@@ -19,7 +19,13 @@ pub(crate) struct Query {
     password: String,
 }
 
-pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) -> Result<String> {
+#[derive(serde::Serialize)]
+pub(crate) struct Response {
+    token: String,
+    auth_type: &'static str,
+}
+
+pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) -> Result<Response> {
     let res = make_request(
         Method::GET,
         URL,
@@ -59,5 +65,5 @@ pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) ->
         })
         .unwrap_or("otp");
 
-    Ok(token + ":" + auth_type)
+    Ok(Response { token, auth_type })
 }

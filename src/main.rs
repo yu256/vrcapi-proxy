@@ -29,10 +29,12 @@ async fn main() -> Result<()> {
 
     spawn().await;
 
-    let (cors, listen) = {
-        let data = general::read_json::<init::Data>("data.json")?;
-        (data.cors.parse::<HeaderValue>()?, data.listen)
-    };
+    let init::Data {
+        cors,
+        listen,
+        auth: _,
+        token: _,
+    } = general::read_json::<init::Data>("data.json")?;
 
     let app = Router::new()
         .route("/ws", get(ws_handler))
@@ -63,7 +65,7 @@ async fn main() -> Result<()> {
         .route("/world", post(api_world))
         .layer(
             CorsLayer::new()
-                .allow_origin(cors)
+                .allow_origin(cors.parse::<HeaderValue>()?)
                 .allow_methods([Method::POST])
                 .allow_headers([CONTENT_TYPE]),
         );
