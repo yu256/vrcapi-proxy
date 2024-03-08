@@ -2,6 +2,7 @@ use super::request;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 
 #[derive(serde::Deserialize)]
 pub(crate) struct Query {
@@ -15,9 +16,10 @@ pub(crate) async fn api_invite_myself(
     let token = validate(auth)?.await;
 
     request(
-        "POST",
+        Method::POST,
         &format!("https://api.vrchat.cloud/api/1/invite/myself/to/{instance_id}"),
         &token,
     )
+    .await
     .map(|_| true)
 }

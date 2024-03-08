@@ -4,6 +4,7 @@ use crate::user_impl::{Status, User};
 use crate::validate::validate;
 use anyhow::{bail, Context as _, Result};
 use axum::Json;
+use reqwest::Method;
 use serde::Serialize;
 use trie_match::trie_match;
 
@@ -27,7 +28,7 @@ pub(crate) async fn api_user(
     let token = validate(auth)?.await;
     match (user_id, force) {
 		(Some(user_id), true) => {
-			match request("GET", &format!("{URL}{user_id}"), &token)?.into_json::<User>() {
+			match request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await {
                 Ok(mut json) => Ok({
                     json.unsanitize();
                     json.into()

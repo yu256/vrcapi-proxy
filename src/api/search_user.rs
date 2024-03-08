@@ -2,6 +2,7 @@ use super::utils::request;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 const MAX: usize = 100;
@@ -21,11 +22,13 @@ pub(crate) async fn api_search_user(
     let n = n.filter(|&n| n != 0 && n <= MAX).unwrap_or(MAX);
 
     request(
-        "GET",
+        Method::GET,
         &format!("https://api.vrchat.cloud/api/1/users?search={username}&n={n}"),
         &token,
-    )?
-    .into_json()
+    )
+    .await?
+    .json()
+    .await
     .map_err(From::from)
 }
 

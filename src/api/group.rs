@@ -2,6 +2,7 @@ use super::utils::request;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 #[derive(serde::Deserialize)]
@@ -14,11 +15,13 @@ pub(crate) async fn api_group(Json(Query { auth, group_id }): Json<Query>) -> Re
     let token = validate(auth)?.await;
 
     request(
-        "GET",
+        Method::GET,
         &format!("https://api.vrchat.cloud/api/1/groups/{group_id}"),
         &token,
-    )?
-    .into_json()
+    )
+    .await?
+    .json()
+    .await
     .map_err(From::from)
 }
 

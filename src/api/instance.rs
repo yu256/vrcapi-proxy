@@ -3,6 +3,7 @@ use crate::unsanitizer::Unsanitizer;
 use crate::{global::FRIENDS, validate::validate};
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -18,10 +19,11 @@ pub(crate) async fn api_instance(
     let token = validate(auth)?.await;
 
     let res = request(
-        "GET",
+        Method::GET,
         &format!("https://api.vrchat.cloud/api/1/instances/{instance_id}"),
         &token,
-    )?;
+    )
+    .await?;
 
     let users = FRIENDS
         .read(|friends| {
@@ -44,7 +46,7 @@ pub(crate) async fn api_instance(
         })
         .await;
 
-    Ok(res.into_json::<InstanceData>()?.into_res(users))
+    Ok(res.json::<InstanceData>().await?.into_res(users))
 }
 
 #[allow(non_snake_case)]

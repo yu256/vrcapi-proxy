@@ -1,9 +1,8 @@
-use crate::global::{COOKIE, UA, APP_NAME};
+use crate::global::{APP_NAME, COOKIE, UA};
 use anyhow::{anyhow, Result};
+use reqwest::{Method, Response};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::sync::LazyLock;
-use ureq::Response;
 
 #[derive(Deserialize)]
 struct ErrorMessage {
@@ -16,63 +15,56 @@ struct ErrorDetail {
     // status_code: u32,
 }
 
-static CLIENT: LazyLock<Result<ureq::Agent>> = LazyLock::new(|| {
-    Ok(ureq::builder()
-        .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
-        .build())
-});
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 pub(super) enum Header<'a> {
     Cookie(&'a str),
     Auth((&'a str, &'a str)),
 }
 
-pub(super) fn make_request(
-    method: &str,
+pub(super) async fn make_request(
+    method: Method,
     target: &str,
-    header: Header,
+    header: Header<'_>,
     serializable: Option<impl Serialize>,
 ) -> Result<Response> {
-    match CLIENT.as_ref() {
-        Ok(agent) => {
-            let builder = agent.request(method, target).set(UA, APP_NAME);
+    let builder = CLIENT.request(method, target).header(UA, APP_NAME);
 
-            let builder = match header {
-                Header::Cookie(cookie) => builder.set(COOKIE, cookie),
-                Header::Auth((header, value)) => builder.set(header, value),
-            };
+    let builder = match header {
+        Header::Cookie(cookie) => builder.header(COOKIE, cookie),
+        Header::Auth((header, value)) => builder.header(header, value),
+    };
 
-            match if let Some(serializable) = serializable {
-                builder.send_json(serializable)
-            } else {
-                builder.call()
-            } {
-                Ok(ok) => Ok(ok),
-                Err(ureq::Error::Status(_, res)) => Err(anyhow!(
-                    "{}",
-                    res.into_json::<ErrorMessage>()?
-                        .error
-                        .message
-                        .replace('\"', "")
-                )),
-                Err(e) => Err(e.into()),
-            }
-        }
-        Err(e) => Err(anyhow!("{e}")),
+	let response = if let Some(serializable) = serializable {
+        builder.json(&serializable).send()
+    } else {
+        builder.send()
+    }.await;
+
+    match response {
+        Ok(response) if response.status().is_success() => Ok(response),
+        Ok(response) => Err(anyhow!(
+            "{}",
+            response.json::<ErrorMessage>().await?
+                .error
+                .message
+                .replace('\"', "")
+        )),
+        Err(e) => Err(e.into()),
     }
 }
 
 #[inline]
-pub(crate) fn request(method: &str, target: &str, cookie: &str) -> Result<Response> {
-    make_request(method, target, Header::Cookie(cookie), None::<()>)
+pub(crate) async fn request(method: Method, target: &str, cookie: &str) -> Result<Response> {
+    make_request(method, target, Header::Cookie(cookie), None::<()>).await
 }
 
 #[inline]
-pub(crate) fn request_json(
-    method: &str,
+pub(crate) async fn request_json(
+    method: Method,
     target: &str,
     cookie: &str,
     serializable: impl Serialize,
 ) -> Result<Response> {
-    make_request(method, target, Header::Cookie(cookie), Some(serializable))
+    make_request(method, target, Header::Cookie(cookie), Some(serializable)).await
 }

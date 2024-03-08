@@ -1,16 +1,15 @@
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User};
 use crate::validate::validate;
-use anyhow::{ensure, Result};
+use anyhow::{bail, Result};
 use serde::Serialize;
 
 pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
     drop(validate(auth)?);
 
-    ensure!(
-        HANDLER.read().await.is_some(),
-        "トークンが無効です。再認証を行ってください。"
-    );
+    if let Err(e) = &*HANDLER.read().await {
+        bail!("WebSocketに接続されていません。\nReason: {e}");
+    }
 
     let (public, private) = FRIENDS
         .read(|friends| {
@@ -33,7 +32,6 @@ pub(crate) async fn api_friends_filtered(auth: String) -> Result<ResFriend> {
         friends
     })
 }
-
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]

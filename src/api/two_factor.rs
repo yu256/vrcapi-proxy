@@ -3,6 +3,7 @@ use crate::{
 };
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde_json::json;
 
 #[derive(serde::Deserialize)]
@@ -24,11 +25,12 @@ pub(crate) async fn api_twofactor(
     drop(validate(auth)?);
 
     request_json(
-        "POST",
+        Method::POST,
         &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{two_factor_type}/verify"),
         &token,
         json!({ "code": two_factor_code }),
-    )?;
+    )
+    .await?;
 
     let data = {
         let data = crate::general::read_json::<Data>("data.json")?;

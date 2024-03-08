@@ -2,6 +2,7 @@ use super::utils::request_json;
 use crate::{global::MYSELF, user_impl::Status, validate::validate};
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
@@ -28,11 +29,12 @@ pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> R
     let token = validate(&req.auth)?.await;
 
     request_json(
-        "PUT",
+        Method::PUT,
         &format!("{URL}{}", req.user),
         &token,
         req.query.clone(),
-    )?;
+    )
+    .await?;
 
     MYSELF
         .write(|user| {

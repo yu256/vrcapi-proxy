@@ -2,6 +2,7 @@ use super::utils::{make_request, Header};
 use anyhow::{Context as _, Result};
 use axum::Json;
 use base64::{engine::general_purpose, Engine as _};
+use reqwest::Method;
 use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
@@ -20,7 +21,7 @@ pub(crate) struct Query {
 
 pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) -> Result<String> {
     let res = make_request(
-        "GET",
+        Method::GET,
         URL,
         Header::Auth((
             "Authorization",
@@ -30,17 +31,21 @@ pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) ->
             ),
         )),
         None::<()>,
-    )?;
+    )
+    .await?;
 
     let token = String::from("auth=")
         + res
-            .header("set-cookie")
+            .headers()
+            .get("set-cookie")
+            .and_then(|h| h.to_str().ok())
             .and_then(|c| c.split(';').next())
             .and_then(|c| c.split('=').nth(1))
             .context("invalid cookie found.")?;
 
     let auth_type = res
-        .into_json::<TwoFactor>()?
+        .json::<TwoFactor>()
+        .await?
         .requiresTwoFactorAuth
         .into_iter()
         .find_map(|auth| {

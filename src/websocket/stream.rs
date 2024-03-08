@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use futures::StreamExt as _;
+use reqwest::Method;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Acquire, Release};
 use std::time::Duration;
@@ -93,11 +94,11 @@ pub(crate) async fn stream() -> WSError {
                         "friend-add" => {
                             let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
                             let mut new_friend = request(
-                                "GET",
+                                Method::GET,
                                 &format!("https://api.vrchat.cloud/api/1/users/{id}"),
                                 &AUTHORIZATION.1.read().await,
-                            )?
-                            .into_json::<User>()?;
+                            ).await?
+                            .json::<User>().await?;
 
                             if new_friend.location != "offline" {
                                 if let Status::AskMe | Status::Busy = new_friend.status {

@@ -32,8 +32,8 @@ pub(crate) static MYSELF: LazyLock<MySelf> = LazyLock::new(|| MySelf {
 pub(crate) static FAVORITE_FRIENDS: LazyLock<RwLock<HashSet<String>>> =
     LazyLock::new(|| RwLock::new(HashSet::new()));
 
-pub(crate) static HANDLER: LazyLock<RwLock<Option<tokio::task::JoinHandle<()>>>> =
-    LazyLock::new(|| RwLock::new(None));
+pub(crate) static HANDLER: LazyLock<RwLock<anyhow::Result<tokio::task::JoinHandle<()>>>> =
+    LazyLock::new(|| RwLock::new(Err(anyhow::anyhow!("uninitialized"))));
 
 pub(crate) static AUTHORIZATION: LazyLock<(&'static str, RwLock<String>)> = LazyLock::new(|| {
     let data = crate::general::read_json::<crate::init::Data>("data.json").unwrap();

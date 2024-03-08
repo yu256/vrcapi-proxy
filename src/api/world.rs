@@ -3,6 +3,7 @@ use crate::unsanitizer::Unsanitizer;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 #[derive(serde::Deserialize)]
@@ -15,11 +16,13 @@ pub(crate) async fn api_world(Json(Query { auth, world_id }): Json<Query>) -> Re
     let token = validate(auth)?.await;
 
     match request(
-        "GET",
+        Method::GET,
         &format!("https://api.vrchat.cloud/api/1/worlds/{world_id}"),
         &token,
-    )?
-    .into_json::<World>()
+    )
+    .await?
+    .json::<World>()
+    .await
     {
         Ok(mut world) => Ok({
             world.modify();

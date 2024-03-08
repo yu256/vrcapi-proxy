@@ -2,6 +2,7 @@ use super::utils::request;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
+use reqwest::Method;
 
 #[derive(serde::Deserialize)]
 pub(crate) struct Query {
@@ -18,10 +19,11 @@ pub(crate) async fn api_friend_accept(
     let token = validate(auth)?.await;
 
     request(
-        "PUT",
+        Method::PUT,
         &format!("https://api.vrchat.cloud/api/1/auth/user/notifications/{notification_id}/accept"),
         &token,
-    )?;
+    )
+    .await?;
 
     Ok(())
 }
