@@ -1,9 +1,51 @@
 use super::utils::request;
 use crate::unsanitizer::Unsanitizer;
-use crate::{global::FRIENDS, validate};
-use anyhow::{Context, Result};
+use crate::{global::FRIENDS, validate::validate};
+use anyhow::Result;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    auth: String,
+    instance_id: String,
+}
+
+pub(crate) async fn api_instance(
+    Json(Query { auth, instance_id }): Json<Query>,
+) -> Result<Response> {
+    let token = validate(auth)?.await;
+
+    let res = request(
+        "GET",
+        &format!("https://api.vrchat.cloud/api/1/instances/{instance_id}"),
+        &token,
+    )?;
+
+    let users = FRIENDS
+        .read(|friends| {
+            friends
+                .iter()
+                .filter(|user| user.location == instance_id)
+                .map(|user| {
+                    (
+                        if !user.userIcon.is_empty() {
+                            user.userIcon.clone()
+                        } else if !user.profilePicOverride.is_empty() {
+                            user.profilePicOverride.clone()
+                        } else {
+                            user.currentAvatarThumbnailImageUrl.clone()
+                        },
+                        user.displayName.clone(),
+                    )
+                })
+                .collect()
+        })
+        .await;
+
+    Ok(res.into_json::<InstanceData>()?.into_res(users))
+}
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
@@ -23,7 +65,7 @@ struct InstanceData {
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
-pub(crate) struct ResponseInstance {
+pub(crate) struct Response {
     #[serde(skip_serializing_if = "Option::is_none")]
     ownerId: Option<String>,
     userCount: i32,
@@ -34,8 +76,8 @@ pub(crate) struct ResponseInstance {
 }
 
 impl InstanceData {
-    fn into_res(self, users: HashMap<String, String>) -> ResponseInstance {
-        ResponseInstance {
+    fn into_res(self, users: HashMap<String, String>) -> Response {
+        Response {
             ownerId: self.ownerId,
             userCount: self.userCount,
             name: self.world.name,
@@ -44,40 +86,4 @@ impl InstanceData {
             users,
         }
     }
-}
-
-pub(crate) async fn api_instance(req: String) -> Result<ResponseInstance> {
-    let (auth, instance) = req
-        .split_once(':')
-        .context(crate::global::INVALID_REQUEST)?;
-    let token = validate::validate(auth)?.await;
-
-    let res = request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/instances/{instance}"),
-        &token,
-    )?;
-
-    let users = FRIENDS
-        .read(|friends| {
-            friends
-                .iter()
-                .filter(|user| user.location == instance)
-                .map(|user| {
-                    (
-                        if !user.userIcon.is_empty() {
-                            user.userIcon.clone()
-                        } else if !user.profilePicOverride.is_empty() {
-                            user.profilePicOverride.clone()
-                        } else {
-                            user.currentAvatarThumbnailImageUrl.clone()
-                        },
-                        user.displayName.clone(),
-                    )
-                })
-                .collect()
-        })
-        .await;
-
-    Ok(res.into_json::<InstanceData>()?.into_res(users))
 }

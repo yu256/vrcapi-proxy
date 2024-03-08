@@ -1,18 +1,33 @@
 use crate::{
-    api::utils::request_json, global::AUTHORIZATION, init::Data, spawn, split_colon, validate,
+    api::utils::request_json, global::AUTHORIZATION, init::Data, spawn, validate::validate,
 };
 use anyhow::Result;
+use axum::Json;
 use serde_json::json;
 
-pub(crate) async fn api_twofactor(req: String) -> Result<bool> {
-    split_colon!(req, [auth, token, r#two_fa_type, two_fa_code]);
-    let _ = validate::validate(auth)?;
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    auth: String,
+    token: String,
+    two_factor_type: String, // emailotp | totp | otp
+    two_factor_code: String,
+}
+
+pub(crate) async fn api_twofactor(
+    Json(Query {
+        auth,
+        token,
+        two_factor_code,
+        two_factor_type,
+    }): Json<Query>,
+) -> Result<bool> {
+    drop(validate(auth)?);
 
     request_json(
         "POST",
-        &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{two_fa_type}/verify"),
-        token,
-        json!({ "code": two_fa_code }),
+        &format!("https://api.vrchat.cloud/api/1/auth/twofactorauth/{two_factor_type}/verify"),
+        &token,
+        json!({ "code": two_factor_code }),
     )?;
 
     let data = {
@@ -21,7 +36,7 @@ pub(crate) async fn api_twofactor(req: String) -> Result<bool> {
             listen: data.listen,
             cors: data.cors,
             auth: data.auth,
-            token: token.into(),
+            token,
         }
     };
 

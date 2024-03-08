@@ -1,8 +1,39 @@
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User};
-use crate::validate;
+use crate::validate::validate;
 use anyhow::{ensure, Result};
 use serde::Serialize;
+
+pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
+    drop(validate(auth)?);
+
+    ensure!(
+        HANDLER.read().await.is_some(),
+        "トークンが無効です。再認証を行ってください。"
+    );
+
+    let (public, private) = FRIENDS
+        .read(|friends| {
+            friends
+                .iter()
+                .map(Friend::from)
+                .partition(|friend| friend.location != "private")
+        })
+        .await;
+
+    Ok(ResFriend { public, private })
+}
+
+pub(crate) async fn api_friends_filtered(auth: String) -> Result<ResFriend> {
+    let favorites = FAVORITE_FRIENDS.read().await;
+    api_friends(auth).await.map(|mut friends| {
+        let fun = |friend: &Friend| favorites.contains(&friend.id);
+        friends.private.retain(fun);
+        friends.public.retain(fun);
+        friends
+    })
+}
+
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
@@ -36,34 +67,4 @@ impl From<&User> for Friend {
             undetermined: user.undetermined,
         }
     }
-}
-
-pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
-    let _ = validate::validate(&auth)?;
-
-    ensure!(
-        HANDLER.read().await.is_some(),
-        "トークンが無効です。再認証を行ってください。"
-    );
-
-    let (public, private) = FRIENDS
-        .read(|friends| {
-            friends
-                .iter()
-                .map(Friend::from)
-                .partition(|friend| friend.location != "private")
-        })
-        .await;
-
-    Ok(ResFriend { public, private })
-}
-
-pub(crate) async fn api_friends_filtered(req: String) -> Result<ResFriend> {
-    let favorites = FAVORITE_FRIENDS.read().await;
-    api_friends(req).await.map(|mut friends| {
-        let fun = |friend: &Friend| favorites.contains(&friend.id);
-        friends.private.retain(fun);
-        friends.public.retain(fun);
-        friends
-    })
 }

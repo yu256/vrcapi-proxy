@@ -17,7 +17,6 @@ mod fetch_friends;
 mod general;
 mod global;
 mod init;
-mod macros;
 mod notification;
 mod unsanitizer;
 mod user_impl;
@@ -40,7 +39,7 @@ async fn main() -> Result<()> {
         .route(
             "/reboot",
             post(move |auth: String| async move {
-                let _ = validate::validate(&auth)?;
+                drop(validate::validate(&auth)?);
                 spawn().await;
                 Ok(true)
             }),

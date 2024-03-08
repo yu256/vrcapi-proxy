@@ -1,5 +1,6 @@
 use super::utils::{make_request, Header};
 use anyhow::{Context as _, Result};
+use axum::Json;
 use base64::{engine::general_purpose, Engine as _};
 use trie_match::trie_match;
 
@@ -11,13 +12,22 @@ struct TwoFactor {
     requiresTwoFactorAuth: Vec<String>,
 }
 
-pub(crate) async fn api_auth(req: String) -> Result<String> {
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    username: String,
+    password: String,
+}
+
+pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) -> Result<String> {
     let res = make_request(
         "GET",
         URL,
         Header::Auth((
             "Authorization",
-            &format!("Basic {}", general_purpose::STANDARD_NO_PAD.encode(req)),
+            &format!(
+                "Basic {}",
+                general_purpose::STANDARD_NO_PAD.encode(username + ":" + &password)
+            ),
         )),
         None::<()>,
     )?;

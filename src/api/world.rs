@@ -1,8 +1,33 @@
 use super::utils::request;
 use crate::unsanitizer::Unsanitizer;
-use crate::{split_colon, validate};
+use crate::validate::validate;
 use anyhow::Result;
+use axum::Json;
 use serde::{Deserialize, Serialize};
+
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    auth: String,
+    world_id: String,
+}
+
+pub(crate) async fn api_world(Json(Query { auth, world_id }): Json<Query>) -> Result<World> {
+    let token = validate(auth)?.await;
+
+    match request(
+        "GET",
+        &format!("https://api.vrchat.cloud/api/1/worlds/{world_id}"),
+        &token,
+    )?
+    .into_json::<World>()
+    {
+        Ok(mut world) => Ok({
+            world.modify();
+            world
+        }),
+        Err(err) => Err(err.into()),
+    }
+}
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
@@ -48,24 +73,5 @@ impl World {
             is_tag
         });
         self.description = self.description.unsanitize();
-    }
-}
-
-pub(crate) async fn api_world(req: String) -> Result<World> {
-    split_colon!(req, [auth, world]);
-    let token = validate::validate(auth)?.await;
-
-    match request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/worlds/{world}"),
-        &token,
-    )?
-    .into_json::<World>()
-    {
-        Ok(mut world) => Ok({
-            world.modify();
-            world
-        }),
-        Err(err) => Err(err.into()),
     }
 }

@@ -1,14 +1,58 @@
 use super::utils::request;
-use crate::api::utils::request_json;
 use crate::global::{FRIENDS, MYSELF};
 use crate::user_impl::{Status, User};
-use crate::validate;
-use anyhow::{anyhow, Context, Result};
+use crate::validate::validate;
+use anyhow::{bail, Context as _, Result};
 use axum::Json;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";
+
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    auth: String,
+    user_id: Option<String>, // 与えられなかった場合は自身のプロフィールを参照する
+    #[serde(default)]
+    force: bool,
+}
+
+pub(crate) async fn api_user(
+    Json(Query {
+        auth,
+        user_id,
+        force,
+    }): Json<Query>,
+) -> Result<ResUser> {
+    let token = validate(auth)?.await;
+    match (user_id, force) {
+		(Some(user_id), true) => {
+			match request("GET", &format!("{URL}{user_id}"), &token)?.into_json::<User>() {
+                Ok(mut json) => Ok({
+                    json.unsanitize();
+                    json.into()
+                }),
+                Err(err) => Err(err.into()),
+            }
+		}
+		(Some(user_id), false) => {
+			FRIENDS
+			.read(|friends| friends.iter().find(|u| u.id == user_id).cloned())
+			.await.map(From::from).context("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")
+		}
+		_ => {
+
+		match MYSELF.read().await {
+            Some(mut user) => Ok({
+                user.unsanitize();
+                user.into()
+            }),
+            None => bail!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。"),
+        }
+
+		}
+	}
+}
 
 #[allow(non_snake_case)]
 #[derive(Serialize)]
@@ -72,78 +116,4 @@ impl From<User> for ResUser {
             profilePicOverride: user.profilePicOverride,
         }
     }
-}
-
-pub(crate) async fn api_user(req: String) -> Result<ResUser> {
-    let mut iter = req.split(':');
-    let token = validate::validate(iter.next().context(crate::global::INVALID_REQUEST)?)?.await;
-    match (iter.next(), iter.next()) {
-		(None, None) => match MYSELF.read().await {
-            Some(mut user) => Ok({
-                user.unsanitize();
-                user.into()
-            }),
-            None => Err(anyhow!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")),
-        }
-		(Some(user), force) => {
-			if force != Some("true") && let Some(user) = FRIENDS
-			.read(|friends| friends.iter().find(|u| u.id == user).cloned())
-			.await
-		{
-			return Ok(user.into());
-		}
-
-            match request("GET", &format!("{URL}{user}"), &token)?.into_json::<User>() {
-                Ok(mut json) => Ok({
-                    json.unsanitize();
-                    json.into()
-                }),
-                Err(err) => Err(err.into()),
-            }
-        }
-        (None, Some(_)) => unsafe { std::hint::unreachable_unchecked() } // イテレータからNoneの次にSomeが返ってくることはない
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub(crate) struct ProfileUpdateQuery {
-    auth: String,
-    user: String,
-    query: Query,
-}
-
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Clone)]
-struct Query {
-    status: Status,
-    statusDescription: String,
-    bio: String,
-    bioLinks: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    userIcon: Option<String>,
-}
-
-pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> Result<bool> {
-    let token = validate::validate(&req.auth)?.await;
-
-    request_json(
-        "PUT",
-        &format!("{URL}{}", req.user),
-        &token,
-        req.query.clone(),
-    )?;
-
-    MYSELF
-        .write(|user| {
-            user.status = req.query.status;
-            user.statusDescription = req.query.statusDescription;
-            user.bio = req.query.bio;
-            user.bioLinks = req.query.bioLinks;
-            if let Some(user_icon) = req.query.userIcon {
-                user.userIcon = user_icon;
-            }
-        })
-        .await;
-
-    Ok(true)
 }

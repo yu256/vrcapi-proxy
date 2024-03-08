@@ -1,7 +1,26 @@
 use super::utils::request;
-use crate::{split_colon, validate};
+use crate::validate::validate;
 use anyhow::Result;
+use axum::Json;
 use serde::{Deserialize, Serialize};
+
+#[derive(serde::Deserialize)]
+pub(crate) struct Query {
+    auth: String,
+    group_id: String,
+}
+
+pub(crate) async fn api_group(Json(Query { auth, group_id }): Json<Query>) -> Result<Group> {
+    let token = validate(auth)?.await;
+
+    request(
+        "GET",
+        &format!("https://api.vrchat.cloud/api/1/groups/{group_id}"),
+        &token,
+    )?
+    .into_json()
+    .map_err(From::from)
+}
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
@@ -68,17 +87,4 @@ struct Member {
     bannedAt: Option<String>,
     has2FA: bool,
     permissions: Vec<String>,
-}
-
-pub(crate) async fn api_group(req: String) -> Result<Group> {
-    split_colon!(req, [auth, id]);
-    let token = validate::validate(auth)?.await;
-
-    request(
-        "GET",
-        &format!("https://api.vrchat.cloud/api/1/groups/{id}"),
-        &token,
-    )?
-    .into_json()
-    .map_err(From::from)
 }
