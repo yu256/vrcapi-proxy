@@ -2,7 +2,7 @@ use super::utils::{request, ResponseExt as _};
 use crate::global::{FRIENDS, MYSELF};
 use crate::user_impl::{Status, User};
 use crate::validate::validate;
-use anyhow::{bail, Context as _, Result};
+use anyhow::{bail, Result};
 use axum::Json;
 use hyper::Method;
 use serde::Serialize;
@@ -34,9 +34,17 @@ pub(crate) async fn api_user(
             })
 		}
 		(Some(user_id), false) => {
-			FRIENDS
+			match FRIENDS
 			.read(|friends| friends.iter().find(|u| u.id == user_id).cloned())
-			.await.map(From::from).context("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")
+			.await {
+                Some(user) => Ok(user.into()),
+                None => {
+                    request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {
+                        json.unsanitize();
+                        json.into()
+                    })
+                },
+            }
 		}
 		_ => {
             match MYSELF.read().await {
