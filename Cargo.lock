@@ -90,7 +90,7 @@ source = "git+https://github.com/yu256/axum/?rev=761b7d63acc19032ef09218a9d47f17
 dependencies = [
  "async-trait",
  "axum-core",
- "base64 0.21.7",
+ "base64",
  "bytes",
  "futures-util",
  "http",
@@ -162,12 +162,6 @@ name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
-
-[[package]]
-name = "base64"
-version = "0.22.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
 
 [[package]]
 name = "bitflags"
@@ -1514,13 +1508,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
-name = "vrcapi_proxy"
-version = "2.0.0"
+name = "vrcapi-proxy"
+version = "0.0.1"
 dependencies = [
  "aho-corasick",
  "anyhow",
  "axum",
- "base64 0.22.0",
+ "base64",
  "bytes",
  "chrono",
  "dirs-2",

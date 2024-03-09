@@ -9,7 +9,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
-pub(crate) const APP_NAME: &str = "vrcapi_proxy";
+pub(crate) const APP_NAME: &str = "vrcapi-proxy";
 pub(crate) const UA: &str = "User-Agent";
 pub(crate) const COOKIE: &str = "Cookie";
 pub(crate) const INVALID_AUTH: &str = "認証情報が不正です。";
