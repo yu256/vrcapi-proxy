@@ -1,0 +1,27 @@
+[package]
+name = "vrcapi-proxy"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { git = "https://github.com/yu256/axum/", rev = "761b7d63acc19032ef09218a9d47f17e632e0a5c", features = ["ws"] }
+tower-http = { version = "*", features = ["cors"] }
+tokio = { version = "*", features = ["macros", "rt-multi-thread"] }
+tokio-tungstenite = { version = "*", features = ["native-tls"] }
+futures = "*"
+anyhow = "*"
+base64 = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+dirs-2 = "*"
+trie-match = "*"
+aho-corasick = "*"
+chrono = "*"
+uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics"] }
+hyper-util = { version = "*", features = ["client-legacy"] }
+bytes = "*"
+http-body-util = "*"
+hyper = "*"
+hyper-tls = "*"
