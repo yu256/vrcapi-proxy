@@ -3,6 +3,7 @@ use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
 use hyper::Method;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::{Deserialize, Serialize};
 
 const MAX: usize = 100;
@@ -20,6 +21,8 @@ pub(crate) async fn api_search_user(
     let token = validate(auth)?.await;
 
     let n = n.filter(|&n| n != 0 && n <= MAX).unwrap_or(MAX);
+
+    let username = utf8_percent_encode(&username, NON_ALPHANUMERIC).to_string();
 
     request(
         Method::GET,
