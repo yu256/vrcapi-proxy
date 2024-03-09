@@ -44,8 +44,10 @@ pub(crate) struct HitUser {
     isFriend: bool,
     #[serde(default)]
     statusDescription: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(default)]
     userIcon: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
     #[serde(default)]
     profilePicOverride: String,
 }

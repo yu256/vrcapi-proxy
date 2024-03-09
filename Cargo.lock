@@ -1523,6 +1523,7 @@ dependencies = [
  "hyper",
  "hyper-tls",
  "hyper-util",
+ "percent-encoding",
  "serde",
  "serde_json",
  "tokio",
