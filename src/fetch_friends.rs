@@ -17,8 +17,6 @@ pub(crate) async fn spawn() {
 
     *HANDLER.write().await = Ok(tokio::spawn(async move {
         let result: anyhow::Result<()> = async move {
-            println!("Trying to connect stream...");
-
             let token = &AUTHORIZATION.1.read().await;
 
             let mut friends = request(

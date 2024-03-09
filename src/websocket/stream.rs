@@ -1,7 +1,7 @@
 use super::error::WSError;
+use crate::api::utils::ResponseExt as _;
 use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_SENDERS};
 use crate::user_impl::{Status, User, VecUserExt as _};
-use crate::api::utils::ResponseExt as _;
 use crate::{
     api::request,
     global::{APP_NAME, UA},
@@ -53,6 +53,8 @@ pub(crate) async fn stream() -> WSError {
                     .await;
             }
         };
+
+        println!("Connected to the websocket.");
 
         while let Some(message) = stream.next().await {
             let message = match message {
