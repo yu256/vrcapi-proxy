@@ -28,13 +28,10 @@ pub(crate) async fn api_user(
     let token = validate(auth)?.await;
     match (user_id, force) {
 		(Some(user_id), true) => {
-			match request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await {
-                Ok(mut json) => Ok({
-                    json.unsanitize();
-                    json.into()
-                }),
-                Err(err) => Err(err.into()),
-            }
+			request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {
+                json.unsanitize();
+                json.into()
+            })
 		}
 		(Some(user_id), false) => {
 			FRIENDS

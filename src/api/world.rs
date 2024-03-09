@@ -15,7 +15,7 @@ pub(crate) struct Query {
 pub(crate) async fn api_world(Json(Query { auth, world_id }): Json<Query>) -> Result<World> {
     let token = validate(auth)?.await;
 
-    match request(
+    request(
         Method::GET,
         &format!("https://api.vrchat.cloud/api/1/worlds/{world_id}"),
         &token,
@@ -23,13 +23,10 @@ pub(crate) async fn api_world(Json(Query { auth, world_id }): Json<Query>) -> Re
     .await?
     .json::<World>()
     .await
-    {
-        Ok(mut world) => Ok({
-            world.modify();
-            world
-        }),
-        Err(err) => Err(err.into()),
-    }
+    .map(|mut world| {
+        world.modify();
+        world
+    })
 }
 
 #[allow(non_snake_case)]

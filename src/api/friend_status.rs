@@ -32,5 +32,4 @@ pub(crate) async fn api_friend_status(
     .await?
     .json()
     .await
-    .map_err(From::from)
 }

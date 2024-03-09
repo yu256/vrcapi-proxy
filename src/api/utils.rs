@@ -59,9 +59,6 @@ pub(super) async fn make_request(
     if response.status().is_success() {
         Ok(response)
     } else {
-        // let body_bytes = response.collect().await?.to_bytes();
-        // let error = serde_json::from_slice::<ErrorMessage>(&body_bytes)?;
-
         Err(anyhow!(
             "{}",
             response

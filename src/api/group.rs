@@ -22,7 +22,6 @@ pub(crate) async fn api_group(Json(Query { auth, group_id }): Json<Query>) -> Re
     .await?
     .json()
     .await
-    .map_err(From::from)
 }
 
 #[allow(non_snake_case)]

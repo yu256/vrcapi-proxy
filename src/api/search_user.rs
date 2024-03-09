@@ -29,7 +29,6 @@ pub(crate) async fn api_search_user(
     .await?
     .json()
     .await
-    .map_err(From::from)
 }
 
 #[allow(non_snake_case)]

@@ -11,5 +11,4 @@ pub(crate) async fn api_notifications(auth: String) -> Result<Vec<Notification>>
         .await?
         .json()
         .await
-        .map_err(From::from)
 }

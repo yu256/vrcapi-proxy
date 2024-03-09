@@ -10,7 +10,7 @@ use axum::routing::get;
 use axum::{routing::post, Router};
 use fetch_friends::spawn;
 use tower_http::cors::CorsLayer;
-use websocket::backend::handler::ws_handler;
+use websocket::server::handler::ws_handler;
 
 mod api;
 mod fetch_friends;
