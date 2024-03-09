@@ -1,8 +1,8 @@
-use super::utils::{make_request, Header};
+use super::utils::{make_request, Header, ResponseExt as _};
 use anyhow::{Context as _, Result};
 use axum::Json;
 use base64::{engine::general_purpose, Engine as _};
-use reqwest::Method;
+use hyper::Method;
 use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";

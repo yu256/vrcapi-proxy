@@ -2,7 +2,7 @@ use super::utils::request;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 
 #[derive(serde::Deserialize)]
 pub(crate) struct Query {

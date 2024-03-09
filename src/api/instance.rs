@@ -1,9 +1,9 @@
-use super::utils::request;
+use super::utils::{request, ResponseExt as _};
 use crate::unsanitizer::Unsanitizer;
 use crate::{global::FRIENDS, validate::validate};
 use anyhow::Result;
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

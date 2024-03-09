@@ -1,10 +1,11 @@
 use super::request;
+use super::utils::ResponseExt as _;
 use crate::api::utils::request_json;
 use crate::global::FAVORITE_FRIENDS;
 use crate::validate::validate;
 use anyhow::Result;
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 use serde::Deserialize;
 use serde_json::json;
 

@@ -2,7 +2,7 @@ use super::utils::request_json;
 use crate::{global::MYSELF, user_impl::Status, validate::validate};
 use anyhow::Result;
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.vrchat.cloud/api/1/users/";

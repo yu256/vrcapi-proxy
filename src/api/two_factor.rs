@@ -3,7 +3,7 @@ use crate::{
 };
 use anyhow::Result;
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 use serde_json::json;
 
 #[derive(serde::Deserialize)]

@@ -1,10 +1,10 @@
-use super::utils::request;
+use super::utils::{request, ResponseExt as _};
 use crate::global::{FRIENDS, MYSELF};
 use crate::user_impl::{Status, User};
 use crate::validate::validate;
 use anyhow::{bail, Context as _, Result};
 use axum::Json;
-use reqwest::Method;
+use hyper::Method;
 use serde::Serialize;
 use trie_match::trie_match;
 
@@ -42,15 +42,13 @@ pub(crate) async fn api_user(
 			.await.map(From::from).context("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。")
 		}
 		_ => {
-
-		match MYSELF.read().await {
-            Some(mut user) => Ok({
-                user.unsanitize();
-                user.into()
-            }),
-            None => bail!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。"),
-        }
-
+            match MYSELF.read().await {
+                Some(mut user) => Ok({
+                    user.unsanitize();
+                    user.into()
+                }),
+                None => bail!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。"),
+            }
 		}
 	}
 }

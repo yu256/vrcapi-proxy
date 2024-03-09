@@ -12,7 +12,7 @@ mod search_user;
 mod two_factor;
 mod update_profile;
 mod user;
-mod utils;
+pub(crate) mod utils;
 mod world;
 
 pub(super) use favorites::fetch_favorite_friends;

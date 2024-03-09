@@ -1,7 +1,7 @@
-use super::utils::request;
+use super::utils::{request, ResponseExt as _};
 use crate::{notification::Notification, validate::validate};
 use anyhow::Result;
-use reqwest::Method;
+use hyper::Method;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user/notifications";
 

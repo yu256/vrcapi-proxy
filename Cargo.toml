@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = { git = "https://github.com/yu256/axum/", rev = "761b7d63acc19032ef09218a9d47f17e632e0a5c", features = ["ws"] }
-tower-http = { version = "0.5.2", features = ["cors"] }
+tower-http = { version = "*", features = ["cors"] }
 tokio = { version = "*", features = ["macros", "rt-multi-thread"] }
 tokio-tungstenite = { version = "*", features = ["native-tls"] }
 futures = "*"
@@ -21,4 +21,8 @@ trie-match = "*"
 aho-corasick = "*"
 chrono = "*"
 uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics"] }
-reqwest = { version = "*", features = ["json"] }
+hyper-util = { version = "*", features = ["client-legacy"] }
+bytes = "*"
+http-body-util = "*"
+hyper = "*"
+hyper-tls = "*"

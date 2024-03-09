@@ -1,11 +1,12 @@
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::user_impl::{Status, User, VecUserExt as _};
+use crate::utils::ResponseExt as _;
 use crate::websocket::error::WSError::{Disconnected, Other, Unknown};
 use crate::{
     api::{fetch_favorite_friends, request},
     websocket::stream::stream,
 };
-use reqwest::Method;
+use hyper::Method;
 
 pub(crate) async fn spawn() {
     if let Ok(ref handler) = *HANDLER.read().await {

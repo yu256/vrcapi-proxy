@@ -1,6 +1,7 @@
 use super::error::WSError;
 use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_SENDERS};
 use crate::user_impl::{Status, User, VecUserExt as _};
+use crate::api::utils::ResponseExt as _;
 use crate::{
     api::request,
     global::{APP_NAME, UA},
@@ -9,7 +10,7 @@ use crate::{
     },
 };
 use futures::StreamExt as _;
-use reqwest::Method;
+use hyper::Method;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Acquire, Release};
 use std::time::Duration;
