@@ -1,9 +1,9 @@
 use super::error::WSError;
-use crate::api::utils::ResponseExt as _;
-use crate::global::{AUTHORIZATION, FRIENDS, MYSELF, STREAM_SENDERS};
-use crate::user_impl::{Status, User, VecUserExt as _};
+use crate::fetcher::{request, ResponseExt as _};
+use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
+use crate::user::{Status, User, VecUserExt as _};
+use crate::websocket::server::STREAM_SENDERS;
 use crate::{
-    api::request,
     global::{APP_NAME, UA},
     websocket::structs::{
         FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,

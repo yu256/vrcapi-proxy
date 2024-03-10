@@ -1,5 +1,5 @@
 use crate::global::{FAVORITE_FRIENDS, FRIENDS, HANDLER};
-use crate::user_impl::{Status, User};
+use crate::user::{Status, User};
 use crate::validate::validate;
 use anyhow::{bail, Result};
 use serde::Serialize;

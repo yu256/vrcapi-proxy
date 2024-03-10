@@ -1,5 +1,6 @@
 use crate::{
-    api::utils::request_json, global::AUTHORIZATION, init::Data, spawn, validate::validate,
+    fetcher::request_json, global::AUTHORIZATION, init::Data, validate::validate,
+    websocket::spawn_client::spawn_ws_client,
 };
 use anyhow::Result;
 use axum::Json;
@@ -33,7 +34,7 @@ pub(crate) async fn api_twofactor(
     .await?;
 
     let data = {
-        let data = crate::general::read_json::<Data>("data.json")?;
+        let data = crate::json::read_json::<Data>("data.json")?;
         Data {
             listen: data.listen,
             cors: data.cors,
@@ -42,11 +43,11 @@ pub(crate) async fn api_twofactor(
         }
     };
 
-    crate::general::write_json::<Data>(&data, "data.json")?;
+    crate::json::write_json::<Data>(&data, "data.json")?;
 
     *AUTHORIZATION.1.write().await = data.token;
 
-    spawn().await;
+    spawn_ws_client().await;
 
     Ok(true)
 }

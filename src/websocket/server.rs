@@ -1,4 +1,4 @@
-use crate::global::{AUTHORIZATION, STREAM_SENDERS};
+use crate::global::AUTHORIZATION;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
@@ -7,20 +7,26 @@ use axum::{
     response::IntoResponse,
 };
 use futures::{SinkExt as _, StreamExt as _};
-use std::time::Duration;
-use tokio::sync::mpsc;
+use once_cell::sync::Lazy;
+use std::{collections::HashMap, time::Duration};
+use tokio::sync::{
+    mpsc::{self, Sender},
+    Mutex,
+};
 use uuid::Uuid;
 
 pub(crate) async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(websocket)
 }
 
+pub(super) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<String>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
 async fn websocket(stream: WebSocket) {
     let (mut sender, mut receiver) = stream.split();
 
-    match receiver.next().await {
-        Some(Ok(Message::Text(auth))) if auth == AUTHORIZATION.0 => (),
-        _ => return,
+    if !matches!(receiver.next().await, Some(Ok(Message::Text(auth))) if auth == AUTHORIZATION.0) {
+        return;
     }
 
     let (tx, mut rx) = mpsc::channel(50);
@@ -38,12 +44,9 @@ async fn websocket(stream: WebSocket) {
     loop {
         tokio::select! {
             msg = receiver.next() => {
-                match msg {
-                    Some(Ok(msg)) if !matches!(msg, Message::Close(_)) => (),
-                    _ => {
-                        delete.await;
-                        break;
-                    }
+                if !matches!(msg, Some(Ok(msg)) if !matches!(msg, Message::Close(_))) {
+                    delete.await;
+                    break;
                 }
             }
             Some(received) = rx.recv() => {

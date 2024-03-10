@@ -1,5 +1,4 @@
-use super::utils::request;
-use crate::validate::validate;
+use crate::{fetcher::request, validate::validate};
 use anyhow::Result;
 use axum::Json;
 use hyper::Method;

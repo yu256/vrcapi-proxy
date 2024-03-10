@@ -1,4 +1,4 @@
-use crate::user_impl::User;
+use crate::user::User;
 use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 

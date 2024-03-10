@@ -1,4 +1,4 @@
-use super::utils::{make_request, Header, ResponseExt as _};
+use crate::fetcher::{make_request, Header, ResponseExt as _};
 use anyhow::{Context as _, Result};
 use axum::Json;
 use base64::{engine::general_purpose, Engine as _};

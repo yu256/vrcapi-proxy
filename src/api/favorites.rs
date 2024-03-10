@@ -1,6 +1,4 @@
-use super::request;
-use super::utils::ResponseExt as _;
-use crate::api::utils::request_json;
+use crate::fetcher::{request, request_json, ResponseExt as _};
 use crate::global::FAVORITE_FRIENDS;
 use crate::validate::validate;
 use anyhow::Result;

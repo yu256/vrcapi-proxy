@@ -1,4 +1,4 @@
-use crate::user_impl::{Status, User};
+use crate::user::{Status, User};
 use serde::Deserialize;
 
 #[allow(non_snake_case)]

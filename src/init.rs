@@ -1,5 +1,5 @@
 use crate::{
-    general::{read_json, write_json},
+    json::{read_json, write_json},
     global::DATA_PATH,
 };
 use anyhow::{anyhow, ensure, Result};

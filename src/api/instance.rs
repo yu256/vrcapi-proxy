@@ -1,6 +1,9 @@
-use super::utils::{request, ResponseExt as _};
 use crate::unsanitizer::Unsanitizer;
-use crate::{global::FRIENDS, validate::validate};
+use crate::{
+    fetcher::{request, ResponseExt as _},
+    global::FRIENDS,
+    validate::validate,
+};
 use anyhow::Result;
 use axum::Json;
 use hyper::Method;

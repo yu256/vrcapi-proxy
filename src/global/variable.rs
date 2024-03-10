@@ -1,13 +1,8 @@
 use super::struct_impl::{MySelf, OnlineFriends};
 use dirs_2::home_dir;
 use once_cell::sync::Lazy;
-use std::{
-    collections::{HashMap, HashSet},
-    path::PathBuf,
-};
-use tokio::sync::mpsc::Sender;
-use tokio::sync::{Mutex, RwLock};
-use uuid::Uuid;
+use std::{collections::HashSet, path::PathBuf};
+use tokio::sync::RwLock;
 
 pub(crate) const APP_NAME: &str = "vrcapi-proxy";
 pub(crate) const UA: &str = "User-Agent";
@@ -36,9 +31,6 @@ pub(crate) static HANDLER: Lazy<RwLock<anyhow::Result<tokio::task::JoinHandle<()
     Lazy::new(|| RwLock::new(Err(anyhow::anyhow!("uninitialized"))));
 
 pub(crate) static AUTHORIZATION: Lazy<(&'static str, RwLock<String>)> = Lazy::new(|| {
-    let data = crate::general::read_json::<crate::init::Data>("data.json").unwrap();
+    let data = crate::json::read_json::<crate::init::Data>("data.json").unwrap();
     (data.auth.leak(), RwLock::new(data.token))
 });
-
-pub(crate) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<String>>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));

@@ -1,6 +1,6 @@
-use super::utils::{request, ResponseExt as _};
+use crate::fetcher::{request, ResponseExt as _};
 use crate::global::{FRIENDS, MYSELF};
-use crate::user_impl::{Status, User};
+use crate::user::{Status, User};
 use crate::validate::validate;
 use anyhow::{bail, Result};
 use axum::Json;
@@ -55,7 +55,7 @@ pub(crate) async fn api_user(
                 None => bail!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。"),
             }
         }
-	}
+    }
 }
 
 #[allow(non_snake_case)]

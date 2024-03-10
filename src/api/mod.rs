@@ -12,11 +12,9 @@ mod search_user;
 mod two_factor;
 mod update_profile;
 mod user;
-pub(crate) mod utils;
 mod world;
 
 pub(super) use favorites::fetch_favorite_friends;
-pub(super) use utils::request;
 
 pub(super) use auth::api_auth;
 pub(super) use favorites::api_add_favorites;

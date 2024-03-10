@@ -1,4 +1,5 @@
-pub(crate) mod stream;
-pub(crate) mod structs;
-pub(super) mod error;
+pub(crate) mod client;
+pub(crate) mod error;
 pub(crate) mod server;
+pub(crate) mod spawn_client;
+pub(crate) mod structs;

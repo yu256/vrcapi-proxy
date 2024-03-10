@@ -5,33 +5,33 @@ use axum::http::header::CONTENT_TYPE;
 use axum::http::{HeaderValue, Method};
 use axum::routing::get;
 use axum::{routing::post, Router};
-use fetch_friends::spawn;
 use tower_http::cors::CorsLayer;
-use websocket::server::handler::ws_handler;
+use websocket::server::ws_handler;
+use websocket::spawn_client::spawn_ws_client;
 
 mod api;
-mod fetch_friends;
-mod general;
 mod global;
 mod init;
+mod json;
 mod notification;
 mod unsanitizer;
-mod user_impl;
+mod user;
 mod validate;
 mod websocket;
+mod fetcher;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     init()?;
 
-    spawn().await;
+    spawn_ws_client().await;
 
     let init::Data {
         cors,
         listen,
         auth: _,
         token: _,
-    } = general::read_json::<init::Data>("data.json")?;
+    } = json::read_json::<init::Data>("data.json")?;
 
     let app = Router::new()
         .route("/ws", get(ws_handler))
@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
             "/reboot",
             post(move |auth: String| async move {
                 drop(validate::validate(&auth)?);
-                spawn().await;
+                spawn_ws_client().await;
                 Ok(true)
             }),
         )
