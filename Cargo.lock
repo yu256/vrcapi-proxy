@@ -1387,17 +1387,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "trie-match"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d23c631289863e3c84b1827230ce1abd992e7920054899f8ae908ed5ad589f95"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.52",
-]
-
-[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1530,7 +1519,6 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "tower-http",
- "trie-match",
  "uuid",
 ]
 

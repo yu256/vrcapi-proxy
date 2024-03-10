@@ -3,7 +3,6 @@ use anyhow::{Context as _, Result};
 use axum::Json;
 use base64::{engine::general_purpose, Engine as _};
 use hyper::Method;
-use trie_match::trie_match;
 
 const URL: &str = "https://api.vrchat.cloud/api/1/auth/user";
 
@@ -54,14 +53,10 @@ pub(crate) async fn api_auth(Json(Query { username, password }): Json<Query>) ->
         .await?
         .requiresTwoFactorAuth
         .into_iter()
-        .find_map(|auth| {
-            trie_match! {
-                match auth.as_str() {
-                    "emailOtp" => Some("emailotp"),
-                    "totp" => Some("totp"),
-                    _ => None,
-                }
-            }
+        .find_map(|auth| match auth.as_str() {
+            "emailOtp" => Some("emailotp"),
+            "totp" => Some("totp"),
+            _ => None,
         })
         .unwrap_or("otp");
 
