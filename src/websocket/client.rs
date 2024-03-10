@@ -24,7 +24,7 @@ use WSError::*;
 
 static IS_DISCONNECTED: AtomicBool = AtomicBool::new(true);
 
-pub(crate) async fn stream() -> WSError {
+pub(super) async fn stream() -> WSError {
     // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
     let mut req = unsafe {
         format!(

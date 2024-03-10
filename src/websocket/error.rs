@@ -1,5 +1,4 @@
-#[derive(Debug)]
-pub(crate) enum WSError {
+pub(super) enum WSError {
     Disconnected,
     Token,
     Unknown(String),

@@ -14,7 +14,7 @@ pub(crate) async fn api_friend_accept(
         auth,
         notification_id,
     }): Json<Query>,
-) -> Result<()> {
+) -> Result<bool> {
     let token = validate(auth)?.await;
 
     request(
@@ -22,7 +22,6 @@ pub(crate) async fn api_friend_accept(
         &format!("https://api.vrchat.cloud/api/1/auth/user/notifications/{notification_id}/accept"),
         &token,
     )
-    .await?;
-
-    Ok(())
+    .await
+    .map(|_| true)
 }
