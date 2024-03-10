@@ -1,6 +1,3 @@
-#![feature(lazy_cell)]
-#![feature(let_chains)]
-
 use crate::init::init;
 use anyhow::Result;
 use api::*;

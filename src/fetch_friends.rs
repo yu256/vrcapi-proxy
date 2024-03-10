@@ -32,7 +32,7 @@ pub(crate) async fn spawn() {
 
             friends.retain_mut(|friend| {
                 let is_online = friend.location != "offline";
-                if is_online && let Status::AskMe | Status::Busy = friend.status {
+                if is_online && matches!(friend.status, Status::AskMe | Status::Busy) {
                     friend.undetermined = true;
                 }
                 is_online

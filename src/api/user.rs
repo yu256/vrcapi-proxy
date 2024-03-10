@@ -27,16 +27,16 @@ pub(crate) async fn api_user(
 ) -> Result<ResUser> {
     let token = validate(auth)?.await;
     match (user_id, force) {
-		(Some(user_id), true) => {
-			request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {
+        (Some(user_id), true) => {
+            request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {
                 json.unsanitize();
                 json.into()
             })
-		}
-		(Some(user_id), false) => {
-			match FRIENDS
-			.read(|friends| friends.iter().find(|u| u.id == user_id).cloned())
-			.await {
+        }
+        (Some(user_id), false) => {
+            match FRIENDS
+            .read(|friends| friends.iter().find(|u| u.id == user_id).cloned())
+            .await {
                 Some(user) => Ok(user.into()),
                 None => {
                     request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {
@@ -45,8 +45,8 @@ pub(crate) async fn api_user(
                     })
                 },
             }
-		}
-		_ => {
+        }
+        _ => {
             match MYSELF.read().await {
                 Some(mut user) => Ok({
                     user.unsanitize();
@@ -54,7 +54,7 @@ pub(crate) async fn api_user(
                 }),
                 None => bail!("プロフィールの取得に失敗しました。トークンが無効か、ユーザー情報の取得が完了していません。後者の場合は、オンラインになると取得されます。"),
             }
-		}
+        }
 	}
 }
 

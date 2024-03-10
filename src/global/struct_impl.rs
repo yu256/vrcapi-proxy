@@ -1,9 +1,9 @@
 use crate::user_impl::User;
-use std::sync::LazyLock;
+use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 
 pub(crate) struct OnlineFriends {
-    pub(super) inner: LazyLock<RwLock<Vec<User>>>,
+    pub(super) inner: Lazy<RwLock<Vec<User>>>,
 }
 
 impl OnlineFriends {

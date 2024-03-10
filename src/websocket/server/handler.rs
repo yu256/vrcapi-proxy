@@ -18,11 +18,9 @@ pub(crate) async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
 async fn websocket(stream: WebSocket) {
     let (mut sender, mut receiver) = stream.split();
 
-    let Some(Ok(Message::Text(auth))) = receiver.next().await else {
-        return;
-    };
-    if auth != AUTHORIZATION.0 {
-        return;
+    match receiver.next().await {
+        Some(Ok(Message::Text(auth))) if auth == AUTHORIZATION.0 => (),
+        _ => return,
     }
 
     let (tx, mut rx) = mpsc::channel(50);
@@ -33,25 +31,27 @@ async fn websocket(stream: WebSocket) {
 
     let mut interval = tokio::time::interval(Duration::from_secs(60));
 
-    let delete = || async {
+    let delete = async {
         STREAM_SENDERS.lock().await.remove(&uuid);
     };
 
     loop {
         tokio::select! {
             msg = receiver.next() => {
-                if let Some(Ok(msg)) = msg && !matches!(msg, Message::Close(_)) {
-                } else {
-                    delete().await;
-                    break;
-                };
+                match msg {
+                    Some(Ok(msg)) if !matches!(msg, Message::Close(_)) => (),
+                    _ => {
+                        delete.await;
+                        break;
+                    }
+                }
             }
             Some(received) = rx.recv() => {
                 let _ = sender.send(Message::Text(received)).await;
             }
             _ = interval.tick() => {
                 if sender.send(Message::Ping(Vec::new())).await.is_err() {
-                    delete().await;
+                    delete.await;
                     break;
                 }
             }

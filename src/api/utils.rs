@@ -8,8 +8,8 @@ use hyper_util::{
     client::legacy::{connect::HttpConnector, Client},
     rt::TokioExecutor,
 };
+use once_cell::sync::Lazy;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::sync::LazyLock;
 
 #[derive(Deserialize)]
 struct ErrorMessage {
@@ -22,11 +22,11 @@ struct ErrorDetail {
     // status_code: u32,
 }
 
-static CLIENT: LazyLock<Client<HttpsConnector<HttpConnector>, String>> =
-    LazyLock::new(|| Client::builder(TokioExecutor::new()).build(HttpsConnector::new()));
+static CLIENT: Lazy<Client<HttpsConnector<HttpConnector>, String>> =
+    Lazy::new(|| Client::builder(TokioExecutor::new()).build(HttpsConnector::new()));
 
-static GET_CLIENT: LazyLock<Client<HttpsConnector<HttpConnector>, Empty<Bytes>>> =
-    LazyLock::new(|| Client::builder(TokioExecutor::new()).build(HttpsConnector::new()));
+static GET_CLIENT: Lazy<Client<HttpsConnector<HttpConnector>, Empty<Bytes>>> =
+    Lazy::new(|| Client::builder(TokioExecutor::new()).build(HttpsConnector::new()));
 
 pub(super) enum Header<'a> {
     Cookie(&'a str),
