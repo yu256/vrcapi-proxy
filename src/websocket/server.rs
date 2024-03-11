@@ -8,7 +8,7 @@ use axum::{
 };
 use futures::{SinkExt as _, StreamExt as _};
 use once_cell::sync::Lazy;
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{
     mpsc::{self, Sender},
     Mutex,
@@ -19,7 +19,7 @@ pub(crate) async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
     ws.on_upgrade(websocket)
 }
 
-pub(super) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<String>>>> =
+pub(super) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<Arc<String>>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 async fn websocket(stream: WebSocket) {
@@ -50,7 +50,7 @@ async fn websocket(stream: WebSocket) {
                 }
             }
             Some(received) = rx.recv() => {
-                let _ = sender.send(Message::Text(received)).await;
+                let _ = sender.send(Message::Text(Arc::<_>::unwrap_or_clone(received))).await;
             }
             _ = interval.tick() => {
                 if sender.send(Message::Ping(Vec::new())).await.is_err() {

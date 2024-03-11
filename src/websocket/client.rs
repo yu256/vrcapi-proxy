@@ -13,6 +13,7 @@ use futures::StreamExt as _;
 use hyper::Method;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::{Acquire, Release};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::SendError;
@@ -132,8 +133,10 @@ pub(super) async fn stream() -> WSError {
                     _ => {}
                 }
 
+                let message = Arc::new(message);
+
                 for (_, sender) in STREAM_SENDERS.lock().await.iter_mut() {
-                    sender.send(message.clone()).await?;
+                    sender.send(Arc::clone(&message)).await?;
                 }
 
                 Ok::<(), anyhow::Error>(())

@@ -11,7 +11,7 @@ VRChat REST API / WebSocket APIのプロキシサーバーです。jsonデータ
 
 ### 対応していない場合
 
-1. Rust環境(>= 1.75.0)をセットアップします。
+1. Rust環境(>= 1.76.0)をセットアップします。
 2. このリポジトリを `git clone https://github.com/yu256/vrcapi-proxy.git` でクローンします。
 3. クローンしたリポジトリに移動し、`cargo build --release`
    を実行してバイナリを生成します。生成されたバイナリは `/target/release` ディレクトリに保存されます。
