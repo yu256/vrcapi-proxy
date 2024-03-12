@@ -1,13 +1,12 @@
 use crate::global::AUTHORIZATION;
-use axum::{
-    extract::{
-        ws::{Message, WebSocket},
-        WebSocketUpgrade,
-    },
-    response::IntoResponse,
+use axum::extract::{
+    self,
+    ws::{Message, WebSocket},
+    WebSocketUpgrade,
 };
 use futures::{SinkExt as _, StreamExt as _};
 use once_cell::sync::Lazy;
+use serde::Deserialize;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{
     mpsc::{self, Sender},
@@ -15,17 +14,27 @@ use tokio::sync::{
 };
 use uuid::Uuid;
 
-pub(crate) async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(websocket)
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Query {
+    auth: Option<String>,
+    auth_token: Option<String>,
+}
+
+pub(crate) async fn ws_handler(
+    ws: WebSocketUpgrade,
+    extract::Query(Query { auth, auth_token }): extract::Query<Query>,
+) -> hyper::Response<axum::body::Body> {
+    ws.on_upgrade(|stream| async { websocket(stream, (auth, auth_token)).await })
 }
 
 pub(super) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<Arc<String>>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
-async fn websocket(stream: WebSocket) {
+async fn websocket(stream: WebSocket, auth: (Option<String>, Option<String>)) {
     let (mut sender, mut receiver) = stream.split();
 
-    if !matches!(receiver.next().await, Some(Ok(Message::Text(auth))) if auth == AUTHORIZATION.0) {
+    if !matches!(auth, (Some(val), _) | (_, Some(val)) if val == AUTHORIZATION.0) {
         return;
     }
 
@@ -50,7 +59,7 @@ async fn websocket(stream: WebSocket) {
                 }
             }
             Some(received) = rx.recv() => {
-                let _ = sender.send(Message::Text(Arc::<_>::unwrap_or_clone(received))).await;
+                let _ = sender.send(Message::Text(Arc::unwrap_or_clone(received))).await;
             }
             _ = interval.tick() => {
                 if sender.send(Message::Ping(Vec::new())).await.is_err() {

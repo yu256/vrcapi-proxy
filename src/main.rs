@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     } = json::read_json::<init::Data>("data.json")?;
 
     let app = Router::new()
-        .route("/ws", get(ws_handler))
+        .route("/", get(ws_handler))
         .route(
             "/reboot",
             post(move |auth: String| async move {
