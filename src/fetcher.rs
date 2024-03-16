@@ -50,7 +50,11 @@ pub(super) async fn make_request(
     };
 
     let response = if let Some(serializable) = serializable {
-        CLIENT.request(builder.body(serde_json::to_string(&serializable)?)?)
+        CLIENT.request(
+            builder
+                .header(hyper::header::CONTENT_TYPE, "application/json")
+                .body(serde_json::to_string(&serializable)?)?,
+        )
     } else {
         GET_CLIENT.request(builder.body(Empty::new())?)
     }
