@@ -1,6 +1,6 @@
 use crate::global::{APP_NAME, COOKIE, UA};
 use anyhow::{anyhow, Result};
-use bytes::{Buf as _, Bytes};
+use bytes::Bytes;
 use http_body_util::{BodyExt as _, Empty};
 use hyper::{body::Incoming, Method, Request, Response};
 use hyper_tls::HttpsConnector;
@@ -105,7 +105,8 @@ impl ResponseExt for Response<Incoming> {
     where
         T: DeserializeOwned,
     {
-        let reader = self.collect().await?.aggregate().reader();
-        serde_json::from_reader::<_, T>(reader).map_err(From::from)
+        let bytes = self.collect().await?.to_bytes();
+        serde_json::from_slice::<T>(&bytes)
+            .map_err(|e| anyhow!("{}\n{e}", String::from_utf8_lossy(&bytes)))
     }
 }
