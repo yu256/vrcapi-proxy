@@ -10,42 +10,85 @@ pub(super) struct StreamBody {
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
-pub(super) struct FriendOnlineEventContent {
-    pub(super) location: String,
-    pub(super) travelingToLocation: Option<String>,
-    pub(super) user: OnlineEventUser,
+pub struct LocationEventContent {
+    pub userId: String,
+    pub location: String,
+    pub travelingToLocation: Option<String>,
+    pub worldId: String,
+    pub canRequestInvite: Option<bool>,
+    pub user: User,
+    pub world: Option<World>,
 }
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
-pub(super) struct OnlineEventUser {
+pub struct LocationEventUser {
+    pub id: String,
+    pub displayName: String,
     #[serde(default)]
-    pub(super) bio: String,
+    pub userIcon: String,
     #[serde(default)]
-    pub(super) bioLinks: Vec<String>,
+    pub bio: String,
     #[serde(default)]
-    pub(super) currentAvatarThumbnailImageUrl: String,
-    pub(super) displayName: String,
-    pub(super) id: String,
-    pub(super) isFriend: bool,
-    pub(super) status: Status,
+    pub bioLinks: Vec<String>,
     #[serde(default)]
-    pub(super) statusDescription: String,
-    pub(super) tags: Vec<String>,
+    pub profilePicOverride: String,
     #[serde(default)]
-    pub(super) userIcon: String,
+    pub statusDescription: String,
     #[serde(default)]
-    pub(super) profilePicOverride: String,
+    pub currentAvatarImageUrl: String,
+    #[serde(default)]
+    pub currentAvatarThumbnailImageUrl: String,
+    pub currentAvatarTags: Vec<String>,
+    pub state: String,
+    pub tags: Vec<String>,
+    pub developerType: String,
+    pub last_login: String,
+    pub last_platform: String,
+    pub allowAvatarCopying: bool,
+    pub status: Status,
+    pub date_joined: String,
+    pub isFriend: bool,
+    pub friendKey: String,
+    pub last_activity: String,
 }
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
-pub(super) struct FriendUpdateEventContent {
-    pub(super) user: User,
+pub struct World {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub authorId: String,
+    pub authorName: String,
+    pub releaseStatus: String,
+    pub featured: bool,
+    pub capacity: i32,
+    pub recommendedCapacity: i32,
+    pub imageUrl: String,
+    pub thumbnailImageUrl: String,
+    pub namespace: String,
+    pub version: i32,
+    pub organization: String,
+    pub previewYoutubeId: Option<String>,
+    pub udonProducts: Vec<String>,
+    pub favorites: i32,
+    pub visits: i32,
+    pub popularity: i32,
+    pub heat: i32,
+    pub publicationDate: String,
+    pub labsPublicationDate: String,
+    pub instances: Vec<String>,
+    pub publicOccupants: i32,
+    pub privateOccupants: i32,
+    pub occupants: i32,
+    pub tags: Vec<String>,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
-impl From<FriendOnlineEventContent> for User {
-    fn from(value: FriendOnlineEventContent) -> Self {
+impl From<LocationEventContent> for User {
+    fn from(value: LocationEventContent) -> Self {
         Self {
             bio: value.user.bio,
             bioLinks: value.user.bioLinks,

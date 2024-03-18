@@ -5,9 +5,7 @@ use crate::user::{Status, User, VecUserExt as _};
 use crate::websocket::server::STREAM_SENDERS;
 use crate::{
     global::{APP_NAME, UA},
-    websocket::structs::{
-        FriendOnlineEventContent, FriendUpdateEventContent, StreamBody, UserIdContent,
-    },
+    websocket::structs::{LocationEventContent, StreamBody, UserIdContent},
 };
 use futures::StreamExt as _;
 use hyper::Method;
@@ -60,14 +58,8 @@ pub(super) async fn stream() -> WSError {
 
             match body.r#type.as_str() {
                 "friend-online" | "friend-location" => {
-                    let content = serde_json::from_str::<FriendOnlineEventContent>(&body.content)?;
+                    let content = serde_json::from_str::<LocationEventContent>(&body.content)?;
                     FRIENDS.write(|friends| friends.update(content)).await;
-                }
-
-                "friend-update" => {
-                    let user =
-                        serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
-                    FRIENDS.write(|friends| friends.update(user)).await;
                 }
 
                 "friend-add" => {
@@ -94,15 +86,8 @@ pub(super) async fn stream() -> WSError {
                     FRIENDS.write(|friends| friends.del(&id)).await;
                 }
 
-                "user-update" => {
-                    let user =
-                        serde_json::from_str::<FriendUpdateEventContent>(&body.content)?.user;
-                    MYSELF.insert(user).await;
-                }
-
                 "user-location" => {
-                    let user =
-                        serde_json::from_str::<FriendOnlineEventContent>(&body.content)?.into();
+                    let user = serde_json::from_str::<LocationEventContent>(&body.content)?.into();
                     MYSELF.insert(user).await;
                 }
 
