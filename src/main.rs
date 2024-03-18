@@ -10,6 +10,7 @@ use websocket::server::ws_handler;
 use websocket::spawn_client::spawn_ws_client;
 
 mod api;
+mod fetcher;
 mod global;
 mod init;
 mod json;
@@ -18,7 +19,6 @@ mod unsanitizer;
 mod user;
 mod validate;
 mod websocket;
-mod fetcher;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -26,12 +26,7 @@ async fn main() -> Result<()> {
 
     spawn_ws_client().await;
 
-    let init::Data {
-        cors,
-        listen,
-        auth: _,
-        token: _,
-    } = json::read_json::<init::Data>("data.json")?;
+    let init::Data { cors, listen, .. } = json::read_json::<init::Data>("data.json")?;
 
     let app = Router::new()
         .route("/", get(ws_handler))

@@ -25,7 +25,7 @@ pub(crate) async fn ws_handler(
     ws: WebSocketUpgrade,
     extract::Query(Query { auth, auth_token }): extract::Query<Query>,
 ) -> hyper::Response<axum::body::Body> {
-    ws.on_upgrade(|stream| async { websocket(stream, (auth, auth_token)).await })
+    ws.on_upgrade(|stream| websocket(stream, (auth, auth_token)))
 }
 
 pub(super) static STREAM_SENDERS: Lazy<Mutex<HashMap<Uuid, Sender<Arc<String>>>>> =

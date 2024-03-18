@@ -1,9 +1,10 @@
 use crate::fetcher::{request, ResponseExt as _};
 use crate::global::{AUTHORIZATION, FRIENDS, HANDLER};
 use crate::user::{Status, User, VecUserExt as _};
-use crate::websocket::error::WSError::{Disconnected, Other, Unknown};
+use crate::websocket::error::WSError::{Disconnected, IoErr, Unknown};
 use crate::{api::fetch_favorite_friends, websocket::client::stream};
 use hyper::Method;
+use std::time::Duration;
 
 pub(crate) async fn spawn_ws_client() {
     if let Ok(ref handler) = *HANDLER.read().await {
@@ -39,15 +40,27 @@ pub(crate) async fn spawn_ws_client() {
 
             FRIENDS.write(|users| *users = friends).await;
 
+            let mut io_err_cnt = 0u8;
+
             loop {
                 match stream().await {
-                    Disconnected => (),
-                    Other(e) => {
-                        eprintln!("{e} ({})", chrono::Local::now())
+                    Disconnected => {
+                        io_err_cnt = 0;
                     }
                     Unknown(e) => {
-                        eprintln!("Unknown Error: {e} ({})", chrono::Local::now());
+                        eprintln!("Unknown Error: {e}");
                         break;
+                    }
+                    IoErr(e) => {
+                        io_err_cnt += 1;
+
+                        eprintln!("{e}\nretry: {io_err_cnt}/20");
+
+                        match io_err_cnt {
+                            1 => (),
+                            20 => break,
+                            _ => tokio::time::sleep(Duration::from_secs(10)).await,
+                        }
                     }
                     _ => break,
                 }
