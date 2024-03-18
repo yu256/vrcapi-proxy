@@ -16,7 +16,7 @@ pub struct LocationEventContent {
     pub travelingToLocation: Option<String>,
     pub worldId: String,
     pub canRequestInvite: Option<bool>,
-    pub user: User,
+    pub user: LocationEventUser,
     pub world: Option<World>,
 }
 
