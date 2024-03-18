@@ -12,9 +12,9 @@ pub(super) struct StreamBody {
 #[derive(Deserialize)]
 pub struct LocationEventContent {
     pub userId: String,
-    pub location: String,
+    pub location: Option<String>,
     pub travelingToLocation: Option<String>,
-    pub worldId: String,
+    pub worldId: Option<String>,
     pub canRequestInvite: Option<bool>,
     pub user: LocationEventUser,
     pub world: Option<World>,
@@ -96,7 +96,7 @@ impl From<LocationEventContent> for User {
             displayName: value.user.displayName,
             id: value.user.id,
             isFriend: value.user.isFriend,
-            location: value.location,
+            location: value.location.unwrap_or_default(),
             travelingToLocation: value.travelingToLocation,
             status: value.user.status,
             statusDescription: value.user.statusDescription,
