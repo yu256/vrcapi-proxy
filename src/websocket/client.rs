@@ -47,7 +47,9 @@ pub(super) async fn stream() -> WSError {
                 };
             }
             Ok(tungstenite::Message::Text(message)) => message,
-            Ok(tungstenite::Message::Close(_)) => return Disconnected,
+            Ok(tungstenite::Message::Close(_)) | Err(tungstenite::error::Error::Protocol(_)) => {
+                return Disconnected
+            }
             Err(e @ tungstenite::error::Error::Io(_)) => return IoErr(e),
             Err(e) => return Unknown(e.to_string()),
             _ => continue,
