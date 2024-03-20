@@ -33,9 +33,10 @@ pub(crate) async fn api_user(
             })
         }
         (Some(user_id), false) => {
-            match FRIENDS
-            .read(|friends| friends.iter().find(|u| u.id == user_id).cloned())
-            .await {
+            let friends = &FRIENDS
+            .read()
+            .await;
+            match friends.online.iter().chain(&friends.web).chain(&friends.offline).find(|u| u.id == user_id).cloned() {
                 Some(user) => Ok(user.into()),
                 None => {
                     request(Method::GET, &format!("{URL}{user_id}"), &token).await?.json::<User>().await.map(|mut json| {

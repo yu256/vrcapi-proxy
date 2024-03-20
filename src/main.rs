@@ -24,9 +24,15 @@ mod websocket;
 async fn main() -> Result<()> {
     init()?;
 
-    spawn_ws_client().await;
+    let init::Data {
+        cors,
+        listen,
+        token,
+        ..
+    } = json::read_json::<init::Data>("data.json")?;
 
-    let init::Data { cors, listen, .. } = json::read_json::<init::Data>("data.json")?;
+    tokio::join!(spawn_ws_client(), internal::init_var::init_var(&token)).1?;
+    drop(token);
 
     let app = Router::new()
         .route("/", get(ws_handler))

@@ -1,7 +1,8 @@
 use super::error::WSError;
 use crate::fetcher::{request, ResponseExt as _};
 use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
-use crate::user::{Status, User, VecUserExt as _};
+use crate::internal::user_info::fetch_user_info;
+use crate::user::{Status, User};
 use crate::websocket::server::STREAM_SENDERS;
 use crate::{
     global::{APP_NAME, UA},
@@ -61,7 +62,26 @@ pub(super) async fn stream() -> WSError {
             match body.r#type.as_str() {
                 "friend-online" | "friend-location" => {
                     let content = serde_json::from_str::<LocationEventContent>(&body.content)?;
-                    FRIENDS.write(|friends| friends.update(content)).await;
+                    let mut user: User = content.into();
+                    user.unsanitize();
+
+                    let friends = &mut FRIENDS.write().await;
+
+                    if let Some(index) = friends.offline.iter().position(|x| x.id == user.id) {
+                        friends.offline.remove(index);
+                    }
+
+                    if let Some(friend) = friends
+                        .online
+                        .iter_mut()
+                        .find(|friend| friend.id == user.id)
+                    {
+                        *friend = user;
+                    } else {
+                        friends.online.push(user);
+                    }
+
+                    friends.online.sort();
                 }
 
                 "friend-add" => {
@@ -75,17 +95,72 @@ pub(super) async fn stream() -> WSError {
                     .json::<User>()
                     .await?;
 
+                    new_friend.unsanitize();
+
                     if new_friend.location != "offline" {
                         if let Status::AskMe | Status::Busy = new_friend.status {
-                            new_friend.undetermined = true;
+                            if fetch_user_info(&AUTHORIZATION.1.read().await)
+                                .await?
+                                .activeFriends
+                                .contains(&new_friend.id)
+                            {
+                                let locked = &mut FRIENDS.write().await;
+                                locked.online.push(new_friend);
+                                locked.online.sort();
+                            } else {
+                                let locked = &mut FRIENDS.write().await;
+                                locked.web.push(new_friend);
+                                locked.web.sort();
+                            }
+                        } else {
+                            let locked = &mut FRIENDS.write().await;
+                            locked.online.push(new_friend);
+                            locked.online.sort();
                         }
-                        FRIENDS.write(|friends| friends.update(new_friend)).await;
+                    } else {
+                        let locked = &mut FRIENDS.write().await;
+                        locked.offline.push(new_friend);
+                        locked.offline.sort();
                     }
                 }
 
-                "friend-offline" | "friend-delete" | "friend-active" => {
+                t @ ("friend-offline" | "friend-delete" | "friend-active") => {
                     let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
-                    FRIENDS.write(|friends| friends.del(&id)).await;
+                    let friends = &mut FRIENDS.write().await;
+                    macro_rules! move_friend {
+                        ($friends:expr, $id:expr, [$($from:ident),*], $to:ident) => {
+                            $(
+                                if let Some(index) = $friends.$from.iter().position(|x| x.id == $id) {
+                                    let friend = $friends.$from.remove(index);
+                                    $friends.$to.push(friend);
+                                    $friends.$to.sort();
+                                }
+                            )*
+                        };
+                    }
+
+                    macro_rules! remove_friend {
+                        ($friends:expr, $id:expr, [$($from:ident),*]) => {
+                            $(
+                                if let Some(index) = $friends.$from.iter().position(|x| x.id == $id) {
+                                    $friends.$from.remove(index);
+                                }
+                            )*
+                        };
+                    }
+
+                    match t {
+                        "friend-offline" => {
+                            move_friend!(friends, id, [online, web], offline);
+                        }
+                        "friend-delete" => {
+                            remove_friend!(friends, id, [online, web, offline]);
+                        }
+                        "friend-active" => {
+                            move_friend!(friends, id, [online, offline], web);
+                        }
+                        _ => unreachable!(),
+                    }
                 }
 
                 "user-location" => {

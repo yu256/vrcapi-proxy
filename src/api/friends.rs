@@ -1,24 +1,24 @@
-use crate::global::{FAVORITE_FRIENDS, FRIENDS, HANDLER};
+use crate::global::{FAVORITE_FRIENDS, FRIENDS, WS_HANDLER};
 use crate::user::{Status, User};
 use crate::validate::validate;
-use anyhow::{bail, Result};
+use anyhow::{ensure, Result};
 use serde::Serialize;
 
 pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
     drop(validate(auth)?);
 
-    if let Err(e) = &*HANDLER.read().await {
-        bail!("WebSocketに接続されていません。\nReason: {e}");
-    }
+    ensure!(
+        WS_HANDLER.read().await.is_some(),
+        "WebSocketに接続されていません。"
+    );
 
     let (public, private) = FRIENDS
-        .read(|friends| {
-            friends
-                .iter()
-                .map(Friend::from)
-                .partition(|friend| friend.location != "private")
-        })
-        .await;
+        .read()
+        .await
+        .online
+        .iter()
+        .map(Friend::from)
+        .partition(|friend| friend.location != "private");
 
     Ok(ResFriend { public, private })
 }
@@ -44,7 +44,6 @@ struct Friend {
     id: String,
     status: Status,
     location: String,
-    undetermined: bool,
 }
 
 #[derive(Serialize)]
@@ -62,7 +61,6 @@ impl From<&User> for Friend {
             id: user.id.clone(),
             status: user.status,
             location: user.location.clone(),
-            undetermined: user.undetermined,
         }
     }
 }

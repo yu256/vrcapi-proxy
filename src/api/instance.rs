@@ -29,25 +29,24 @@ pub(crate) async fn api_instance(
     .await?;
 
     let users = FRIENDS
-        .read(|friends| {
-            friends
-                .iter()
-                .filter(|user| user.location == instance_id)
-                .map(|user| {
-                    (
-                        if !user.userIcon.is_empty() {
-                            user.userIcon.clone()
-                        } else if !user.profilePicOverride.is_empty() {
-                            user.profilePicOverride.clone()
-                        } else {
-                            user.currentAvatarThumbnailImageUrl.clone()
-                        },
-                        user.displayName.clone(),
-                    )
-                })
-                .collect()
+        .read()
+        .await
+        .online
+        .iter()
+        .filter(|user| user.location == instance_id)
+        .map(|user| {
+            (
+                if !user.userIcon.is_empty() {
+                    user.userIcon.clone()
+                } else if !user.profilePicOverride.is_empty() {
+                    user.profilePicOverride.clone()
+                } else {
+                    user.currentAvatarThumbnailImageUrl.clone()
+                },
+                user.displayName.clone(),
+            )
         })
-        .await;
+        .collect();
 
     Ok(res.json::<InstanceData>().await?.into_res(users))
 }

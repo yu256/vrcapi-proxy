@@ -13,8 +13,7 @@ mod two_factor;
 mod update_profile;
 mod user;
 mod world;
-
-pub(super) use favorites::fetch_favorite_friends;
+pub mod internal;
 
 pub(super) use auth::api_auth;
 pub(super) use favorites::api_add_favorites;

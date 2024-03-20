@@ -11,6 +11,8 @@ pub(crate) enum Status {
     AskMe,
     #[serde(rename = "busy")]
     Busy,
+    #[serde(rename = "offline")]
+    Offline,
 }
 
 #[allow(non_snake_case)]
@@ -35,8 +37,6 @@ pub(crate) struct User {
     pub(crate) userIcon: String,
     #[serde(default)]
     pub(crate) profilePicOverride: String,
-    #[serde(default)]
-    pub(crate) undetermined: bool,
 }
 
 impl User {
@@ -61,32 +61,5 @@ impl PartialEq for User {
 impl PartialOrd for User {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.status.cmp(&other.status))
-    }
-}
-
-pub(crate) trait VecUserExt {
-    fn update(&mut self, content: impl Into<User>);
-    fn del(&mut self, id: &str);
-    fn unsanitize(&mut self);
-}
-
-impl VecUserExt for Vec<User> {
-    fn update(&mut self, content: impl Into<User>) {
-        let mut user = content.into();
-        user.unsanitize();
-        if let Some(friend) = self.iter_mut().find(|friend| friend.id == user.id) {
-            *friend = user;
-        } else {
-            self.push(user);
-        }
-        self.sort();
-    }
-    fn del(&mut self, id: &str) {
-        if let Some(index) = self.iter().position(|x| x.id == id) {
-            self.remove(index);
-        }
-    }
-    fn unsanitize(&mut self) {
-        self.iter_mut().for_each(User::unsanitize);
     }
 }
