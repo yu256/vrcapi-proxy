@@ -105,12 +105,12 @@ pub(super) async fn stream() -> WSError {
                                 .contains(&new_friend.id)
                             {
                                 let locked = &mut FRIENDS.write().await;
-                                locked.online.push(new_friend);
-                                locked.online.sort();
-                            } else {
-                                let locked = &mut FRIENDS.write().await;
                                 locked.web.push(new_friend);
                                 locked.web.sort();
+                            } else {
+                                let locked = &mut FRIENDS.write().await;
+                                locked.online.push(new_friend);
+                                locked.online.sort();
                             }
                         } else {
                             let locked = &mut FRIENDS.write().await;
