@@ -96,7 +96,7 @@ pub struct Presence {
     pub profilePicOverride: String,
     pub currentAvatarTags: String,
     pub avatarThumbnail: String,
-    pub status: String,
+    pub status: Status,
     pub instanceType: String,
     pub travelingToWorld: String,
     pub travelingToInstance: String,
