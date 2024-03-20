@@ -17,6 +17,8 @@ pub(super) async fn fetch_all_friends(token: &str, is_offline: bool) -> anyhow::
         offset += 50;
     }
 
+    friends.iter_mut().for_each(User::unsanitize);
+
     Ok(friends)
 }
 

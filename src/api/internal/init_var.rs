@@ -23,7 +23,7 @@ async fn init_myself_and_friends(token: &str) -> anyhow::Result<()> {
         fetch_all_friends(token, true),
     )?;
 
-    let (online, web) = online
+    let (web, online) = online
         .into_iter()
         .partition(|u| user_profile.activeFriends.contains(&u.id));
 
