@@ -49,7 +49,7 @@ pub(super) async fn stream() -> WSError {
             }
             Ok(tungstenite::Message::Text(message)) => message,
             Ok(tungstenite::Message::Close(_)) | Err(tungstenite::error::Error::Protocol(_)) => {
-                return Disconnected
+                return Disconnected;
             }
             Err(e @ tungstenite::error::Error::Io(_)) => return IoErr(e),
             Err(e) => return Unknown(e.to_string()),
@@ -127,38 +127,39 @@ pub(super) async fn stream() -> WSError {
                 t @ ("friend-offline" | "friend-delete" | "friend-active") => {
                     let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
                     let friends = &mut FRIENDS.write().await;
+
                     macro_rules! move_friend {
-                        ($friends:expr, $id:expr, [$($from:ident),*], $to:ident) => {
-                            $(
-                                if let Some(index) = $friends.$from.iter().position(|x| x.id == $id) {
-                                    let friend = $friends.$from.remove(index);
-                                    $friends.$to.push(friend);
-                                    $friends.$to.sort();
-                                }
-                            )*
+                        ([$($from:ident),*], $to:ident) => {
+                            'block: {
+                                $(
+                                    if let Some(index) = friends.$from.iter().position(|x| x.id == id) {
+                                        let friend = friends.$from.remove(index);
+                                        friends.$to.push(friend);
+                                        friends.$to.sort();
+                                        break 'block;
+                                    }
+                                )*
+                            }
                         };
                     }
 
                     macro_rules! remove_friend {
-                        ($friends:expr, $id:expr, [$($from:ident),*]) => {
-                            $(
-                                if let Some(index) = $friends.$from.iter().position(|x| x.id == $id) {
-                                    $friends.$from.remove(index);
-                                }
-                            )*
+                        ([$($from:ident),*]) => {
+                            'block: {
+                                $(
+                                    if let Some(index) = friends.$from.iter().position(|x| x.id == id) {
+                                        friends.$from.remove(index);
+                                        break 'block;
+                                    }
+                                )*
+                            }
                         };
                     }
 
                     match t {
-                        "friend-offline" => {
-                            move_friend!(friends, id, [online, web], offline);
-                        }
-                        "friend-delete" => {
-                            remove_friend!(friends, id, [online, web, offline]);
-                        }
-                        "friend-active" => {
-                            move_friend!(friends, id, [online, offline], web);
-                        }
+                        "friend-offline" => move_friend!([online, web], offline),
+                        "friend-delete" => remove_friend!([online, web, offline]),
+                        "friend-active" => move_friend!([online, offline], web),
                         _ => unreachable!(),
                     }
                 }
