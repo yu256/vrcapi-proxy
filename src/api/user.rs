@@ -1,5 +1,5 @@
 use crate::fetcher::{request, ResponseExt as _};
-use crate::global::{FRIENDS, MYSELF};
+use crate::global::USERS;
 use crate::user::{Status, User};
 use crate::validate::validate;
 use anyhow::{bail, Result};
@@ -33,7 +33,7 @@ pub(crate) async fn api_user(
             })
         }
         (Some(user_id), false) => {
-            let friends = &FRIENDS
+            let friends = &USERS
             .read()
             .await;
             match friends.online.iter().chain(&friends.web).chain(&friends.offline).find(|u| u.id == user_id).cloned() {
@@ -47,7 +47,7 @@ pub(crate) async fn api_user(
             }
         }
         _ => {
-            match MYSELF.read().await {
+            match USERS.read().await.myself.clone() {
                 Some(mut user) => Ok({
                     user.unsanitize();
                     user.into()
@@ -67,7 +67,7 @@ pub(crate) struct ResUser {
     currentAvatarThumbnailImageUrl: String,
     displayName: String,
     isFriend: bool,
-    location: String,
+    location: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     travelingToLocation: Option<String>,
     status: Status,

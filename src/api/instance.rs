@@ -1,7 +1,7 @@
 use crate::unsanitizer::Unsanitizer;
 use crate::{
     fetcher::{request, ResponseExt as _},
-    global::FRIENDS,
+    global::USERS,
     validate::validate,
 };
 use anyhow::Result;
@@ -28,12 +28,12 @@ pub(crate) async fn api_instance(
     )
     .await?;
 
-    let users = FRIENDS
+    let users = USERS
         .read()
         .await
         .online
         .iter()
-        .filter(|user| user.location == instance_id)
+        .filter(|user| user.location.as_ref().is_some_and(|l| l == &instance_id))
         .map(|user| {
             (
                 if !user.userIcon.is_empty() {

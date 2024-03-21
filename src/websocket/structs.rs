@@ -10,7 +10,7 @@ pub(super) struct StreamBody {
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
-pub struct LocationEventContent {
+pub struct FriendLocation {
     pub userId: String,
     pub location: Option<String>,
     pub travelingToLocation: Option<String>,
@@ -87,23 +87,31 @@ pub struct World {
     pub updated_at: String,
 }
 
-impl From<LocationEventContent> for User {
-    fn from(value: LocationEventContent) -> Self {
-        Self {
-            bio: value.user.bio,
-            bioLinks: value.user.bioLinks,
-            currentAvatarThumbnailImageUrl: value.user.currentAvatarThumbnailImageUrl,
-            displayName: value.user.displayName,
-            id: value.user.id,
-            isFriend: value.user.isFriend,
-            location: value.location.unwrap_or_default(),
-            travelingToLocation: value.travelingToLocation,
-            status: value.user.status,
-            statusDescription: value.user.statusDescription,
-            tags: value.user.tags,
-            userIcon: value.user.userIcon,
-            profilePicOverride: value.user.profilePicOverride,
-        }
+impl FriendLocation {
+    pub fn normalize(self) -> (User, Option<World>) {
+        (
+            User {
+                bio: self.user.bio,
+                bioLinks: self.user.bioLinks,
+                currentAvatarThumbnailImageUrl: self.user.currentAvatarThumbnailImageUrl,
+                displayName: self.user.displayName,
+                id: self.user.id,
+                isFriend: self.user.isFriend,
+                location: self.location,
+                travelingToLocation: self.travelingToLocation,
+                status: self.user.status,
+                statusDescription: self.user.statusDescription,
+                tags: self.user.tags,
+                userIcon: self.user.userIcon,
+                profilePicOverride: self.user.profilePicOverride,
+                currentAvatarImageUrl: self.user.currentAvatarImageUrl,
+                developerType: self.user.developerType,
+                last_login: self.user.last_login,
+                last_platform: self.user.last_platform,
+                friendKey: self.user.friendKey,
+            },
+            self.world,
+        )
     }
 }
 

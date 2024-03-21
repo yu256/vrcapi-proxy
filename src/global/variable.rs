@@ -1,6 +1,7 @@
-use super::struct_impl::{MySelf, Friends};
+use crate::user::User;
 use dirs_2::home_dir;
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use std::path::PathBuf;
 use tokio::sync::RwLock;
 
@@ -16,9 +17,26 @@ pub(crate) static DATA_PATH: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 // Interior mutable
-pub(crate) static FRIENDS: RwLock<Friends> = RwLock::const_new(Friends::new());
+pub(crate) static USERS: RwLock<Users> = RwLock::const_new(Users::new());
 
-pub(crate) static MYSELF: MySelf = MySelf(RwLock::const_new(None));
+#[derive(Serialize)]
+pub(crate) struct Users {
+    pub myself: Option<User>,
+    pub online: Vec<User>,
+    pub web: Vec<User>,
+    pub offline: Vec<User>,
+}
+
+impl Users {
+    const fn new() -> Self {
+        Self {
+            myself: None,
+            online: Vec::new(),
+            web: Vec::new(),
+            offline: Vec::new(),
+        }
+    }
+}
 
 pub(crate) static FAVORITE_FRIENDS: RwLock<Vec<String>> = RwLock::const_new(Vec::new());
 

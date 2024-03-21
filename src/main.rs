@@ -48,6 +48,7 @@ async fn main() -> Result<()> {
         .route("/user", post(api_user))
         .route("/profile", post(api_update_profile))
         .route("/friends", post(api_friends))
+        .route("/friends/all", post(api_friends_all))
         .route("/friends/filtered", post(api_friends_filtered))
         .route("/friend/request", post(api_friend_request))
         .route("/friend/accept", post(api_friend_accept))

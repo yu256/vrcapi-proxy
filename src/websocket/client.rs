@@ -1,12 +1,12 @@
 use super::error::WSError;
 use crate::fetcher::{request, ResponseExt as _};
-use crate::global::{AUTHORIZATION, FRIENDS, MYSELF};
+use crate::global::{AUTHORIZATION, USERS};
 use crate::internal::user_info::fetch_user_info;
 use crate::user::{Status, User};
 use crate::websocket::server::STREAM_SENDERS;
 use crate::{
     global::{APP_NAME, UA},
-    websocket::structs::{LocationEventContent, StreamBody, UserIdContent},
+    websocket::structs::{FriendLocation, StreamBody, UserIdContent},
 };
 use futures::StreamExt as _;
 use hyper::Method;
@@ -61,11 +61,11 @@ pub(super) async fn stream() -> WSError {
 
             match body.r#type.as_str() {
                 "friend-online" | "friend-location" => {
-                    let content = serde_json::from_str::<LocationEventContent>(&body.content)?;
-                    let mut user: User = content.into();
+                    let (mut user, _) =
+                        serde_json::from_str::<FriendLocation>(&body.content)?.normalize();
                     user.unsanitize();
 
-                    let friends = &mut FRIENDS.write().await;
+                    let friends = &mut USERS.write().await;
 
                     if let Some(index) = friends.offline.iter().position(|x| x.id == user.id) {
                         friends.offline.remove(index);
@@ -97,28 +97,28 @@ pub(super) async fn stream() -> WSError {
 
                     new_friend.unsanitize();
 
-                    if new_friend.location != "offline" {
+                    if new_friend.location.as_ref().is_some_and(|l| l != "offline") {
                         if let Status::AskMe | Status::Busy = new_friend.status {
                             if fetch_user_info(&AUTHORIZATION.1.read().await)
                                 .await?
                                 .activeFriends
                                 .contains(&new_friend.id)
                             {
-                                let locked = &mut FRIENDS.write().await;
+                                let locked = &mut USERS.write().await;
                                 locked.web.push(new_friend);
                                 locked.web.sort();
                             } else {
-                                let locked = &mut FRIENDS.write().await;
+                                let locked = &mut USERS.write().await;
                                 locked.online.push(new_friend);
                                 locked.online.sort();
                             }
                         } else {
-                            let locked = &mut FRIENDS.write().await;
+                            let locked = &mut USERS.write().await;
                             locked.online.push(new_friend);
                             locked.online.sort();
                         }
                     } else {
-                        let locked = &mut FRIENDS.write().await;
+                        let locked = &mut USERS.write().await;
                         locked.offline.push(new_friend);
                         locked.offline.sort();
                     }
@@ -126,7 +126,7 @@ pub(super) async fn stream() -> WSError {
 
                 t @ ("friend-offline" | "friend-delete" | "friend-active") => {
                     let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
-                    let friends = &mut FRIENDS.write().await;
+                    let friends = &mut USERS.write().await;
 
                     macro_rules! move_friend {
                         ([$($from:ident),*], $to:ident) => {
@@ -165,8 +165,10 @@ pub(super) async fn stream() -> WSError {
                 }
 
                 "user-location" => {
-                    let user = serde_json::from_str::<LocationEventContent>(&body.content)?.into();
-                    MYSELF.insert(user).await;
+                    let myself = serde_json::from_str::<FriendLocation>(&body.content)?
+                        .normalize()
+                        .0;
+                    USERS.write().await.myself = Some(myself);
                 }
 
                 _ => {}

@@ -16,27 +16,35 @@ pub(crate) enum Status {
 }
 
 #[allow(non_snake_case)]
-#[derive(Deserialize, Clone, Eq)]
-pub(crate) struct User {
+#[derive(Serialize, Deserialize, Clone, Eq)]
+pub struct User {
+    pub id: String,
+    pub location: Option<String>,
+    pub travelingToLocation: Option<String>,
+    pub displayName: String,
     #[serde(default)]
-    pub(crate) bio: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub userIcon: String,
     #[serde(default)]
-    pub(crate) bioLinks: Vec<String>,
+    pub bio: String,
     #[serde(default)]
-    pub(crate) currentAvatarThumbnailImageUrl: String,
-    pub(crate) displayName: String,
-    pub(crate) id: String,
-    pub(crate) isFriend: bool,
-    pub(crate) location: String,
-    pub(crate) travelingToLocation: Option<String>,
-    pub(crate) status: Status,
+    pub bioLinks: Vec<String>,
     #[serde(default)]
-    pub(crate) statusDescription: String,
-    pub(crate) tags: Vec<String>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub profilePicOverride: String,
     #[serde(default)]
-    pub(crate) userIcon: String,
+    pub statusDescription: String,
     #[serde(default)]
-    pub(crate) profilePicOverride: String,
+    pub currentAvatarImageUrl: String,
+    #[serde(default)]
+    pub currentAvatarThumbnailImageUrl: String,
+    pub tags: Vec<String>,
+    pub developerType: String,
+    pub last_login: String,
+    pub last_platform: String,
+    pub status: Status,
+    pub isFriend: bool,
+    pub friendKey: String,
 }
 
 impl User {

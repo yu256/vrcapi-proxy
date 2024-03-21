@@ -1,24 +1,29 @@
-use crate::global::{FAVORITE_FRIENDS, FRIENDS, WS_HANDLER};
-use crate::user::{Status, User};
+use crate::global::{FAVORITE_FRIENDS, USERS, WS_HANDLER};
+use crate::user::User;
 use crate::validate::validate;
 use anyhow::{ensure, Result};
 use serde::Serialize;
 
-pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
+async fn validate_(auth: &str) -> Result<()> {
     drop(validate(auth)?);
 
     ensure!(
         WS_HANDLER.read().await.is_some(),
         "WebSocketに接続されていません。"
     );
+    Ok(())
+}
 
-    let (public, private) = FRIENDS
+pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
+    validate_(&auth).await?;
+
+    let (public, private) = USERS
         .read()
         .await
         .online
         .iter()
-        .map(Friend::from)
-        .partition(|friend| friend.location != "private");
+        .cloned()
+        .partition(|friend| friend.location.as_ref().is_some_and(|l| l != "private"));
 
     Ok(ResFriend { public, private })
 }
@@ -26,41 +31,20 @@ pub(crate) async fn api_friends(auth: String) -> Result<ResFriend> {
 pub(crate) async fn api_friends_filtered(auth: String) -> Result<ResFriend> {
     let favorites = FAVORITE_FRIENDS.read().await;
     api_friends(auth).await.map(|mut friends| {
-        let fun = |friend: &Friend| favorites.contains(&friend.id);
+        let fun = |friend: &User| favorites.contains(&friend.id);
         friends.private.retain(fun);
         friends.public.retain(fun);
         friends
     })
 }
 
-#[allow(non_snake_case)]
-#[derive(Serialize)]
-struct Friend {
-    currentAvatarThumbnailImageUrl: String,
-    #[serde(skip_serializing_if = "str::is_empty")]
-    userIcon: String,
-    #[serde(skip_serializing_if = "str::is_empty")]
-    profilePicOverride: String,
-    id: String,
-    status: Status,
-    location: String,
+pub(crate) async fn api_friends_all(auth: String) -> Result<String> {
+    validate_(&auth).await?;
+    serde_json::to_string(&*USERS.read().await).map_err(From::from)
 }
 
 #[derive(Serialize)]
 pub(crate) struct ResFriend {
-    public: Vec<Friend>,
-    private: Vec<Friend>,
-}
-
-impl From<&User> for Friend {
-    fn from(user: &User) -> Self {
-        Self {
-            currentAvatarThumbnailImageUrl: user.currentAvatarThumbnailImageUrl.clone(),
-            userIcon: user.userIcon.clone(),
-            profilePicOverride: user.profilePicOverride.clone(),
-            id: user.id.clone(),
-            status: user.status,
-            location: user.location.clone(),
-        }
-    }
+    public: Vec<User>,
+    private: Vec<User>,
 }

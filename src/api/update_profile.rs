@@ -1,4 +1,4 @@
-use crate::{fetcher::request_json, global::MYSELF, user::Status, validate::validate};
+use crate::{fetcher::request_json, global::USERS, user::Status, validate::validate};
 use anyhow::Result;
 use axum::Json;
 use hyper::Method;
@@ -35,17 +35,16 @@ pub(crate) async fn api_update_profile(Json(req): Json<ProfileUpdateQuery>) -> R
     )
     .await?;
 
-    MYSELF
-        .write(|user| {
-            user.status = req.query.status;
-            user.statusDescription = req.query.statusDescription;
-            user.bio = req.query.bio;
-            user.bioLinks = req.query.bioLinks;
-            if let Some(user_icon) = req.query.userIcon {
-                user.userIcon = user_icon;
-            }
-        })
-        .await;
+    let mut binding = USERS.write().await;
+    let locked = binding.myself.as_mut().unwrap();
+
+    locked.status = req.query.status;
+    locked.statusDescription = req.query.statusDescription;
+    locked.bio = req.query.bio;
+    locked.bioLinks = req.query.bioLinks;
+    if let Some(user_icon) = req.query.userIcon {
+        locked.userIcon = user_icon;
+    }
 
     Ok(true)
 }
