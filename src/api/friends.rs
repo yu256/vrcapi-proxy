@@ -2,6 +2,7 @@ use crate::global::{FAVORITE_FRIENDS, USERS, WS_HANDLER};
 use crate::user::User;
 use crate::validate::validate;
 use anyhow::{ensure, Result};
+use hyper::StatusCode;
 use serde::Serialize;
 
 async fn validate_(auth: &str) -> Result<()> {
@@ -38,9 +39,15 @@ pub(crate) async fn api_friends_filtered(auth: String) -> Result<ResFriend> {
     })
 }
 
-pub(crate) async fn api_friends_all(auth: String) -> Result<String> {
-    validate_(&auth).await?;
-    serde_json::to_string(&*USERS.read().await).map_err(From::from)
+pub(crate) async fn api_friends_all(auth: String) -> (StatusCode, String) {
+    if let Err(e) = validate_(&auth).await {
+        (StatusCode::UNAUTHORIZED, e.to_string())
+    } else {
+        (
+            StatusCode::OK,
+            serde_json::to_string(&*USERS.read().await).unwrap(),
+        )
+    }
 }
 
 #[derive(Serialize)]
