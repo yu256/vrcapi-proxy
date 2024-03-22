@@ -6,7 +6,7 @@ use crate::user::{Status, User};
 use crate::websocket::server::STREAM_SENDERS;
 use crate::{
     global::{APP_NAME, UA},
-    websocket::structs::{FriendLocation, StreamBody, UserIdContent},
+    websocket::structs::{FriendActive, FriendLocation, StreamBody, UserIdContent},
 };
 use futures::StreamExt as _;
 use hyper::Method;
@@ -15,6 +15,18 @@ use tokio_tungstenite::tungstenite::client::IntoClientRequest as _;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
 use tokio_tungstenite::{connect_async, tungstenite};
 use WSError::*;
+
+macro_rules! remove_friend {
+    ($friends:expr, $id:expr, [$($from:ident),*]) => {
+        'block: {
+            $(
+                if $friends.$from.find_remove(|x| x.id == $id).is_some() {
+                    break 'block;
+                }
+            )*
+        }
+    };
+}
 
 pub(super) async fn stream() -> WSError {
     // Safety: トークンがあっているなら失敗するはずがない 不正であればこの関数に到達しない
@@ -67,10 +79,6 @@ pub(super) async fn stream() -> WSError {
 
                     let friends = &mut USERS.write().await;
 
-                    if let Some(index) = friends.offline.iter().position(|x| x.id == user.id) {
-                        friends.offline.remove(index);
-                    }
-
                     if let Some(friend) = friends
                         .online
                         .iter_mut()
@@ -78,10 +86,16 @@ pub(super) async fn stream() -> WSError {
                     {
                         *friend = user;
                     } else {
-                        friends.online.push(user);
+                        remove_friend!(friends, user.id, [offline, web]);
+                        friends.online.push_and_sort(user);
                     }
+                }
 
-                    friends.online.sort();
+                "friend-active" => {
+                    let user = serde_json::from_str::<FriendActive>(&body.content)?.user;
+                    let locked = &mut USERS.write().await;
+                    remove_friend!(locked, user.id, [offline, online]);
+                    locked.web.push_and_sort(user);
                 }
 
                 "friend-add" => {
@@ -104,63 +118,37 @@ pub(super) async fn stream() -> WSError {
                                 .activeFriends
                                 .contains(&new_friend.id)
                             {
-                                let locked = &mut USERS.write().await;
-                                locked.web.push(new_friend);
-                                locked.web.sort();
+                                USERS.write().await.web.push_and_sort(new_friend);
                             } else {
-                                let locked = &mut USERS.write().await;
-                                locked.online.push(new_friend);
-                                locked.online.sort();
+                                USERS.write().await.online.push_and_sort(new_friend);
                             }
                         } else {
-                            let locked = &mut USERS.write().await;
-                            locked.online.push(new_friend);
-                            locked.online.sort();
+                            USERS.write().await.online.push_and_sort(new_friend);
                         }
                     } else {
-                        let locked = &mut USERS.write().await;
-                        locked.offline.push(new_friend);
-                        locked.offline.sort();
+                        USERS.write().await.offline.push_and_sort(new_friend);
                     }
                 }
 
-                t @ ("friend-offline" | "friend-delete" | "friend-active") => {
+                "friend-delete" => {
                     let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
-                    let friends = &mut USERS.write().await;
+                    let locked = &mut USERS.write().await;
+                    remove_friend!(locked, id, [offline, web, online]);
+                }
 
-                    macro_rules! move_friend {
-                        ([$($from:ident),*], $to:ident) => {
-                            'block: {
-                                $(
-                                    if let Some(index) = friends.$from.iter().position(|x| x.id == id) {
-                                        let friend = friends.$from.remove(index);
-                                        friends.$to.push(friend);
-                                        friends.$to.sort();
-                                        break 'block;
-                                    }
-                                )*
-                            }
-                        };
-                    }
+                "friend-offline" => {
+                    let id = serde_json::from_str::<UserIdContent>(&body.content)?.userId;
+                    let locked = &mut USERS.write().await;
 
-                    macro_rules! remove_friend {
-                        ([$($from:ident),*]) => {
-                            'block: {
-                                $(
-                                    if let Some(index) = friends.$from.iter().position(|x| x.id == id) {
-                                        friends.$from.remove(index);
-                                        break 'block;
-                                    }
-                                )*
-                            }
-                        };
-                    }
-
-                    match t {
-                        "friend-offline" => move_friend!([online, web], offline),
-                        "friend-delete" => remove_friend!([online, web, offline]),
-                        "friend-active" => move_friend!([online, offline], web),
-                        _ => unreachable!(),
+                    if let Some(mut friend) = locked
+                        .online
+                        .find_remove(|x| x.id == id)
+                        .or_else(|| locked.web.find_remove(|x| x.id == id))
+                    {
+                        friend.status = Default::default();
+                        friend.location = Default::default();
+                        friend.travelingToLocation = Default::default();
+                        locked.web.push_and_sort(friend);
                     }
                 }
 
@@ -185,4 +173,29 @@ pub(super) async fn stream() -> WSError {
     }
 
     Disconnected
+}
+
+trait VecExt<T> {
+    fn find_remove<F>(&mut self, fun: F) -> Option<T>
+    where
+        F: Fn(&T) -> bool;
+    fn push_and_sort(&mut self, item: T)
+    where
+        T: Ord;
+}
+
+impl<T> VecExt<T> for Vec<T> {
+    fn find_remove<F>(&mut self, fun: F) -> Option<T>
+    where
+        F: Fn(&T) -> bool,
+    {
+        self.iter().position(fun).map(|i| self.remove(i))
+    }
+    fn push_and_sort(&mut self, item: T)
+    where
+        T: Ord,
+    {
+        self.push(item);
+        self.sort();
+    }
 }

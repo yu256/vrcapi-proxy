@@ -15,6 +15,12 @@ pub(crate) enum Status {
     Offline,
 }
 
+impl Default for Status {
+    fn default() -> Self {
+        Self::Offline
+    }
+}
+
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Eq)]
 pub struct User {

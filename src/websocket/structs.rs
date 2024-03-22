@@ -117,6 +117,12 @@ impl FriendLocation {
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
+pub(super) struct FriendActive {
+    pub(super) user: User,
+}
+
+#[allow(non_snake_case)]
+#[derive(Deserialize)]
 pub(super) struct UserIdContent {
     pub(super) userId: String,
 }
