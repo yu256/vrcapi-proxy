@@ -77,17 +77,15 @@ pub(super) async fn stream() -> WSError {
                         serde_json::from_str::<FriendLocation>(&body.content)?.normalize();
                     user.unsanitize();
 
-                    let friends = &mut USERS.write().await;
+                    let users = &mut USERS.write().await;
 
-                    if let Some(friend) = friends
-                        .online
-                        .iter_mut()
-                        .find(|friend| friend.id == user.id)
+                    if let Some(friend) =
+                        users.online.iter_mut().find(|friend| friend.id == user.id)
                     {
                         *friend = user;
                     } else {
-                        remove_friend!(friends, user.id, [offline, web]);
-                        friends.online.push_and_sort(user);
+                        remove_friend!(users, user.id, [offline, web]);
+                        users.online.push_and_sort(user);
                     }
                 }
 
@@ -111,6 +109,8 @@ pub(super) async fn stream() -> WSError {
 
                     new_friend.unsanitize();
 
+                    let write = USERS.write();
+
                     if new_friend.location.as_ref().is_some_and(|l| l != "offline") {
                         if let Status::AskMe | Status::Busy = new_friend.status {
                             if fetch_user_info(&AUTHORIZATION.1.read().await)
@@ -118,15 +118,15 @@ pub(super) async fn stream() -> WSError {
                                 .activeFriends
                                 .contains(&new_friend.id)
                             {
-                                USERS.write().await.web.push_and_sort(new_friend);
+                                write.await.web.push_and_sort(new_friend);
                             } else {
-                                USERS.write().await.online.push_and_sort(new_friend);
+                                write.await.online.push_and_sort(new_friend);
                             }
                         } else {
-                            USERS.write().await.online.push_and_sort(new_friend);
+                            write.await.online.push_and_sort(new_friend);
                         }
                     } else {
-                        USERS.write().await.offline.push_and_sort(new_friend);
+                        write.await.offline.push_and_sort(new_friend);
                     }
                 }
 
@@ -148,7 +148,7 @@ pub(super) async fn stream() -> WSError {
                         friend.status = Default::default();
                         friend.location = Default::default();
                         friend.travelingToLocation = Default::default();
-                        locked.web.push_and_sort(friend);
+                        locked.offline.push_and_sort(friend);
                     }
                 }
 
