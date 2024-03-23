@@ -82,7 +82,11 @@ pub(super) async fn stream() -> WSError {
                     if let Some(friend) =
                         users.online.iter_mut().find(|friend| friend.id == user.id)
                     {
+                        let need_to_be_sorted = friend.status != user.status;
                         *friend = user;
+                        if need_to_be_sorted {
+                            users.online.sort();
+                        }
                     } else {
                         remove_friend!(users, user.id, [offline, web]);
                         users.online.push_and_sort(user);
