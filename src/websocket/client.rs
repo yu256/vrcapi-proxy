@@ -96,7 +96,7 @@ pub(super) async fn stream() -> WSError {
                 "friend-active" => {
                     let user = serde_json::from_str::<FriendActive>(&body.content)?.user;
                     let locked = &mut USERS.write().await;
-                    remove_friend!(locked, user.id, [offline, online]);
+                    remove_friend!(locked, user.id, [offline, online, web]);
                     locked.web.push_and_sort(user);
                 }
 
@@ -152,7 +152,7 @@ pub(super) async fn stream() -> WSError {
                         friend.status = Default::default();
                         friend.location = Default::default();
                         friend.travelingToLocation = Default::default();
-                        locked.offline.push_and_sort(friend);
+                        locked.offline.push(friend);
                     }
                 }
 
