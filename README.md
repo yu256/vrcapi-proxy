@@ -16,5 +16,5 @@ VRChat REST API / WebSocket APIのプロキシサーバーです。jsonデータ
 3. クローンしたリポジトリに移動し、`cargo build --release`
    を実行してバイナリを生成します。生成されたバイナリは `/target/release` ディレクトリに保存されます。
 
-初回起動時（すぐに停止します）、ホームディレクトリの `/vrcapi-proxy` フォルダにjsonが生成されます。認証ID, CORS,
+初回起動時（すぐに停止します）、ホームディレクトリの `/vrcapi-proxy` フォルダにjsonが生成されます。認証ID,
 listenするポートの設定を行ってください。設定が完了したら再度起動します。

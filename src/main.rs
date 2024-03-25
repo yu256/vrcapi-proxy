@@ -2,7 +2,7 @@ use crate::init::init;
 use anyhow::Result;
 use api::*;
 use axum::http::header::CONTENT_TYPE;
-use axum::http::{HeaderValue, Method};
+use axum::http::Method;
 use axum::routing::get;
 use axum::{routing::post, Router};
 use tower_http::cors::CorsLayer;
@@ -25,11 +25,10 @@ async fn main() -> Result<()> {
     init()?;
 
     let init::Data {
-        cors,
         listen,
         token,
         ..
-    } = json::read_json::<init::Data>("data.json")?;
+    } = json::read_json("data.json")?;
 
     tokio::join!(spawn_ws_client(), internal::init_var::init_var(&token)).1?;
     drop(token);
@@ -64,7 +63,7 @@ async fn main() -> Result<()> {
         .route("/world", post(api_world))
         .layer(
             CorsLayer::new()
-                .allow_origin(cors.parse::<HeaderValue>()?)
+                .allow_origin(tower_http::cors::Any)
                 .allow_methods([Method::POST])
                 .allow_headers([CONTENT_TYPE]),
         );

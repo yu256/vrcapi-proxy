@@ -1,6 +1,6 @@
 use crate::{
-    json::{read_json, write_json},
     global::DATA_PATH,
+    json::{read_json, write_json},
 };
 use anyhow::{anyhow, ensure, Result};
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub(super) struct Data {
     pub(super) listen: String,
-    pub(super) cors: String,
     pub(super) auth: String,
     pub(super) token: String,
 }
@@ -24,7 +23,6 @@ pub(super) fn init() -> Result<()> {
 
     let default = Data {
         listen: "0.0.0.0:8000".into(),
-        cors: "http://localhost:3000".into(),
         auth: String::new(),
         token: String::new(),
     };

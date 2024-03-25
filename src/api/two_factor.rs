@@ -34,11 +34,10 @@ pub(crate) async fn api_twofactor(
     .await?;
 
     let data = {
-        let data = crate::json::read_json::<Data>("data.json")?;
+        let Data { listen, auth, .. } = crate::json::read_json("data.json")?;
         Data {
-            listen: data.listen,
-            cors: data.cors,
-            auth: data.auth,
+            listen,
+            auth,
             token,
         }
     };
